@@ -1,0 +1,4 @@
+# Exemple de fichier de configuration
+
+output_dir: '/tmp'
+batch_file: 'files/batch_file.xml'
