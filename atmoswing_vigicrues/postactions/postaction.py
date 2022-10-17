@@ -1,5 +1,6 @@
-import atmoswing_vigicrues as asv
 from netCDF4 import Dataset
+
+import atmoswing_vigicrues as asv
 
 
 class PostAction:
@@ -34,7 +35,7 @@ class PostAction:
 
     def run(self):
         """ Exécution de la post-action. """
-        raise NotImplemented
+        raise NotImplementedError
 
     def _open_files(self):
         """ Lecture des fichiers de prévision. """

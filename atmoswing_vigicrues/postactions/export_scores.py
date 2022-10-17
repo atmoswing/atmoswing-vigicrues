@@ -1,7 +1,6 @@
-import json
+import atmoswing_vigicrues as asv
 
 from .postaction import PostAction
-import atmoswing_vigicrues as asv
 
 
 class ExportScores(PostAction):

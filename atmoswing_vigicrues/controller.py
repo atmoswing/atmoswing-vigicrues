@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import yaml
 
 import atmoswing_vigicrues as asv
@@ -69,7 +67,7 @@ class Controller:
         except asv.Error:
             print("La prévision a échoué.")
             return -1
-        except:
+        except Exception:
             print("La prévision a échoué.")
             return -1
 
@@ -81,7 +79,8 @@ class Controller:
         """
         if self.options.pre_actions:
             for action in self.options.pre_actions:
-                raise NotImplemented
+                print(action)
+                raise NotImplementedError
 
     def _register_post_actions(self):
         """

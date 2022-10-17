@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 import tempfile
 
 import pytest
@@ -53,4 +53,3 @@ def test_export_bdapbp_runs(forecast_files, metadata):
         export = asv.ExportBdApBp(tmp_dir, 'export.json')
         export.feed(forecast_files, metadata)
         export.run()
-
