@@ -1,8 +1,8 @@
-import yaml
-import sys
 from pathlib import Path
-from atmoswing_vigicrues.exceptions import *
-from atmoswing_vigicrues.utils import *
+
+import yaml
+
+import atmoswing_vigicrues as asv
 
 
 class Controller:
@@ -64,14 +64,14 @@ class Controller:
     def _check_options(self):
         """ Contrôle que certaines options de base sont définies. """
         if self.options is None:
-            raise OptionError("Les options fournies sont vides.")
+            raise asv.OptionError("Les options fournies sont vides.")
         if self.options.config_file is None:
-            raise OptionError("Le chemin du fichier de configuration "
-                              "n'a pas été fourni.")
+            raise asv.OptionError(
+                "Le chemin du fichier de configuration n'a pas été fourni.")
 
     def _load_config(self):
         """ Chargement du fichier de configuration. """
-        check_file_exists(self.options.config_file)
+        asv.check_file_exists(self.options.config_file)
         with open(self.options.config_file) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -89,11 +89,11 @@ class Controller:
             return getattr(self.options, key)
         if key in self.config and self.config[key]:
             return self.config[key]
-        raise OptionError(key)
+        raise asv.OptionError(key)
 
     def _check_paths_exist(self):
         """ Contrôle que les chemins nécessaires existent. """
-        check_file_exists(self.options.batch_file)
+        asv.check_file_exists(self.options.batch_file)
 
         path_output = Path(self.options.output_dir)
         if not path_output.exists():

@@ -1,4 +1,5 @@
 import argparse
+
 from atmoswing_vigicrues.controller import Controller
 
 

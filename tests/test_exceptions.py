@@ -1,27 +1,28 @@
 import pytest
-from atmoswing_vigicrues.exceptions import *
+
+import atmoswing_vigicrues as asv
 
 
 def test_exception_general():
-    with pytest.raises(Error):
-        raise Error()
+    with pytest.raises(asv.Error):
+        raise asv.Error()
 
 
 def test_exception_option():
-    with pytest.raises(OptionError):
-        raise OptionError('some_key')
+    with pytest.raises(asv.OptionError):
+        raise asv.OptionError('some_key')
 
 
 def test_exception_config():
-    with pytest.raises(ConfigError):
-        raise ConfigError('some_key')
+    with pytest.raises(asv.ConfigError):
+        raise asv.ConfigError('some_key')
 
 
 def test_exception_path():
-    with pytest.raises(PathError):
-        raise PathError('path/to/dir')
+    with pytest.raises(asv.PathError):
+        raise asv.PathError('path/to/dir')
 
 
 def test_exception_file_path():
-    with pytest.raises(FilePathError):
-        raise FilePathError('path/to/file')
+    with pytest.raises(asv.FilePathError):
+        raise asv.FilePathError('path/to/file')

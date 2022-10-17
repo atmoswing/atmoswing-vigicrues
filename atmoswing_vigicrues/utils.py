@@ -1,5 +1,6 @@
-from atmoswing_vigicrues.exceptions import *
 from pathlib import Path
+
+import atmoswing_vigicrues as asv
 
 
 def check_file_exists(path):
@@ -7,6 +8,6 @@ def check_file_exists(path):
     if type(path) == str:
         path = Path(path)
     if not path.exists():
-        raise FilePathError(path)
+        raise asv.FilePathError(path)
     if not path.is_file():
-        raise Error(f"Le chemin '{path}' n'est pas un fichier.")
+        raise asv.Error(f"Le chemin '{path}' n'est pas un fichier.")
