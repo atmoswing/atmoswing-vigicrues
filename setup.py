@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 import setuptools
 
+requirements = [
+    'numpy',
+    'PyYAML'
+]
+
 setuptools.setup(
     name="atmoswing_vigicrues",
     version="0.9.0",
@@ -13,4 +18,13 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Framework :: Pytest"
     ],
+    install_requires=requirements,
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-pep8',
+            'pytest-cov',
+            'pre-commit'
+        ]
+    }
 )
