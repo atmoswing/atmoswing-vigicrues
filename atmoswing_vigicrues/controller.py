@@ -29,6 +29,8 @@ class Controller:
         """
         self.options = options
         self.config = None
+        self.pre_actions = []
+        self.post_actions = []
         self._check_options()
         self._load_config()
         self._merge_config_options()
@@ -59,7 +61,65 @@ class Controller:
         int
             Le code de retour (0 en cas de succès)
         """
-        return -1
+
+        try:
+            self._run_pre_actions()
+            self._run_atmoswing()
+            self._run_post_actions()
+        except asv.Error:
+            print("La prévision a échoué.")
+            return -1
+        except:
+            print("La prévision a échoué.")
+            return -1
+
+        return 0
+
+    def _register_pre_actions(self):
+        """
+        Enregistre les actions préalables à la prévision
+        """
+        if self.options.pre_actions:
+            for action in self.options.pre_actions:
+                raise NotImplemented
+
+    def _register_post_actions(self):
+        """
+        Enregistre les actions postérieures à la prévision
+        """
+        if self.options.post_actions:
+            for action in self.options.post_actions:
+                if action == 'export_bdapbp':
+                    output_dir = self._get_option('bdapbp_output_dir')
+                    file_name = self._get_option('bdapbp_file_name')
+                    self.pre_actions.append(asv.ExportBdApBp(output_dir, file_name))
+                elif action == 'export_scores':
+                    output_dir = self._get_option('scores_output_dir')
+                    file_name = self._get_option('scores_file_name')
+                    self.pre_actions.append(asv.ExportScores(output_dir, file_name))
+                else:
+                    raise asv.Error(f"L'action {action} est inconnue.")
+
+    def _run_pre_actions(self):
+        """
+        Exécute les opérations préalables à la prévision par AtmoSwing.
+        """
+        for action in self.pre_actions:
+            action.run()
+
+    def _run_atmoswing(self):
+        """
+        Exécution d'AtmoSwing.
+        """
+        pass
+
+    def _run_post_actions(self):
+        """
+        Exécute les opérations postérieures à la prévision par AtmoSwing.
+        """
+        for action in self.post_actions:
+            action.feed()
+            action.run()
 
     def _check_options(self):
         """ Contrôle que certaines options de base sont définies. """
@@ -80,21 +140,32 @@ class Controller:
         Assemble les options définies en lignes de commandes et celles du
         fichier de configuration. La ligne de commande prévaut.
         """
-        self.options.output_dir = self._find_option('output_dir')
-        self.options.batch_file = self._find_option('batch_file')
+        self.options.output_dir = self._find_option('output_dir', mandatory=True)
+        self.options.batch_file = self._find_option('batch_file', mandatory=True)
+        self.options.pre_actions = self._find_option('pre_actions')
+        self.options.post_actions = self._find_option('post_actions')
+        self.options.bdapbp_output_dir = self._find_option('bdapbp_output_dir')
+        self.options.bdapbp_file_name = self._find_option('bdapbp_file_name')
+        self.options.scores_output_dir = self._find_option('scores_output_dir')
+        self.options.scores_file_name = self._find_option('scores_file_name')
 
-    def _find_option(self, key):
+    def _find_option(self, key, mandatory=False):
         """ Cherche une valeur dans les arguments passés ou le fichier config. """
         if hasattr(self.options, key) and getattr(self.options, key):
             return getattr(self.options, key)
         if key in self.config and self.config[key]:
             return self.config[key]
+        if mandatory:
+            raise asv.OptionError(key)
+        return None
+
+    def _get_option(self, key):
+        """ Extraction d'une option avec contrôle de son existence. """
+        if hasattr(self.options, key) and getattr(self.options, key):
+            return getattr(self.options, key)
         raise asv.OptionError(key)
 
     def _check_paths_exist(self):
         """ Contrôle que les chemins nécessaires existent. """
         asv.check_file_exists(self.options.batch_file)
-
-        path_output = Path(self.options.output_dir)
-        if not path_output.exists():
-            path_output.mkdir(parents=True, exist_ok=True)
+        asv.check_dir_exists(self.options.output_dir, True)

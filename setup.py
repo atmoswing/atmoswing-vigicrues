@@ -3,7 +3,8 @@ import setuptools
 
 requirements = [
     'numpy',
-    'PyYAML'
+    'PyYAML',
+    'netCDF4'
 ]
 
 setuptools.setup(
