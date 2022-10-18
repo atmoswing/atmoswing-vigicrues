@@ -4,7 +4,8 @@ import setuptools
 requirements = [
     'numpy',
     'PyYAML',
-    'netCDF4'
+    'netCDF4',
+    'pysftp'
 ]
 
 setuptools.setup(

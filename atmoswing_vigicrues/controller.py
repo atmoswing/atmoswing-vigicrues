@@ -29,6 +29,7 @@ class Controller:
         self.config = None
         self.pre_actions = []
         self.post_actions = []
+        self.disseminations = []
         self._check_options()
         self._load_config()
         self._merge_config_options()
@@ -64,6 +65,7 @@ class Controller:
             self._run_pre_actions()
             self._run_atmoswing()
             self._run_post_actions()
+            self._run_disseminations()
         except asv.Error:
             print("La prévision a échoué.")
             return -1
@@ -99,6 +101,22 @@ class Controller:
                 else:
                     raise asv.Error(f"L'action {action} est inconnue.")
 
+    def _register_disseminations(self):
+        """
+        Enregistre les actions préalables à la prévision
+        """
+        if self.options.disseminations:
+            for action in self.options.disseminations:
+                if action == 'transfer_sftp':
+                    hostname = self._get_option('export_sftp_hostname')
+                    username = self._get_option('export_sftp_username')
+                    password = self._get_option('export_sftp_password')
+                    remote_dir = self._get_option('export_sftp_remote_dir')
+                    self.disseminations.append(asv.TransferSftp(hostname, username,
+                                                                password, remote_dir))
+                else:
+                    raise asv.Error(f"L'action {action} est inconnue.")
+
     def _run_pre_actions(self):
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
@@ -117,6 +135,14 @@ class Controller:
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
         for action in self.post_actions:
+            action.feed()
+            action.run()
+
+    def _run_disseminations(self):
+        """
+        Exécute les opérations de diffusion.
+        """
+        for action in self.disseminations:
             action.feed()
             action.run()
 

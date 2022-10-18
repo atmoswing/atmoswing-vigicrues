@@ -3,10 +3,16 @@
 output_dir: '/tmp'
 batch_file: 'files/batch_file.xml'
 
-pre_actions: []
+pre_actions: ['import_arpege', 'import_ifs', 'transform_arpege']
 post_actions: ['export_bdapbp', 'export_scores']
+disseminations: ['transfer_sftp']
 
 bdapbp_output_dir: '/tmp'
 bdapbp_file_name: 'BdApBp_AtmoSwing.json'
 scores_output_dir: '/tmp'
 scores_file_name: 'Scores_AtmoSwing.txt'
+
+export_sftp_hostname: '127.0.0.1'
+export_sftp_username: 'username'
+export_sftp_password: 'secret'
+export_sftp_remote_dir: 'public'
