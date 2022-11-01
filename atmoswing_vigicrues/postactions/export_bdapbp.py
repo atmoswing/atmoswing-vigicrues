@@ -9,22 +9,30 @@ from .postaction import PostAction
 class ExportBdApBp(PostAction):
     """
     Export des prévisions au format Json de la BdApBp.
+
+    Attributes
+    ----------
+    output_dir : str
+        Chemin de destination pour l'enregistrement des fichiers.
+    file_name: str
+        Nom du fichier
     """
 
-    def __init__(self, output_dir, file_name='BdApBp_AtmoSwing.json'):
+    def __init__(self, options):
         """
         Initialisation de l'instance ExportBdApBp
 
         Parameters
         ----------
-        output_dir : str
-            Chemin de destination pour l'enregistrement des fichiers.
-        file_name: str
-            Nom du fichier
+        options
+            L'instance options
         """
-        asv.check_dir_exists(output_dir, True)
-        self.output_dir = output_dir
-        self.file_name = file_name
+        self.output_dir = options.get('bdapbp_output_dir')
+        asv.check_dir_exists(self.output_dir, True)
+        if options.has('bdapbp_file_name'):
+            self.file_name = options.get('bdapbp_file_name')
+        else:
+            self.file_name = 'BdApBp_AtmoSwing.json'
         super().__init__()
 
     def __del__(self):

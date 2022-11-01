@@ -1,3 +1,5 @@
+import importlib
+
 import yaml
 
 import atmoswing_vigicrues as asv
@@ -10,46 +12,24 @@ class Controller:
     Attributes
     ----------
     options : object
-        Options de la prévision généralement passées sous la forme d'arguments lors de
-        l'utilisation en lignes de commandes.
-    config : dict
-        Configuration chargée du fichier défini par l'argument config_file.
+        Options de la prévision combinant les arguments passés lors de l'utilisation en
+        lignes de commandes et les options du fichier de configuration.
     """
 
-    def __init__(self, options):
+    def __init__(self, cli_options):
         """
         Initialisation de l'instance Controller
 
         Parameters
         ----------
-        options : object
+        cli_options : object
             Options passées en lignes de commandes à la fonction main()
         """
-        self.options = options
-        self.config = None
+        self.options = asv.Options(cli_options)
         self.pre_actions = []
         self.post_actions = []
         self.disseminations = []
-        self._check_options()
-        self._load_config()
-        self._merge_config_options()
         self._check_paths_exist()
-
-    @property
-    def options(self):
-        return self._options
-
-    @options.setter
-    def options(self, options):
-        self._options = options
-
-    @property
-    def config(self):
-        return self._config
-
-    @config.setter
-    def config(self, config):
-        self._config = config
 
     def run(self) -> int:
         """
@@ -79,43 +59,34 @@ class Controller:
         """
         Enregistre les actions préalables à la prévision
         """
-        if self.options.pre_actions:
-            for action in self.options.pre_actions:
-                print(action)
-                raise NotImplementedError
+        if self.options.has('pre_actions'):
+            for action in self.options.get('pre_actions'):
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
+                    raise asv.Error(f"L'action {action} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
+                self.pre_actions.append(fct(self.options))
 
     def _register_post_actions(self):
         """
         Enregistre les actions postérieures à la prévision
         """
-        if self.options.post_actions:
-            for action in self.options.post_actions:
-                if action == 'export_bdapbp':
-                    output_dir = self._get_option('bdapbp_output_dir')
-                    file_name = self._get_option('bdapbp_file_name')
-                    self.pre_actions.append(asv.ExportBdApBp(output_dir, file_name))
-                elif action == 'export_scores':
-                    output_dir = self._get_option('scores_output_dir')
-                    file_name = self._get_option('scores_file_name')
-                    self.pre_actions.append(asv.ExportScores(output_dir, file_name))
-                else:
+        if self.options.has('post_actions'):
+            for action in self.options.get('post_actions'):
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
                     raise asv.Error(f"L'action {action} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
+                self.post_actions.append(fct(self.options))
 
     def _register_disseminations(self):
         """
         Enregistre les actions préalables à la prévision
         """
-        if self.options.disseminations:
-            for action in self.options.disseminations:
-                if action == 'transfer_sftp':
-                    hostname = self._get_option('export_sftp_hostname')
-                    username = self._get_option('export_sftp_username')
-                    password = self._get_option('export_sftp_password')
-                    remote_dir = self._get_option('export_sftp_remote_dir')
-                    self.disseminations.append(asv.TransferSftp(hostname, username,
-                                                                password, remote_dir))
-                else:
+        if self.options.has('disseminations'):
+            for action in self.options.get('disseminations'):
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
                     raise asv.Error(f"L'action {action} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
+                self.disseminations.append(fct(self.options))
 
     def _run_pre_actions(self):
         """
@@ -146,51 +117,7 @@ class Controller:
             action.feed()
             action.run()
 
-    def _check_options(self):
-        """ Contrôle que certaines options de base sont définies. """
-        if self.options is None:
-            raise asv.OptionError("Les options fournies sont vides.")
-        if self.options.config_file is None:
-            raise asv.OptionError(
-                "Le chemin du fichier de configuration n'a pas été fourni.")
-
-    def _load_config(self):
-        """ Chargement du fichier de configuration. """
-        asv.check_file_exists(self.options.config_file)
-        with open(self.options.config_file) as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
-
-    def _merge_config_options(self):
-        """
-        Assemble les options définies en lignes de commandes et celles du
-        fichier de configuration. La ligne de commande prévaut.
-        """
-        self.options.output_dir = self._find_option('output_dir', mandatory=True)
-        self.options.batch_file = self._find_option('batch_file', mandatory=True)
-        self.options.pre_actions = self._find_option('pre_actions')
-        self.options.post_actions = self._find_option('post_actions')
-        self.options.bdapbp_output_dir = self._find_option('bdapbp_output_dir')
-        self.options.bdapbp_file_name = self._find_option('bdapbp_file_name')
-        self.options.scores_output_dir = self._find_option('scores_output_dir')
-        self.options.scores_file_name = self._find_option('scores_file_name')
-
-    def _find_option(self, key, mandatory=False):
-        """ Cherche une valeur dans les arguments passés ou le fichier config. """
-        if hasattr(self.options, key) and getattr(self.options, key):
-            return getattr(self.options, key)
-        if key in self.config and self.config[key]:
-            return self.config[key]
-        if mandatory:
-            raise asv.OptionError(key)
-        return None
-
-    def _get_option(self, key):
-        """ Extraction d'une option avec contrôle de son existence. """
-        if hasattr(self.options, key) and getattr(self.options, key):
-            return getattr(self.options, key)
-        raise asv.OptionError(key)
-
     def _check_paths_exist(self):
         """ Contrôle que les chemins nécessaires existent. """
-        asv.check_file_exists(self.options.batch_file)
-        asv.check_dir_exists(self.options.output_dir, True)
+        asv.check_file_exists(self.options.get('batch_file'))
+        asv.check_dir_exists(self.options.get('output_dir'), True)

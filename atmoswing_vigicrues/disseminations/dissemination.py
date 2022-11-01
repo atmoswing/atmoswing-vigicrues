@@ -14,7 +14,7 @@ class Dissemination:
 
     def feed(self, file_paths):
         """
-        Transmission des fichiers à dissufer
+        Transmission des fichiers à diffuser
 
         Parameters
         ----------
