@@ -1,6 +1,7 @@
 import glob
 import os
 import tempfile
+import types
 
 import pytest
 
@@ -9,12 +10,20 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_export_bdapbp_fails_if_files_not_found():
+@pytest.fixture
+def options():
     with tempfile.TemporaryDirectory() as tmp_dir:
-        export = asv.ExportBdApBp(tmp_dir, 'export.json')
-        export.feed(['/wrong/path'], {})
-        with pytest.raises(asv.FilePathError):
-            export.run()
+        options = asv.Options(
+            types.SimpleNamespace(config_file=DIR_PATH + '/files/config.yaml',
+                                  bdapbp_output_dir=tmp_dir))
+    return options
+
+
+def test_export_bdapbp_fails_if_files_not_found(options):
+    export = asv.ExportBdApBp(options)
+    export.feed(['/wrong/path'], {})
+    with pytest.raises(asv.FilePathError):
+        export.run()
 
 
 @pytest.fixture
@@ -34,22 +43,19 @@ def metadata():
     return metadata
 
 
-def test_export_bdapbp_is_created_with_no_file(metadata):
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        export = asv.ExportBdApBp(tmp_dir, 'export.json')
-        export.feed([], metadata)
-        export.run()
+def test_export_bdapbp_is_created_with_no_file(options, metadata):
+    export = asv.ExportBdApBp(options)
+    export.feed([], metadata)
+    export.run()
 
 
-def test_export_bdapbp_is_created_with_no_metadata(forecast_files):
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        export = asv.ExportBdApBp(tmp_dir, 'export.json')
-        export.feed(forecast_files, {})
-        export.run()
+def test_export_bdapbp_is_created_with_no_metadata(options, forecast_files):
+    export = asv.ExportBdApBp(options)
+    export.feed(forecast_files, {})
+    export.run()
 
 
-def test_export_bdapbp_runs(forecast_files, metadata):
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        export = asv.ExportBdApBp(tmp_dir, 'export.json')
-        export.feed(forecast_files, metadata)
-        export.run()
+def test_export_bdapbp_runs(options, forecast_files, metadata):
+    export = asv.ExportBdApBp(options)
+    export.feed(forecast_files, metadata)
+    export.run()
