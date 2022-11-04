@@ -14,8 +14,10 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 def options():
     with tempfile.TemporaryDirectory() as tmp_dir:
         options = asv.Options(
-            types.SimpleNamespace(config_file=DIR_PATH + '/files/config.yaml',
-                                  bdapbp_output_dir=tmp_dir))
+            types.SimpleNamespace(
+                config_file=DIR_PATH + '/files/config.yaml',
+                bdapbp_output_dir=tmp_dir
+            ))
     return options
 
 
