@@ -1,9 +1,8 @@
-import glob
 import os
 import shutil
 import tempfile
 import types
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -38,6 +37,19 @@ def test_download_gfs_fails_if_files_not_found(options):
 
 def test_download_gfs_succeeds(options):
     action = asv.DownloadGfsData(options)
-    date = datetime.utcnow()
+    date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
+    shutil.rmtree(options.get('gfs_output_dir'))
+
+
+def test_download_gfs_for_today_succeeds(options):
+    action = asv.DownloadGfsData(options)
+    assert action.run()
+    shutil.rmtree(options.get('gfs_output_dir'))
+
+
+def test_download_gfs_skipped_if_exists_locally(options):
+    action = asv.DownloadGfsData(options)
+    assert action.run()
+    assert action.run() is False
     shutil.rmtree(options.get('gfs_output_dir'))

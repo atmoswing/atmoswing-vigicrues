@@ -108,18 +108,9 @@ class DownloadGfsData(PreAction):
         -------
         Vrai (True) en cas de succès, faux (False) autrement.
         """
-        left_lon = self.domain[0]
-        right_lon = self.domain[1]
-        bottom_lat = self.domain[2]
-        top_lat = self.domain[3]
-        subregion = f'subregion=&leftlon={left_lon}&rightlon={right_lon}&' \
-                    f'toplat={top_lat}&bottomlat={bottom_lat}'
-
-        levels = [f'lev_{int(level)}_mb=on&' for level in self.levels]
-        levels = ''.join(levels)
+        subregion = self._build_subregion_request()
+        levels = self._build_levels_request()
         resol = self.resolution
-
-        forecast_date, forecast_hour = self._format_forecast_date(date)
 
         for lead_time in range(0, self.lead_time_max + 1, 6):
             lead_time_str = f'{lead_time:03d}'
@@ -128,6 +119,8 @@ class DownloadGfsData(PreAction):
 
                 attempts = 0
                 while attempts < self.max_attempts:
+
+                    forecast_date, forecast_hour = self._format_forecast_date(date)
 
                     url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
                           f"pl?file=gfs.t{forecast_hour}z.pgrb2.{resol}." \
@@ -138,26 +131,47 @@ class DownloadGfsData(PreAction):
                     file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
                                 f'{variable.lower()}.{lead_time_str}.grib2'
 
-                    local_path = Path(self.output_dir)
-                    local_path = local_path / date.strftime("%Y")
-                    local_path = local_path / date.strftime("%m")
-                    local_path = local_path / date.strftime("%d")
+                    local_path = self._get_local_path(date)
+                    file_path = local_path / file_name
 
-                    local_path.mkdir(parents=True, exist_ok=True)
+                    if file_path.exists():
+                        print("The GFS forecast were already downloaded.")
+                        return False
 
                     try:
-                        request.urlretrieve(url, local_path / file_name)
+                        request.urlretrieve(url, file_path)
                         break
                     except error.HTTPError as e:
                         attempts += 1
                         date = date - timedelta(hours=6)
-                        forecast_date, forecast_hour = self._format_forecast_date(date)
                         if attempts >= self.max_attempts:
                             print(e.code)
                 else:
                     return False
 
         return True
+
+    def _get_local_path(self, date):
+        local_path = Path(self.output_dir)
+        local_path = local_path / date.strftime("%Y")
+        local_path = local_path / date.strftime("%m")
+        local_path = local_path / date.strftime("%d")
+        local_path.mkdir(parents=True, exist_ok=True)
+        return local_path
+
+    def _build_levels_request(self):
+        levels = [f'lev_{int(level)}_mb=on&' for level in self.levels]
+        levels = ''.join(levels)
+        return levels
+
+    def _build_subregion_request(self):
+        left_lon = self.domain[0]
+        right_lon = self.domain[1]
+        bottom_lat = self.domain[2]
+        top_lat = self.domain[3]
+        subregion = f'subregion=&leftlon={left_lon}&rightlon={right_lon}&' \
+                    f'toplat={top_lat}&bottomlat={bottom_lat}'
+        return subregion
 
     @staticmethod
     def _format_forecast_date(date):
