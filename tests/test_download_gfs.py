@@ -44,12 +44,12 @@ def test_download_gfs_succeeds(options):
 
 def test_download_gfs_for_today_succeeds(options):
     action = asv.DownloadGfsData(options)
-    assert action.run()
+    assert action.run(datetime.utcnow())
     shutil.rmtree(options.get('gfs_output_dir'))
 
 
 def test_download_gfs_skipped_if_exists_locally(options):
     action = asv.DownloadGfsData(options)
-    assert action.run()
-    assert action.run() is False
+    assert action.run(datetime.utcnow())
+    assert action.run(datetime.utcnow()) is False
     shutil.rmtree(options.get('gfs_output_dir'))

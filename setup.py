@@ -5,11 +5,13 @@ requirements = [
     'numpy',
     'PyYAML',
     'netCDF4',
-    'pysftp'
+    'pysftp',
+    'atmoswing-toolbox',
+    'eccodes'
 ]
 
 setuptools.setup(
-    name="atmoswing_vigicrues",
+    name="atmoswing-vigicrues",
     version="0.9.0",
     author="Pascal Horton",
     author_email="pascal.horton@terranum.ch",

@@ -89,11 +89,11 @@ class DownloadGfsData(PreAction):
 
         super().__init__()
 
-    def run(self) -> bool:
+    def run(self, date) -> bool:
         """
         Exécute l'action.
         """
-        return self.download(datetime.utcnow())
+        return self.download(date)
 
     def download(self, date) -> bool:
         """

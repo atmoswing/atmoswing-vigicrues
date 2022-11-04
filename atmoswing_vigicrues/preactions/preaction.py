@@ -13,6 +13,6 @@ class PreAction:
         Initialisation de l'instance PreAction
         """
 
-    def run(self) -> bool:
+    def run(self, date) -> bool:
         """ Exécution de la pre-action. """
         raise NotImplementedError
