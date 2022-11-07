@@ -152,10 +152,7 @@ class DownloadGfsData(PreAction):
         return True
 
     def _get_local_path(self, date):
-        local_path = Path(self.output_dir)
-        local_path = local_path / date.strftime("%Y")
-        local_path = local_path / date.strftime("%m")
-        local_path = local_path / date.strftime("%d")
+        local_path = asv.build_date_dir_structure(self.output_dir, date)
         local_path.mkdir(parents=True, exist_ok=True)
         return local_path
 

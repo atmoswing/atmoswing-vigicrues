@@ -4,7 +4,7 @@ output_dir: '/tmp'
 batch_file: 'files/batch_file.xml'
 
 pre_actions: ['import_arpege', 'import_ifs', 'transform_arpege']
-post_actions: ['export_bdapbp', 'export_scores']
+post_actions: ['ExportBdApBp', 'ExportScores']
 disseminations: ['transfer_sftp']
 
 bdapbp_output_dir: '/tmp'

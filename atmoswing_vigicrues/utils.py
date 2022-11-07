@@ -20,3 +20,11 @@ def check_dir_exists(path, create=False):
             path_output.mkdir(parents=True, exist_ok=True)
         else:
             raise asv.Error(f"Le répertoire '{path}' n'a pas été trouvé.")
+
+
+def build_date_dir_structure(base, date):
+    base = Path(base)
+    base = base / date.strftime("%Y")
+    base = base / date.strftime("%m")
+    base = base / date.strftime("%d")
+    return base
