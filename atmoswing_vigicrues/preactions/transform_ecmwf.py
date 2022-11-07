@@ -6,35 +6,35 @@ from atmoswing_toolbox.datasets import generic, grib_dataset
 from .preaction import PreAction
 
 
-class TransformGfsData(PreAction):
+class TransformEcmwfData(PreAction):
     """
-    Transforme les prévisions émises par GFS en fichier netcdf.
+    Transforme les prévisions émises par l'ECMWF en fichier netcdf.
     """
 
     def __init__(self, options):
         """
-        Initialisation de l'instance TransformGfsData
+        Initialisation de l'instance TransformEcmwfData
 
         Parameters
         ----------
         options
             L'instance contenant les options de l'action. Les champs possibles sont:
-            * transform_gfs_input_dir: str
+            * transform_ecmwf_input_dir: str
                 Répertoire contenant les fichiers originaux (grib2).
-            * transform_gfs_output_dir: str
+            * transform_ecmwf_output_dir: str
                 Répertoire cible pour l'enregistrement des fichiers.
-            * gfs_variables: list
+            * ecmwf_variables: list
                 Variables à télécharger.
                 Valeur par défaut: ['hgt']
         """
-        self.input_dir = options.get('transform_gfs_input_dir')
-        self.output_dir = options.get('transform_gfs_output_dir')
+        self.input_dir = options.get('transform_ecmwf_input_dir')
+        self.output_dir = options.get('transform_ecmwf_output_dir')
         asv.check_dir_exists(self.output_dir, True)
 
-        if options.has('gfs_variables'):
-            self.variables = options.get('gfs_variables')
+        if options.has('ecmwf_variables'):
+            self.variables = options.get('ecmwf_variables')
         else:
-            self.variables = ['hgt']
+            self.variables = ['z']
 
         super().__init__()
 
@@ -55,7 +55,7 @@ class TransformGfsData(PreAction):
 
     def transform(self, date) -> bool:
         """
-        Transforme les prévisions de GFS pour une date d'émission de la prévision.
+        Transforme les prévisions de l'ECMWF pour une date d'émission de la prévision.
 
         Parameters
         ----------
@@ -71,7 +71,7 @@ class TransformGfsData(PreAction):
         forecast_date, forecast_hour = self._format_forecast_date(date)
 
         for variable in self.variables:
-            file_name_pattern = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
+            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS_Forecast.' \
                                 f'{variable.lower()}.*.grib2'
 
             input_files = sorted(input_dir.glob(file_name_pattern))

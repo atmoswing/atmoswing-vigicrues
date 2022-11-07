@@ -2,7 +2,9 @@ import os
 import shutil
 import tempfile
 import types
+import eccodes
 from datetime import datetime
+from pathlib import Path
 
 
 import pytest
@@ -22,7 +24,6 @@ def options():
                 gfs_variables=['hgt'],
                 transform_gfs_output_dir=tmp_dir,
                 transform_gfs_input_dir=DIR_PATH + '/files/gfs-grib2',
-                eccodes_dir=''
             ))
     return options
 
@@ -34,6 +35,15 @@ def test_transform_gfs_fails_if_files_not_found(options):
     shutil.rmtree(options.get('transform_gfs_output_dir'))
 
 
+def test_eccodes_import():
+    file = Path(DIR_PATH) / 'files' / 'gfs-grib2' / '2022' / '10' / '01'
+    file = file / '2022100100.NWS_GFS_Forecast.hgt.006.grib2'
+    assert file.exists()
+    f = open(file, 'rb')
+    msgid = eccodes.codes_new_from_file(f, eccodes.CODES_PRODUCT_GRIB)
+    assert msgid is not None
+
+
 def test_transform_gfs_succeeds(options):
     action = asv.TransformGfsData(options)
     date = datetime(2022, 10, 1, 0)
@@ -41,12 +51,9 @@ def test_transform_gfs_succeeds(options):
     shutil.rmtree(options.get('transform_gfs_output_dir'))
 
 
-
-
-
-
 def test_download_gfs_skipped_if_exists_locally(options):
-    action = asv.DownloadGfsData(options)
-    assert action.run()
-    assert action.run() is False
+    action = asv.TransformGfsData(options)
+    date = datetime(2022, 10, 1, 0)
+    assert action.run(date)
+    assert action.run(date) is False
     shutil.rmtree(options.get('gfs_output_dir'))

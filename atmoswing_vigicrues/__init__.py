@@ -7,6 +7,7 @@ from .exceptions import (ConfigError, Error, FilePathError, OptionError,
                          PathError)
 from .preactions.download_gfs import DownloadGfsData
 from .preactions.transform_gfs import TransformGfsData
+from .preactions.transform_ecmwf import TransformEcmwfData
 from .postactions.export_bdapbp import ExportBdApBp
 from .postactions.export_scores import ExportScores
 from .disseminations.transfer_sftp import TransferSftp
@@ -14,5 +15,5 @@ from .utils import check_dir_exists, check_file_exists, build_date_dir_structure
 
 __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'Controller', 'Options', 'ExportBdApBp', 'ExportScores', 'TransferSftp',
-           'DownloadGfsData', 'TransformGfsData', 'check_file_exists',
-           'check_dir_exists', 'build_date_dir_structure')
+           'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData',
+           'check_file_exists', 'check_dir_exists', 'build_date_dir_structure')

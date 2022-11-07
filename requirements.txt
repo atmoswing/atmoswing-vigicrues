@@ -4,3 +4,4 @@ numpy
 atmoswing-toolbox
 PyYAML
 pysftp
+python-dateutil
