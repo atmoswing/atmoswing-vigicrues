@@ -9,39 +9,37 @@ from .preaction import PreAction
 class DownloadGfsData(PreAction):
     """
     Téléchargement des prévisions émises par GFS.
+
+    Parameters
+    ----------
+    options: objet
+        L'instance contenant les options de l'action. Les champs possibles sont:
+
+        * gfs_output_dir: str
+            Répertoire cible pour l'enregistrement des fichiers.
+        * gfs_lead_time_max: int
+            Échéance maximale de la prévision en heures.
+            Valeur par defaut: 168
+        * gfs_variables: list
+            Variables à télécharger.
+            Valeur par défaut: ['hgt']
+        * gfs_levels: list
+            Niveaux de pression à télécharger.
+            Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]
+        * gfs_domain
+            Domaine à télécharger.
+            Valeur par défaut: [-20, 30, 25, 65]
+        * gfs_resolution
+            Résolution spatiale des données.
+            Options: 0.25, 0.50, 1
+            Valeur par défaut: 0.25
+        * gfs_max_attempts
+            Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
+            (soustrayant 6 h).
+            Valeur par défaut: 8
     """
 
     def __init__(self, options):
-        """
-        Initialisation de l'instance DownloadGfsData
-
-        Parameters
-        ----------
-        options
-            L'instance contenant les options de l'action. Les champs possibles sont:
-            * gfs_output_dir: str
-                Répertoire cible pour l'enregistrement des fichiers.
-            * gfs_lead_time_max: int
-                Échéance maximale de la prévision en heures.
-                Valeur par defaut: 168
-            * gfs_variables: list
-                Variables à télécharger.
-                Valeur par défaut: ['hgt']
-            * gfs_levels: list
-                Niveaux de pression à télécharger.
-                Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]
-            * gfs_domain
-                Domaine à télécharger.
-                Valeur par défaut: [-20, 30, 25, 65]
-            * gfs_resolution
-                Résolution spatiale des données.
-                Options: 0.25, 0.50, 1
-                Valeur par défaut: 0.25
-            * gfs_max_attempts
-                Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
-                (soustrayant 6 h).
-                Valeur par défaut: 8
-        """
         self.output_dir = options.get('gfs_output_dir')
         asv.check_dir_exists(self.output_dir, True)
 
@@ -92,6 +90,15 @@ class DownloadGfsData(PreAction):
     def run(self, date) -> bool:
         """
         Exécute l'action.
+
+        Parameters
+        ----------
+        date: datetime
+            Date d'émission de la prévision.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
         return self.download(date)
 
