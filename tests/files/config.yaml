@@ -3,16 +3,50 @@
 output_dir: '/tmp'
 batch_file: 'files/batch_file.xml'
 
-pre_actions: ['import_arpege', 'import_ifs', 'transform_arpege']
-post_actions: ['ExportBdApBp', 'ExportScores']
-disseminations: ['transfer_sftp']
+pre_actions:
+  - name: Download GFS data
+    uses: DownloadGfsData
+    with:
+      output_dir: '/tmp/gfs'
+      lead_time_max: 168
+      variables: ['hgt']
+      levels: [300, 400, 500, 600, 700, 850, 925, 1000]
+      domain: [-20, 30, 25, 65]
+      resolution: 0.25
+      max_attempts: 8
 
-bdapbp_output_dir: '/tmp'
-bdapbp_file_name: 'BdApBp_AtmoSwing.json'
-scores_output_dir: '/tmp'
-scores_file_name: 'Scores_AtmoSwing.txt'
+  - name: Transform GFS data
+    uses: TransformGfsData
+    with:
+      input_dir: '/tmp/gfs'
+      output_dir: '/tmp/generic'
+      variables: ['hgt']
 
-export_sftp_hostname: '127.0.0.1'
-export_sftp_username: 'username'
-export_sftp_password: 'secret'
-export_sftp_remote_dir: 'public'
+  - name: Transform ECMWF data
+    uses: TransformEcmwfData
+    with:
+      input_dir: '/tmp/ecmwf'
+      output_dir: '/tmp/generic'
+      variables: ['hgt']
+
+post_actions:
+  - name: Export BdApBp
+    uses: ExportBdApBp
+    with:
+      output_dir: '/tmp'
+      file_name: 'BdApBp_AtmoSwing.json'
+
+  - name: Export Scores
+    uses: ExportScores
+    with:
+      output_dir: '/tmp'
+      file_name: 'Scores_AtmoSwing.txt'
+
+disseminations:
+  - name: Transfer SFTP
+    uses: TransferSftp
+    with:
+      hostname: '127.0.0.1'
+      username: 'username'
+      password: 'secret'
+      remote_dir: 'public'
