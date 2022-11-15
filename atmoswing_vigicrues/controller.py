@@ -26,10 +26,13 @@ class Controller:
             Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
+        self.verbose = True
         self.pre_actions = []
         self.post_actions = []
         self.disseminations = []
-        self._check_paths_exist()
+        self._register_pre_actions()
+        self._register_post_actions()
+        self._register_disseminations()
 
     def run(self) -> int:
         """
@@ -61,10 +64,13 @@ class Controller:
         """
         if self.options.has('pre_actions'):
             for action in self.options.get('pre_actions'):
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
-                    raise asv.Error(f"L'action {action} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
-                self.pre_actions.append(fct(self.options))
+                name = action['name']
+                module = action['uses']
+                self._display_message(f"Chargement de la pre-action '{name}'")
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
+                    raise asv.Error(f"L'action {module} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
+                self.pre_actions.append(fct(action['with']))
 
     def _register_post_actions(self):
         """
@@ -72,10 +78,13 @@ class Controller:
         """
         if self.options.has('post_actions'):
             for action in self.options.get('post_actions'):
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
-                    raise asv.Error(f"L'action {action} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
-                self.post_actions.append(fct(self.options))
+                name = action['name']
+                module = action['uses']
+                self._display_message(f"Chargement de la post-action '{name}'")
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
+                    raise asv.Error(f"L'action {module} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
+                self.post_actions.append(fct(action['with']))
 
     def _register_disseminations(self):
         """
@@ -83,10 +92,13 @@ class Controller:
         """
         if self.options.has('disseminations'):
             for action in self.options.get('disseminations'):
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), action):
-                    raise asv.Error(f"L'action {action} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), action)
-                self.disseminations.append(fct(self.options))
+                name = action['name']
+                module = action['uses']
+                self._display_message(f"Chargement de la disseminations '{name}'")
+                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
+                    raise asv.Error(f"L'action {module} est inconnue.")
+                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
+                self.disseminations.append(fct(action['with']))
 
     def _run_pre_actions(self):
         """
@@ -117,7 +129,6 @@ class Controller:
             action.feed()
             action.run()
 
-    def _check_paths_exist(self):
-        """ Contrôle que les chemins nécessaires existent. """
-        asv.check_file_exists(self.options.get('batch_file'))
-        asv.check_dir_exists(self.options.get('output_dir'), True)
+    def _display_message(self, message):
+        if self.verbose:
+            print(message)

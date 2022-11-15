@@ -14,17 +14,20 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 @pytest.fixture
 def options():
     with tempfile.TemporaryDirectory() as tmp_dir:
-        options = asv.Options(
+        options_full = asv.Options(
             types.SimpleNamespace(
-                config_file=DIR_PATH + '/files/config.yaml',
-                gfs_output_dir=tmp_dir,
-                gfs_lead_time_max=12,
-                gfs_variables=['hgt'],
-                gfs_levels=[500, 1000],
-                gfs_domain=[-5, 5, 40, 45],
-                gfs_resolution=0.25
+                config_file=DIR_PATH + '/files/config_gfs_download.yaml'
             ))
-    return options
+
+        action_options = options_full.config['pre_actions'][0]
+        action_options['with']['output_dir'] = tmp_dir
+
+    return action_options['with']
+
+
+def count_files_recursively(options):
+    nb_files = sum([len(files) for r, d, files in os.walk(options['output_dir'])])
+    return nb_files
 
 
 def test_download_gfs_fails_if_files_not_found(options):
@@ -32,24 +35,54 @@ def test_download_gfs_fails_if_files_not_found(options):
     date = datetime.utcnow()
     date = date.replace(date.year + 1)
     assert action.download(date) is False
-    shutil.rmtree(options.get('gfs_output_dir'))
+    shutil.rmtree(options['output_dir'])
 
 
-def test_download_gfs_succeeds(options):
+def test_download_gfs_025_succeeds(options):
+    options['resolution'] = 0.25
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
-    shutil.rmtree(options.get('gfs_output_dir'))
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
+
+
+def test_download_gfs_050_succeeds(options):
+    options['resolution'] = 0.50
+    action = asv.DownloadGfsData(options)
+    date = datetime.utcnow() - timedelta(days=1)
+    assert action.download(date)
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
+
+
+def test_download_gfs_100_succeeds(options):
+    options['resolution'] = 1
+    action = asv.DownloadGfsData(options)
+    date = datetime.utcnow() - timedelta(days=1)
+    assert action.download(date)
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
+
+
+def test_download_gfs_default_succeeds(options):
+    action = asv.DownloadGfsData(options)
+    date = datetime.utcnow() - timedelta(days=1)
+    assert action.download(date)
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
 
 
 def test_download_gfs_for_today_succeeds(options):
     action = asv.DownloadGfsData(options)
     assert action.run(datetime.utcnow())
-    shutil.rmtree(options.get('gfs_output_dir'))
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
 
 
 def test_download_gfs_skipped_if_exists_locally(options):
     action = asv.DownloadGfsData(options)
     assert action.run(datetime.utcnow())
+    assert count_files_recursively(options) == 3
     assert action.run(datetime.utcnow()) is False
-    shutil.rmtree(options.get('gfs_output_dir'))
+    shutil.rmtree(options['output_dir'])

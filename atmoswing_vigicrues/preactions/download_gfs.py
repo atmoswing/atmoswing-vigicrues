@@ -15,59 +15,59 @@ class DownloadGfsData(PreAction):
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
-        * gfs_output_dir: str
+        * output_dir: str
             Répertoire cible pour l'enregistrement des fichiers.
-        * gfs_lead_time_max: int
+        * lead_time_max: int
             Échéance maximale de la prévision en heures.
             Valeur par defaut: 168
-        * gfs_variables: list
+        * variables: list
             Variables à télécharger.
             Valeur par défaut: ['hgt']
-        * gfs_levels: list
+        * levels: list
             Niveaux de pression à télécharger.
             Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]
-        * gfs_domain
+        * domain
             Domaine à télécharger.
             Valeur par défaut: [-20, 30, 25, 65]
-        * gfs_resolution
+        * resolution
             Résolution spatiale des données.
             Options: 0.25, 0.50, 1
             Valeur par défaut: 0.25
-        * gfs_max_attempts
+        * max_attempts
             Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
             (soustrayant 6 h).
             Valeur par défaut: 8
     """
 
     def __init__(self, options):
-        self.output_dir = options.get('gfs_output_dir')
+        self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 
-        if options.has('gfs_lead_time_max'):
-            self.lead_time_max = options.get('gfs_lead_time_max')
+        if 'lead_time_max' in options:
+            self.lead_time_max = options['lead_time_max']
         else:
             self.lead_time_max = 168
 
-        if options.has('gfs_variables'):
-            self.variables = options.get('gfs_variables')
+        if 'variables' in options:
+            self.variables = options['variables']
         else:
             self.variables = ['hgt']
 
-        if options.has('gfs_levels'):
-            self.levels = options.get('gfs_levels')
+        if 'levels' in options:
+            self.levels = options['levels']
         else:
             self.levels = [300, 400, 500, 600, 700, 850, 925, 1000]
 
-        if options.has('gfs_domain'):
-            self.domain = options.get('gfs_domain')
+        if 'domain' in options:
+            self.domain = options['domain']
             if len(self.domain) != 4:
                 raise ValueError("Le domaine GFS doit être défini par 4 valeurs.")
         else:
             # Ordre: left lon, right lon, bottom lat, top lat
             self.domain = [-20, 30, 25, 65]
 
-        if options.has('gfs_resolution'):
-            resolution = options.get('gfs_resolution')
+        if 'resolution' in options:
+            resolution = options['resolution']
             if resolution == 0.25:
                 self.resolution = '0p25'
             elif resolution == 0.50:
@@ -80,8 +80,8 @@ class DownloadGfsData(PreAction):
         else:
             self.resolution = '0p25'
 
-        if options.has('gfs_max_attempts'):
-            self.max_attempts = options.get('gfs_max_attempts')
+        if 'max_attempts' in options:
+            self.max_attempts = options['max_attempts']
         else:
             self.max_attempts = 8
 
@@ -118,6 +118,9 @@ class DownloadGfsData(PreAction):
         subregion = self._build_subregion_request()
         levels = self._build_levels_request()
         resol = self.resolution
+        sub_product = 'pgrb2'
+        if resol == '0p50':
+            sub_product = 'pgrb2full'
 
         for lead_time in range(0, self.lead_time_max + 1, 6):
             lead_time_str = f'{lead_time:03d}'
@@ -130,7 +133,7 @@ class DownloadGfsData(PreAction):
                     forecast_date, forecast_hour = self._format_forecast_date(date)
 
                     url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
-                          f"pl?file=gfs.t{forecast_hour}z.pgrb2.{resol}." \
+                          f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
                           f"f{lead_time_str}&{levels}var_{variable.upper()}=on&" \
                           f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
                           f"{forecast_hour}%2Fatmos"

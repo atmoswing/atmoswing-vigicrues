@@ -1,0 +1,12 @@
+# Exemple de fichier de configuration
+
+pre_actions:
+  - name: Download GFS data
+    uses: DownloadGfsData
+    with:
+      output_dir: '/tmp/gfs'
+      lead_time_max: 12
+      variables: ['hgt']
+      levels: [500, 1000]
+      domain: [-5, 5, 40, 45]
+      resolution: 0.5

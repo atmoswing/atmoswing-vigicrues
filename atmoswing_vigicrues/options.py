@@ -9,7 +9,7 @@ class Options:
     dans le fichier config.
 
     ----------
-    options : object
+    cli_options : object
         Options de la prévision généralement passées sous la forme d'arguments lors de
         l'utilisation en lignes de commandes.
     config : dict
@@ -25,18 +25,18 @@ class Options:
         cli_options : object
             Options passées en lignes de commandes à la fonction main()
         """
-        self.options = cli_options
+        self.cli_options = cli_options
         self.config = None
         self._check_options()
         self._load_config()
 
     @property
-    def options(self):
-        return self._options
+    def cli_options(self):
+        return self._cli_options
 
-    @options.setter
-    def options(self, options):
-        self._options = options
+    @cli_options.setter
+    def cli_options(self, cli_options):
+        self._cli_options = cli_options
 
     @property
     def config(self):
@@ -82,15 +82,16 @@ class Options:
 
     def _check_options(self):
         """ Contrôle que certaines options de base sont définies. """
-        if self.options is None:
+        if self.cli_options is None:
             raise asv.OptionError("Les options fournies sont vides.")
-        if not hasattr(self.options, 'config_file') or self.options.config_file is None:
+        if not hasattr(self.cli_options, 'config_file') or \
+                self.cli_options.config_file is None:
             raise asv.OptionError(
                 "Le chemin du fichier de configuration n'a pas été fourni.")
 
     def _load_config(self):
         """ Chargement du fichier de configuration. """
-        asv.check_file_exists(self.options.config_file)
-        with open(self.options.config_file) as f:
+        asv.check_file_exists(self.cli_options.config_file)
+        with open(self.cli_options.config_file) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
