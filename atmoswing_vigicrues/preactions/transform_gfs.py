@@ -1,6 +1,6 @@
 import atmoswing_vigicrues as asv
 from datetime import datetime
-from atmoswing_toolbox.datasets import generic, grib_dataset
+#from atmoswing_toolbox.datasets import generic, grib_dataset
 
 
 from .preaction import PreAction
@@ -79,14 +79,14 @@ class TransformGfsData(PreAction):
             if len(input_files) == 0:
                 return False
 
-            data = grib_dataset.Grib(directory=input_dir,
-                                     file_pattern=file_name_pattern)
-            data.load()
+            #data = grib_dataset.Grib(directory=input_dir,
+            #                         file_pattern=file_name_pattern)
+            #data.load()
 
-            new_file = generic.Generic(directory=self.output_dir,
-                                       var_name=variable,
-                                       ref_data=data)
-            new_file.generate(format=generic.NETCDF_4)
+            #new_file = generic.Generic(directory=self.output_dir,
+            #                           var_name=variable,
+            #                           ref_data=data)
+            #new_file.generate(format=generic.NETCDF_4)
 
         return True
 
