@@ -16,7 +16,6 @@ setuptools.setup(
     author="Pascal Horton",
     author_email="pascal.horton@terranum.ch",
     package_dir={"atmoswing_vigicrues": "atmoswing_vigicrues"},
-    packages=setuptools.find_packages(where="atmoswing_vigicrues"),
     entry_points={
         "console_scripts": ["atmoswing_vigicrues=atmoswing_vigicrues.__main__:main"]
     },

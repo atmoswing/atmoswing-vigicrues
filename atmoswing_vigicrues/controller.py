@@ -1,7 +1,5 @@
 import importlib
 
-import yaml
-
 import atmoswing_vigicrues as asv
 
 
