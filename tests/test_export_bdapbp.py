@@ -60,13 +60,12 @@ def test_export_bdapbp_runs(options, forecast_files, metadata):
     export = asv.ExportBdApBp(options)
     export.feed(forecast_files, metadata)
     export.run()
-    assert count_files_recursively(options) == 4
+    assert count_files_recursively(options) == 3
 
     created_files = [
-        '2022-10-01_00.PC-AZ4o.Allier_Langogne_Pluvio.json',
-        '2022-10-01_00.PC-AZ4o.Ardeche_Vogue_Pluvio.json',
-        '2022-10-01_00.PC-AZ4o.Arly_Pluvio.json',
-        '2022-10-01_00.PC-AZ4o.Arve_Pluvio.json'
+        '2022-10-01_00.PC-AZ4o.Alpes_bernoises_est.json',
+        '2022-10-01_00.PC-AZ4o.Chablais.json',
+        '2022-10-01_00.PC-AZ4o.Cretes_sud.json'
     ]
     for created_file in created_files:
         file_path = options['output_dir'] + '/2022/10/01/' + created_file
@@ -86,7 +85,27 @@ def test_export_bdapbp_with_no_limit(options, forecast_files, metadata):
     assert count_files_recursively(options) == 1
 
     created_files = [
-        '2022-10-01_00.PC-AZ4o.Allier_Langogne_Pluvio.json'
+        '2022-10-01_00.PC-AZ4o.Alpes_bernoises_est.json'
+    ]
+    for created_file in created_files:
+        file_path = options['output_dir'] + '/2022/10/01/' + created_file
+        with open(file_path) as f:
+            data = json.load(f)
+            assert data['statut'] == 0
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_with_all_stations(options, forecast_files, metadata):
+    forecast_files.sort()
+    forecast_files = [forecast_files[0]]
+    options['only_relevant_stations'] = False
+    export = asv.ExportBdApBp(options)
+    export.feed(forecast_files, metadata)
+    export.run()
+    assert count_files_recursively(options) == 1
+
+    created_files = [
+        '2022-10-01_00.PC-AZ4o.Alpes_bernoises_est.json'
     ]
     for created_file in created_files:
         file_path = options['output_dir'] + '/2022/10/01/' + created_file

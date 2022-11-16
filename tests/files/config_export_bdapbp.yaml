@@ -6,3 +6,4 @@ post_actions:
     with:
       output_dir: '/tmp'
       number_analogs: 10
+      only_relevant_stations: True

@@ -23,6 +23,8 @@ class ExportBdApBp(PostAction):
         * number_analogs : int
             Nombre d'analogues maximal à conserver (valeurs les plus élevées).
             -1 pour toutes les analogues.
+        * only_relevant_stations : bool
+            Exporter uniquement les stations pour lesquelles la méthode a été calibrée.
     """
 
     def __init__(self, options):
@@ -36,6 +38,11 @@ class ExportBdApBp(PostAction):
             self.number_analogs = options['number_analogs']
         else:
             self.number_analogs = -1
+
+        if 'only_relevant_stations' in options:
+            self.only_relevant_stations = options['only_relevant_stations']
+        else:
+            self.only_relevant_stations = True
 
         self._reset_status()
 
@@ -55,6 +62,7 @@ class ExportBdApBp(PostAction):
         * 200 : Erreur lors du traitement fichier netcdf.
         """
         for file in self._file_paths:
+            file = Path(file)
             self._reset_status()
             nc_file = None
 
@@ -82,7 +90,7 @@ class ExportBdApBp(PostAction):
             data = {
                 'statut': self.status,
                 'rapport': {
-                    'fichier': file,
+                    'fichier': file.name,
                     'date': self._get_now_formatted(),
                     'message': self.message
                 },
@@ -139,8 +147,14 @@ class ExportBdApBp(PostAction):
 
         time_format_analogs, time_format_target = self._get_time_format(target_dates)
 
+        if self.only_relevant_stations:
+            station_ids_slct = self._extract_station_ids(nc_file)
+        else:
+            station_ids_slct = station_ids
+
         block = {}
-        for i_station, station_id in enumerate(station_ids):
+        for station_id in station_ids_slct:
+            i_station = np.where(station_ids == station_id)
             block_target_date = {}
             for i_target, target_date in enumerate(target_dates):
                 block_analogs = {}
@@ -153,7 +167,7 @@ class ExportBdApBp(PostAction):
                 # Extract relevant values
                 analog_dates_sub = analog_dates[start:end]
                 analog_criteria_sub = analog_criteria[start:end]
-                analog_values_sub = analog_values[i_station, start:end]
+                analog_values_sub = analog_values[i_station, start:end].flatten()
 
                 # Sort by decreasing precipitation values
                 permutation = (-analog_values_sub).argsort()
@@ -197,8 +211,14 @@ class ExportBdApBp(PostAction):
 
         time_format_analogs, time_format_target = self._get_time_format(target_dates)
 
+        if self.only_relevant_stations:
+            station_ids_slct = self._extract_station_ids(nc_file)
+        else:
+            station_ids_slct = station_ids
+
         block = {}
-        for i_station, station_id in enumerate(station_ids):
+        for station_id in station_ids_slct:
+            i_station = np.where(station_ids == station_id)
             block_target_date = {}
             for i_target, target_date in enumerate(target_dates):
                 block_analogs = {}
@@ -209,7 +229,7 @@ class ExportBdApBp(PostAction):
                 end = start + n_analogs
 
                 # Extract relevant values
-                analog_values_sub = analog_values[i_station, start:end]
+                analog_values_sub = analog_values[i_station, start:end].flatten()
 
                 # Sort by decreasing precipitation values
                 analog_values_sub = np.sort(analog_values_sub)[::-1]
