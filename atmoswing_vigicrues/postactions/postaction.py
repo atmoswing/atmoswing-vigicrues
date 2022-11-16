@@ -9,9 +9,6 @@ class PostAction:
     """
 
     def __init__(self):
-        """
-        Initialisation de l'instance PostAction
-        """
         self._file_paths = []
         self._file_contents = []
         self._metadata = None
@@ -34,23 +31,26 @@ class PostAction:
         self._metadata = metadata
 
     def run(self):
-        """ Exécution de la post-action. """
         raise NotImplementedError
 
     def _open_files(self):
-        """ Lecture des fichiers de prévision. """
         for file in self._file_paths:
             asv.check_file_exists(file)
             content = Dataset(file, 'r', format='NETCDF4')
             self._file_contents.append(content)
 
     def _close_files(self):
-        """ Fermeture des fichiers de prévision. """
         for file in self._file_contents:
             file.close()
 
     def _get_metadata(self, key):
-        """ Extraction sécurisée des métadonnées. """
         if key in self._metadata:
             return self._metadata[key]
         return None
+
+    @staticmethod
+    def _extract_station_ids(nc_file):
+        station_ids = nc_file.predictand_station_ids
+        station_ids = station_ids.split(",")
+        station_ids = [int(i) for i in station_ids]
+        return station_ids

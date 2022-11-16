@@ -15,28 +15,28 @@ class DownloadGfsData(PreAction):
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
-        * output_dir: str
+        * output_dir : str
             Répertoire cible pour l'enregistrement des fichiers.
-        * lead_time_max: int
+        * lead_time_max : int
             Échéance maximale de la prévision en heures.
-            Valeur par defaut: 168
-        * variables: list
+            Valeur par défaut : 168
+        * variables : list
             Variables à télécharger.
             Valeur par défaut: ['hgt']
-        * levels: list
+        * levels : list
             Niveaux de pression à télécharger.
             Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]
-        * domain
+        * domain : list
             Domaine à télécharger.
             Valeur par défaut: [-20, 30, 25, 65]
-        * resolution
+        * resolution : float
             Résolution spatiale des données.
             Options: 0.25, 0.50, 1
-            Valeur par défaut: 0.25
-        * max_attempts
+            Valeur par défaut : 0.25
+        * max_attempts : int
             Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
             (soustrayant 6 h).
-            Valeur par défaut: 8
+            Valeur par défaut : 8
     """
 
     def __init__(self, options):

@@ -20,7 +20,7 @@ class ExportBdApBp(PostAction):
 
         * output_dir : str
             Chemin cible pour l'enregistrement des fichiers.
-        * number_analogs: int
+        * number_analogs : int
             Nombre d'analogues maximal à conserver (valeurs les plus élevées).
             -1 pour toutes les analogues.
     """
@@ -30,13 +30,14 @@ class ExportBdApBp(PostAction):
         self.message = ""
 
         self.output_dir = options['output_dir']
+        asv.check_dir_exists(self.output_dir, True)
+
         if 'number_analogs' in options:
             self.number_analogs = options['number_analogs']
         else:
             self.number_analogs = -1
 
         self._reset_status()
-        asv.check_dir_exists(self.output_dir, True)
 
         super().__init__()
 
@@ -49,9 +50,9 @@ class ExportBdApBp(PostAction):
 
         Erreurs possibles:
 
-        * 100: Absence du fichier netcdf.
-        * 110: Fichier netcdf corrompu.
-        * 200: Erreur lors du traitement fichier netcdf.
+        * 100 : Absence du fichier netcdf.
+        * 110 : Fichier netcdf corrompu.
+        * 200 : Erreur lors du traitement fichier netcdf.
         """
         for file in self._file_paths:
             self._reset_status()
