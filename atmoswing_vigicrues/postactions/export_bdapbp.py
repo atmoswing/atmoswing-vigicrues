@@ -1,5 +1,8 @@
 import json
+import datetime
+import numpy as np
 from pathlib import Path
+from netCDF4 import Dataset
 
 import atmoswing_vigicrues as asv
 
@@ -10,59 +13,90 @@ class ExportBdApBp(PostAction):
     """
     Export des prévisions au format Json de la BdApBp.
 
-    Attributes
+    Parameters
     ----------
-    output_dir : str
-        Chemin de destination pour l'enregistrement des fichiers.
-    file_name: str
-        Nom du fichier
+    options: objet
+        L'instance contenant les options de l'action. Les champs possibles sont:
+
+        * output_dir : str
+            Chemin cible pour l'enregistrement des fichiers.
+        * number_analogs: int
+            Nombre d'analogues maximal à conserver (valeurs les plus élevées).
+            -1 pour toutes les analogues.
     """
 
     def __init__(self, options):
-        """
-        Initialisation de l'instance ExportBdApBp
+        self.status = 100
+        self.message = ""
 
-        Parameters
-        ----------
-        options
-            L'instance options
-        """
-        self.output_dir = options.get('bdapbp_output_dir')
-        asv.check_dir_exists(self.output_dir, True)
-        if options.has('bdapbp_file_name'):
-            self.file_name = options.get('bdapbp_file_name')
+        self.output_dir = options['output_dir']
+        if 'number_analogs' in options:
+            self.number_analogs = options['number_analogs']
         else:
-            self.file_name = 'BdApBp_AtmoSwing.json'
+            self.number_analogs = -1
+
+        self._reset_status()
+        asv.check_dir_exists(self.output_dir, True)
+
         super().__init__()
 
     def __del__(self):
         super().__del__()
 
     def run(self):
-        """ Exécution de la post-action. """
-        self._open_files()
+        """
+        Exécution de la post-action.
 
-        output = {
-            'statut': self._get_metadata('status'),
-            'rapport': {
-                'fichier': self._get_metadata('source_file'),
-                'date': self._get_metadata('date'),
-                'message': self._get_metadata('message')
-            },
-            'metadata': self._create_metadata_block(),
-            'data': self._create_data_block(),
-            'statistics': self._create_statistics_block(),
-        }
+        Erreurs possibles:
 
-        with open(Path(self.output_dir) / self.file_name, "w") as outfile:
-            json.dump(output, outfile)
+        * 100: Absence du fichier netcdf.
+        * 110: Fichier netcdf corrompu.
+        * 200: Erreur lors du traitement fichier netcdf.
+        """
+        for file in self._file_paths:
+            self._reset_status()
+            nc_file = None
 
-    def _create_metadata_block(self):
-        if not self._file_contents:
-            return None
+            if not asv.file_exists(file):
+                self.status = 100
+                self.message = "Absence du fichier netcdf."
+            else:
+                try:
+                    nc_file = Dataset(file, 'r', format='NETCDF4')
+                except:
+                    self.status = 110
+                    self.message = "Fichier netcdf corrompu."
 
-        nc_file = self._file_contents[0]
+            try:
+                metadata = self._create_metadata_block(nc_file)
+                data = self._create_data_block(nc_file)
+                statistics = self._create_statistics_block(nc_file)
+            except:
+                metadata = None
+                data = None
+                statistics = None
+                self.status = 200
+                self.message = "Erreur lors du traitement fichier netcdf."
 
+            data = {
+                'statut': self.status,
+                'rapport': {
+                    'fichier': file,
+                    'date': self._get_now_formatted(),
+                    'message': self.message
+                },
+                'metadata': metadata,
+                'data': data,
+                'statistics': statistics,
+            }
+
+            # Nom du fichier
+            file_path = self._build_file_path(file)
+
+            with open(file_path, "w", encoding="utf-8", newline='\r\n') as outfile:
+                json.dump(data, outfile, indent=4, ensure_ascii=False)
+
+    def _create_metadata_block(self, nc_file):
         block = {
             'atmoswing': {
                 'creation_date': nc_file.creation_date,
@@ -81,28 +115,164 @@ class ExportBdApBp(PostAction):
                 'specific_tag_display': nc_file.specific_tag_display,
             },
             'entites': {
-                'names': None,
-                'ids': None,
-                'official_ids': None
+                'names': self._to_str_dict(nc_file['station_names'][:]),
+                'ids': self._to_int_dict(nc_file['station_ids'][:]),
+                'official_ids': self._to_str_dict(nc_file['station_official_ids'][:])
             },
         }
 
         return block
 
-    def _create_data_block(self):
-        if not self._file_contents:
-            return None
+    def _create_data_block(self, nc_file):
+        # Extracting variables
+        station_ids = nc_file['station_ids'][:]
+        target_dates = nc_file['target_dates'][:]
+        target_dates = asv.utils.mjd_to_datetime(target_dates)
+        analog_dates = nc_file['analog_dates'][:]
+        analog_dates = asv.utils.mjd_to_datetime(analog_dates)
+        analogs_nb = nc_file['analogs_nb'][:]
+        analog_criteria = nc_file['analog_criteria'][:]
+        analog_values = nc_file['analog_values_raw'][:]
 
-        block = {
-        }
+        assert analog_values.shape[0] == len(station_ids)
+
+        time_format_analogs, time_format_target = self._get_time_format(target_dates)
+
+        block = {}
+        for i_station, station_id in enumerate(station_ids):
+            block_target_date = {}
+            for i_target, target_date in enumerate(target_dates):
+                block_analogs = {}
+
+                # Get start/end of the analogs
+                start = np.sum(analogs_nb[0:i_target])
+                n_analogs = analogs_nb[i_target]
+                end = start + n_analogs
+
+                # Extract relevant values
+                analog_dates_sub = analog_dates[start:end]
+                analog_criteria_sub = analog_criteria[start:end]
+                analog_values_sub = analog_values[i_station, start:end]
+
+                # Sort by decreasing precipitation values
+                permutation = (-analog_values_sub).argsort()
+                analog_dates_sub = analog_dates_sub[permutation]
+                analog_criteria_sub = analog_criteria_sub[permutation]
+                analog_values_sub = analog_values_sub[permutation]
+
+                ranks = np.arange(1, n_analogs + 1)[permutation]
+                frequency = asv.utils.build_cumulative_frequency(n_analogs)
+                frequency = np.flip(frequency)
+
+                if 0 < self.number_analogs < n_analogs:
+                    analog_dates_sub = analog_dates_sub[0:self.number_analogs]
+                    analog_criteria_sub = analog_criteria_sub[0:self.number_analogs]
+                    analog_values_sub = analog_values_sub[0:self.number_analogs]
+                    ranks = ranks[0:self.number_analogs]
+                    frequency = frequency[0:self.number_analogs]
+
+                for i_analog, analog_date in enumerate(analog_dates_sub):
+                    block_analogs[str(i_analog)] = {
+                        '0': int(ranks[i_analog]),
+                        '1': round(frequency[i_analog], 3),
+                        '2': analog_date.item().strftime(time_format_analogs),
+                        '3': round(float(analog_criteria_sub[i_analog]), 2),
+                        '4': round(float(analog_values_sub[i_analog]), 2)
+                    }
+
+                target_date_str = target_date.item().strftime(time_format_target)
+                block_target_date[target_date_str] = block_analogs
+            block[str(station_id)] = block_target_date
 
         return block
 
-    def _create_statistics_block(self):
-        if not self._file_contents:
-            return None
+    def _create_statistics_block(self, nc_file):
+        # Extracting variables
+        station_ids = nc_file['station_ids'][:]
+        target_dates = nc_file['target_dates'][:]
+        target_dates = asv.utils.mjd_to_datetime(target_dates)
+        analogs_nb = nc_file['analogs_nb'][:]
+        analog_values = nc_file['analog_values_raw'][:]
 
-        block = {
-        }
+        time_format_analogs, time_format_target = self._get_time_format(target_dates)
+
+        block = {}
+        for i_station, station_id in enumerate(station_ids):
+            block_target_date = {}
+            for i_target, target_date in enumerate(target_dates):
+                block_analogs = {}
+
+                # Get start/end of the analogs
+                start = np.sum(analogs_nb[0:i_target])
+                n_analogs = analogs_nb[i_target]
+                end = start + n_analogs
+
+                # Extract relevant values
+                analog_values_sub = analog_values[i_station, start:end]
+
+                # Sort by decreasing precipitation values
+                analog_values_sub = np.sort(analog_values_sub)[::-1]
+
+                frequency = asv.utils.build_cumulative_frequency(n_analogs)
+                frequency = np.flip(frequency)
+
+                for i_analog, analog_value in enumerate(analog_values_sub):
+                    block_analogs[str(i_analog)] = {
+                        '0': round(frequency[i_analog], 3),
+                        '1': round(float(analog_value), 2)
+                    }
+
+                target_date_str = target_date.item().strftime(time_format_target)
+                block_target_date[target_date_str] = block_analogs
+            block[str(station_id)] = block_target_date
 
         return block
+
+    @staticmethod
+    def _get_time_format(target_dates):
+        time_step = target_dates[1] - target_dates[0]
+        show_hour = time_step < 24 * 3600
+        time_format_target = "%Y%m%d"
+        time_format_analogs = "%Y-%m-%d"
+        if show_hour:
+            time_format_target = "%Y%m%d%H"
+            time_format_analogs = "%Y-%m-%d %H"
+        return time_format_analogs, time_format_target
+
+    @staticmethod
+    def _to_str_dict(var):
+        var = var.flatten()
+        new_list = [str(x) for x in var]
+        return dict(enumerate(new_list))
+
+    @staticmethod
+    def _to_int_dict(var):
+        var = var.flatten()
+        new_list = [int(x) for x in var]
+        return dict(enumerate(new_list))
+
+    def _reset_status(self):
+        self.status = 0
+        self.message = "Exécution correcte"
+
+    @staticmethod
+    def _get_now_formatted():
+        now = datetime.datetime.now()
+        return now.strftime("%Y-%m-%d %H:%M:%S")
+
+    def _get_output_path(self, date):
+        local_path = asv.build_date_dir_structure(self.output_dir, date)
+        local_path.mkdir(parents=True, exist_ok=True)
+        return local_path
+
+    def _build_file_path(self, file):
+        original_file_name = Path(file).name
+        if not original_file_name:
+            now = datetime.datetime.now()
+            original_file_name = now.strftime("%Y-%m-%d_%H%M%S") + '_missing'
+        file_name = f'{original_file_name}.json'
+        if '.nc' in original_file_name:
+            file_name = original_file_name.replace('.nc', '.json')
+        output_dir = self._get_output_path(self._get_metadata('forecast_date'))
+        file_path = output_dir / file_name
+        return file_path

@@ -1,0 +1,8 @@
+# Exemple de fichier de configuration
+
+post_actions:
+  - name: Export BdApBp
+    uses: ExportBdApBp
+    with:
+      output_dir: '/tmp'
+      number_analogs: 10

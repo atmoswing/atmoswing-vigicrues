@@ -1,5 +1,7 @@
 import glob
+import json
 import os
+import shutil
 import tempfile
 import types
 
@@ -13,51 +15,82 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 @pytest.fixture
 def options():
     with tempfile.TemporaryDirectory() as tmp_dir:
-        options = asv.Options(
+        options_full = asv.Options(
             types.SimpleNamespace(
-                config_file=DIR_PATH + '/files/config.yaml',
-                bdapbp_output_dir=tmp_dir
+                config_file=DIR_PATH + '/files/config_export_bdapbp.yaml'
             ))
-    return options
 
+        action_options = options_full.config['post_actions'][0]['with']
+        action_options['output_dir'] = tmp_dir
 
-def test_export_bdapbp_fails_if_files_not_found(options):
-    export = asv.ExportBdApBp(options)
-    export.feed(['/wrong/path'], {})
-    with pytest.raises(asv.FilePathError):
-        export.run()
-
-
-@pytest.fixture
-def forecast_files():
-    return glob.glob(DIR_PATH + "/files/forecasts-v2.1/2022/10/01/*.nc")
+    return action_options
 
 
 @pytest.fixture
 def metadata():
     metadata = {
-        "status": 0,
-        "request": "atmoswing-forecaster -n",
-        "date": "2022-10-01 00:00:00",
-        "duration": 344,
-        "message": "exécution correcte"
+        "forecast_date": "2022-10-01 00:00:00",
     }
     return metadata
 
 
-def test_export_bdapbp_is_created_with_no_file(options, metadata):
-    export = asv.ExportBdApBp(options)
-    export.feed([], metadata)
-    export.run()
+def count_files_recursively(options):
+    nb_files = sum([len(files) for r, d, files in os.walk(options['output_dir'])])
+    return nb_files
 
 
-def test_export_bdapbp_is_created_with_no_metadata(options, forecast_files):
+def test_export_bdapbp_reports_if_files_not_found(options, metadata):
     export = asv.ExportBdApBp(options)
-    export.feed(forecast_files, {})
+    export.feed(['/wrong/path'], metadata)
     export.run()
+    assert count_files_recursively(options) == 1
+    file_path = options['output_dir'] + '/2022/10/01/path.json'
+    with open(file_path) as f:
+        data = json.load(f)
+        assert data['statut'] == 200
+    shutil.rmtree(options['output_dir'])
+
+
+@pytest.fixture
+def forecast_files():
+    return glob.glob(DIR_PATH + "/files/atmoswing-forecasts-v2.1/2022/10/01/*.nc")
 
 
 def test_export_bdapbp_runs(options, forecast_files, metadata):
     export = asv.ExportBdApBp(options)
     export.feed(forecast_files, metadata)
     export.run()
+    assert count_files_recursively(options) == 4
+
+    created_files = [
+        '2022-10-01_00.PC-AZ4o.Allier_Langogne_Pluvio.json',
+        '2022-10-01_00.PC-AZ4o.Ardeche_Vogue_Pluvio.json',
+        '2022-10-01_00.PC-AZ4o.Arly_Pluvio.json',
+        '2022-10-01_00.PC-AZ4o.Arve_Pluvio.json'
+    ]
+    for created_file in created_files:
+        file_path = options['output_dir'] + '/2022/10/01/' + created_file
+        with open(file_path) as f:
+            data = json.load(f)
+            assert data['statut'] == 0
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_with_no_limit(options, forecast_files, metadata):
+    forecast_files.sort()
+    forecast_files = [forecast_files[0]]
+    options['number_analogs'] = -1
+    export = asv.ExportBdApBp(options)
+    export.feed(forecast_files, metadata)
+    export.run()
+    assert count_files_recursively(options) == 1
+
+    created_files = [
+        '2022-10-01_00.PC-AZ4o.Allier_Langogne_Pluvio.json'
+    ]
+    for created_file in created_files:
+        file_path = options['output_dir'] + '/2022/10/01/' + created_file
+        with open(file_path) as f:
+            data = json.load(f)
+            assert data['statut'] == 0
+    shutil.rmtree(options['output_dir'])

@@ -24,7 +24,7 @@ def test_load_config_file():
 def test_options_has_key():
     cli_options = types.SimpleNamespace(config_file=DIR_PATH + '/files/config.yaml')
     options = asv.Options(cli_options)
-    assert options.has('output_dir')
+    assert options.has('batch_file')
     assert options.has('pre_actions')
     assert options.has('post_actions')
     assert options.has('disseminations')
@@ -34,7 +34,7 @@ def test_options_has_key():
 def test_retrieve_option_with_key():
     cli_options = types.SimpleNamespace(config_file=DIR_PATH + '/files/config.yaml')
     options = asv.Options(cli_options)
-    assert options.get('output_dir') == '/tmp'
+    assert options.get('batch_file') == 'files/batch_file.xml'
     assert isinstance(options.get('pre_actions'), list)
     assert isinstance(options.get('post_actions'), list)
     assert isinstance(options.get('disseminations'), list)

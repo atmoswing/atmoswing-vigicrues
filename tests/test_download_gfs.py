@@ -19,10 +19,10 @@ def options():
                 config_file=DIR_PATH + '/files/config_gfs_download.yaml'
             ))
 
-        action_options = options_full.config['pre_actions'][0]
-        action_options['with']['output_dir'] = tmp_dir
+        action_options = options_full.config['pre_actions'][0]['with']
+        action_options['output_dir'] = tmp_dir
 
-    return action_options['with']
+    return action_options
 
 
 def count_files_recursively(options):

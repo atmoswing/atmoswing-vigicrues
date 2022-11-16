@@ -17,3 +17,7 @@ def test_check_file_exists_succeeds():
         tmp_file = tmp_dir + '/file.txt'
         Path(tmp_file).touch()
         asv.check_file_exists(tmp_file)
+
+
+def test_build_cumulative_frequency():
+    f = asv.utils.build_cumulative_frequency(100)

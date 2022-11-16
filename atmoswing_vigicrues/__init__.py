@@ -11,9 +11,10 @@ from .preactions.transform_ecmwf import TransformEcmwfData
 from .postactions.export_bdapbp import ExportBdApBp
 from .postactions.export_scores import ExportScores
 from .disseminations.transfer_sftp import TransferSftp
-from .utils import check_dir_exists, check_file_exists, build_date_dir_structure
+from .utils import file_exists, check_dir_exists, check_file_exists, \
+    build_date_dir_structure
 
 __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'Controller', 'Options', 'ExportBdApBp', 'ExportScores', 'TransferSftp',
-           'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData',
+           'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData', 'file_exists',
            'check_file_exists', 'check_dir_exists', 'build_date_dir_structure')
