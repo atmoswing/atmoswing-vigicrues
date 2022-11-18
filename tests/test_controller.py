@@ -8,6 +8,7 @@ import pytest
 import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+RUN_ATMOSWING = True
 
 
 def test_controller_instance_fails_if_config_is_none():
@@ -46,3 +47,33 @@ def test_controller_can_instantiate_actions():
         fct = getattr(importlib.import_module('atmoswing_vigicrues'), 'DownloadGfsData')
         action = options.config['pre_actions'][0]
         fct(action['with'])
+
+
+def test_run_atmoswing_now():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()
+
+
+def test_run_atmoswing_date():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_date.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()
+
+
+def test_run_atmoswing_past():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_past.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()

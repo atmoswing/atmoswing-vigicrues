@@ -1,4 +1,5 @@
 import importlib
+import subprocess
 
 import atmoswing_vigicrues as asv
 
@@ -109,7 +110,52 @@ class Controller:
         """
         Exécution d'AtmoSwing.
         """
-        pass
+        run = self.options.get('atmoswing')
+        name = run['name']
+        options = run['with']
+        full_cmd = self._build_atmoswing_cmd(options)
+        print(f"Exécution de '{name}'")
+
+        ret = subprocess.run(full_cmd, capture_output=True)
+
+        if ret.returncode != 0:
+            raise asv.Error("L'exécution de la prévision a échoué.")
+
+    @staticmethod
+    def _build_atmoswing_cmd(options):
+        cmd = '--forecast-now'
+        proxy = ''
+
+        if 'target' in options:
+            if options['target'] == 'now':
+                cmd = '--forecast-now'
+            elif options['target'] == 'past':
+                if 'target_nb_days' not in options or not options['target_nb_days']:
+                    raise asv.Error(f"Option 'target_nb_days' non fournie.")
+                nb_days = options['target_nb_days']
+                cmd = f'--forecast-past={nb_days}'
+            elif options['target'] == 'date':
+                if 'target_date' not in options or not options['target_date']:
+                    raise asv.Error(f"Option 'target_date' non fournie.")
+                date = options['target_date']
+                cmd = f'--forecast-date={date}'
+
+        if 'atmoswing_path' not in options or not options['atmoswing_path']:
+            raise asv.Error(f"Option 'atmoswing_path' non fournie.")
+        atmoswing_path = options['atmoswing_path']
+
+        if 'batch_file' not in options or not options['batch_file']:
+            raise asv.Error(f"Option 'batch_file' non fournie.")
+        batch_file = options['batch_file']
+
+        if 'proxy' in options and options['proxy']:
+            proxy = f"--proxy={options['proxy']} "
+            if 'proxy_user' in options and options['proxy_user']:
+                proxy += f"--proxy-user={options['proxy_user']}"
+
+        full_cmd = f"{atmoswing_path} -f {batch_file} {cmd} {proxy}"
+
+        return full_cmd
 
     def _run_post_actions(self):
         """

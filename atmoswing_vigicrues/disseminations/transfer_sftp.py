@@ -8,26 +8,30 @@ class TransferSftp(Dissemination):
     """
     Transfer des résultats par SFTP.
 
-    Attributes
+    Parameters
     ----------
-    hostname : str
-        Adresse du serveur pour la diffusion des résultats.
-    username: str
-        Utilisateur ayant un accès au serveur.
-    password: str
-        Mot de passe de l'utilisateur sur le serveur.
-    remote_dir: str
-        Chemin sur le serveur distant où enregistrer les fichiers.
+    options: objet
+        L'instance contenant les options de l'action. Les champs possibles sont:
+
+        * hostname : str
+            Adresse du serveur pour la diffusion des résultats.
+        * username : str
+            Utilisateur ayant un accès au serveur.
+        * password : str
+            Mot de passe de l'utilisateur sur le serveur.
+        * remote_dir : str
+            Chemin sur le serveur distant où enregistrer les fichiers.
     """
 
     def __init__(self, options):
         """
         Initialisation de l'instance TransferSftp
         """
-        self.hostname = options.get('hostname')
-        self.username = options.get('username')
-        self.password = options.get('password')
-        self.remote_dir = options.get('remote_dir')
+        self.hostname = options['hostname']
+        self.username = options['username']
+        self.password = options['password']
+        self.remote_dir = options['remote_dir']
+
         super().__init__()
 
     def run(self):

@@ -1,0 +1,11 @@
+# Exemple de fichier de configuration
+
+atmoswing:
+  name: Forecast now
+  with:
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    batch_file: 'files/batch_file.xml'
+    target: 'date'
+    target_date: '2022111000'
+    proxy: ''
+    proxy_user: ''

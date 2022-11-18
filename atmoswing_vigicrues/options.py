@@ -29,6 +29,7 @@ class Options:
         self.config = None
         self._check_options()
         self._load_config()
+        self._override_options()
 
     @property
     def cli_options(self):
@@ -81,7 +82,6 @@ class Options:
         raise asv.OptionError(key)
 
     def _check_options(self):
-        """ Contrôle que certaines options de base sont définies. """
         if self.cli_options is None:
             raise asv.OptionError("Les options fournies sont vides.")
         if not hasattr(self.cli_options, 'config_file') or \
@@ -90,8 +90,10 @@ class Options:
                 "Le chemin du fichier de configuration n'a pas été fourni.")
 
     def _load_config(self):
-        """ Chargement du fichier de configuration. """
         asv.check_file_exists(self.cli_options.config_file)
         with open(self.cli_options.config_file) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
+    def _override_options(self):
+        if hasattr(self.cli_options, 'batch_file'):
+            self.config['atmoswing']['with']['batch_file'] = self.cli_options.batch_file
