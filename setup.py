@@ -7,7 +7,8 @@ requirements = [
     'netCDF4',
     'pysftp',
     'atmoswing-toolbox',
-    'eccodes'
+    'eccodes',
+    'requests'
 ]
 
 setuptools.setup(

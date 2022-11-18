@@ -5,3 +5,4 @@ atmoswing-toolbox
 PyYAML
 pysftp
 python-dateutil
+requests
