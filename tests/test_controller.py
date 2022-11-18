@@ -77,3 +77,13 @@ def test_run_atmoswing_past():
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+
+
+def test_run_atmoswing_now_full_pipeline():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()

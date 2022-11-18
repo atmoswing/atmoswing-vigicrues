@@ -1,3 +1,5 @@
+import datetime
+import glob
 import importlib
 import subprocess
 
@@ -13,6 +15,15 @@ class Controller:
     options : object
         Options de la prévision combinant les arguments passés lors de l'utilisation en
         lignes de commandes et les options du fichier de configuration.
+    verbose : bool
+        Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
+    max_attempts : int
+        Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
+        (soustrayant 6 h). Valeur par défaut : 8
+    time_increment : int
+        Pas de temps (h) auquel émettre la prévision (p. ex. toutes les 6h)
+    date : datetime
+        Date de la prévision.
     """
 
     def __init__(self, cli_options):
@@ -26,6 +37,9 @@ class Controller:
         """
         self.options = asv.Options(cli_options)
         self.verbose = True
+        self.max_attempts = 8
+        self.time_increment = 6
+        self.date = datetime.datetime.utcnow()
         self.pre_actions = []
         self.post_actions = []
         self.disseminations = []
@@ -33,15 +47,25 @@ class Controller:
         self._register_post_actions()
         self._register_disseminations()
 
-    def run(self) -> int:
+    def run(self, date=None) -> int:
         """
         Exécution du flux de la prévision et du postprocessing.
+
+        Parameters
+        ----------
+        date : datetime
+            La date de la prévision (par défaut, la date actuelle est utilisée).
 
         Returns
         -------
         int
             Le code de retour (0 en cas de succès)
         """
+
+        if date:
+            self.date = date
+
+        self._fix_date()
 
         try:
             self._run_pre_actions()
@@ -103,8 +127,18 @@ class Controller:
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
         """
-        for action in self.pre_actions:
-            action.run()
+        attempts = 0
+        while attempts < self.max_attempts:
+            success = True
+            for action in self.pre_actions:
+                if not action.run(self.date):
+                    attempts += 1
+                    success = False
+                    break
+            if success:
+                break
+            else:
+                self._back_in_time()
 
     def _run_atmoswing(self):
         """
@@ -121,14 +155,14 @@ class Controller:
         if ret.returncode != 0:
             raise asv.Error("L'exécution de la prévision a échoué.")
 
-    @staticmethod
-    def _build_atmoswing_cmd(options):
-        cmd = '--forecast-now'
+    def _build_atmoswing_cmd(self, options):
+        now_str = self.date.strftime("%Y%m%d%H")
+        cmd = f'--forecast-date={now_str}'
         proxy = ''
 
         if 'target' in options:
             if options['target'] == 'now':
-                cmd = '--forecast-now'
+                cmd = f'--forecast-date={now_str}'
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
                     raise asv.Error(f"Option 'target_nb_days' non fournie.")
@@ -161,8 +195,9 @@ class Controller:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
+        files = self._list_files()
         for action in self.post_actions:
-            action.feed()
+            action.feed(files, {'forecast_date': self.date})
             action.run()
 
     def _run_disseminations(self):
@@ -176,3 +211,21 @@ class Controller:
     def _display_message(self, message):
         if self.verbose:
             print(message)
+
+    def _fix_date(self):
+        date = self.date
+        if isinstance(date, str):
+            date = datetime.datetime.strptime(date, "%Y-%m-%d %H")
+        hour = date.hour
+        hour = self.time_increment * (hour // self.time_increment)
+        self.date = datetime.datetime(date.year, date.month, date.day, hour)
+
+    def _back_in_time(self):
+        self.date = self.date - datetime.timedelta(hours=self.time_increment)
+
+    def _list_files(self):
+        output_dir = self.options.get('atmoswing')['with']['output_dir']
+        output_dir = asv.utils.build_date_dir_structure(output_dir, self.date)
+        pattern = f"{str(output_dir)}/{self.date.strftime('%Y-%m-%d_%H.*.nc')}"
+        files = glob.glob(pattern)
+        return files

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <atmoswing version="1.0" target="forecaster">
-  <forecasts_output_directory>C:\Users\Pascal\Downloads\atmoswing-tests\output</forecasts_output_directory>
-  <exports_output_directory>C:\Users\Pascal\Downloads\atmoswing-tests\output\Exports</exports_output_directory>
-  <parameters_files_directory>\\NAS-home\Job Pascal\AtmoSwing\Operational\Params-precip-CH-VS\parameters</parameters_files_directory>
-  <predictors_archive_directory>\\NAS-home\Job Data\Meteo\Free\NCEP Reanalysis 1 subsets</predictors_archive_directory>
-  <predictors_realtime_directory>C:\Users\Pascal\Downloads\atmoswing-tests\GFS-realtime</predictors_realtime_directory>
-  <predictand_db_directory>C:\Users\Pascal\Drive Home\AtmoSwing\predictands DB</predictand_db_directory>
+  <forecasts_output_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output</forecasts_output_directory>
+  <exports_output_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output</exports_output_directory>
+  <parameters_files_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing</parameters_files_directory>
+  <predictors_archive_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\NR1</predictors_archive_directory>
+  <predictors_realtime_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\gfs</predictors_realtime_directory>
+  <predictand_db_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing</predictand_db_directory>
   <export_synthetic_xml>0</export_synthetic_xml>
   <forecasts>
-    <filename>PC-AZ4o_Chablais.xml</filename>
-    <filename>PC-AZ4o_CretesSud.xml</filename>
+    <filename>PC-AZ2_CretesSudEst.xml</filename>
+    <filename>PC-AZ2_PartiePrincipale.xml</filename>
   </forecasts>
 </atmoswing>

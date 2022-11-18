@@ -17,26 +17,13 @@ pre_actions:
       output_dir: '/tmp/gfs'
       lead_time_max: 168
       variables: ['hgt']
-      levels: [300, 400, 500, 600, 700, 850, 925, 1000]
+      levels: [500, 1000]
       domain: [-20, 30, 25, 65]
       resolution: 0.5
+      max_attempts: 8
       proxies:
         http: ''
         https: ''
-
-  - name: Transform GFS data
-    uses: TransformGfsData
-    with:
-      input_dir: '/tmp/gfs'
-      output_dir: '/tmp/generic'
-      variables: ['hgt']
-
-  - name: Transform ECMWF data
-    uses: TransformEcmwfData
-    with:
-      input_dir: '/tmp/ecmwf'
-      output_dir: '/tmp/generic'
-      variables: ['hgt']
 
 post_actions:
   - name: Export BdApBp

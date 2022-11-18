@@ -32,10 +32,6 @@ class DownloadGfsData(PreAction):
             Résolution spatiale des données.
             Options: 0.25, 0.50, 1
             Valeur par défaut : 0.25
-        * max_attempts : int
-            Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
-            (soustrayant 6 h).
-            Valeur par défaut : 8
         * proxy_host : str
             L'adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port
         * proxy_user : str
@@ -82,11 +78,6 @@ class DownloadGfsData(PreAction):
                                  "aux options disponibles (0.25, 0.5, 1).")
         else:
             self.resolution = '0p25'
-
-        if 'max_attempts' in options:
-            self.max_attempts = options['max_attempts']
-        else:
-            self.max_attempts = 8
 
         self.proxies = None
         if 'proxies' in options and options['proxies']:
@@ -138,48 +129,42 @@ class DownloadGfsData(PreAction):
 
             for variable in self.variables:
 
-                attempts = 0
-                while attempts < self.max_attempts:
+                forecast_date, forecast_hour = self._format_forecast_date(date)
 
-                    forecast_date, forecast_hour = self._format_forecast_date(date)
+                url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
+                      f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
+                      f"f{lead_time_str}&{levels}var_{variable.upper()}=on&" \
+                      f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
+                      f"{forecast_hour}%2Fatmos"
 
-                    url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
-                          f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
-                          f"f{lead_time_str}&{levels}var_{variable.upper()}=on&" \
-                          f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
-                          f"{forecast_hour}%2Fatmos"
+                file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
+                            f'{variable.lower()}.{lead_time_str}.grib2'
 
-                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
-                                f'{variable.lower()}.{lead_time_str}.grib2'
+                local_path = self._get_local_path(date)
+                file_path = local_path / file_name
 
-                    local_path = self._get_local_path(date)
-                    file_path = local_path / file_name
+                if file_path.exists():
+                    continue
 
-                    if file_path.exists():
-                        print("The GFS forecast were already downloaded.")
-                        return False
-
-                    try:
-                        if self.proxies:
-                            r = requests.get(url, proxies=self.proxies)
-                        else:
-                            r = requests.get(url)
-                    except requests.exceptions.RequestException as e:
-                        print(e)
-                        raise RuntimeError("Le téléchargement de GFS a échoué.")
-                    except:
-                        raise RuntimeError("Le téléchargement de GFS a échoué.")
-
-                    if r.status_code == 200:
-                        open(file_path, 'wb').write(r.content)
-                        break
+                try:
+                    if self.proxies:
+                        r = requests.get(url, proxies=self.proxies)
                     else:
-                        attempts += 1
-                        date = date - timedelta(hours=6)
-                        if attempts >= self.max_attempts:
-                            print(r.status_code)
-                            print(r.text)
+                        r = requests.get(url)
+                except requests.exceptions.RequestException as e:
+                    print(e)
+                    print("Le téléchargement de GFS a échoué.")
+                    return False
+                except:
+                    print("Le téléchargement de GFS a échoué.")
+                    return False
+
+                if r.status_code == 200:
+                    open(file_path, 'wb').write(r.content)
+                    break
                 else:
+                    print(r.status_code)
+                    print(r.text)
                     return False
 
         return True
