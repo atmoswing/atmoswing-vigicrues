@@ -3,6 +3,6 @@ netCDF4
 numpy
 atmoswing-toolbox
 PyYAML
-pysftp
+paramiko
 python-dateutil
 requests

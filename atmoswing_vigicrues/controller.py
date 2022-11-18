@@ -195,7 +195,7 @@ class Controller:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
-        files = self._list_files()
+        files = self._list_atmoswing_output_files()
         for action in self.post_actions:
             action.feed(files, {'forecast_date': self.date})
             action.run()
@@ -205,8 +205,11 @@ class Controller:
         Exécute les opérations de diffusion.
         """
         for action in self.disseminations:
-            action.feed()
-            action.run()
+            local_dir = action.local_dir
+            extension = action.extension
+            files = self._list_files(local_dir, extension)
+            action.feed(files)
+            action.run(self.date)
 
     def _display_message(self, message):
         if self.verbose:
@@ -223,9 +226,12 @@ class Controller:
     def _back_in_time(self):
         self.date = self.date - datetime.timedelta(hours=self.time_increment)
 
-    def _list_files(self):
+    def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']
-        output_dir = asv.utils.build_date_dir_structure(output_dir, self.date)
-        pattern = f"{str(output_dir)}/{self.date.strftime('%Y-%m-%d_%H.*.nc')}"
+        return self._list_files(output_dir, '.nc', '%Y-%m-%d_%H')
+
+    def _list_files(self, local_dir, ext, pattern='%Y-%m-%d_%H'):
+        local_dir = asv.utils.build_date_dir_structure(local_dir, self.date)
+        pattern = f"{str(local_dir)}/{self.date.strftime(pattern)}{f'.*{ext}'}"
         files = glob.glob(pattern)
         return files

@@ -23,6 +23,13 @@ class Dissemination:
         """
         self._file_paths = file_paths
 
-    def run(self):
-        """ Exécution de la diffusion. """
+    def run(self, date):
+        """
+        Exécution de la diffusion.
+
+        Parameters
+        ----------
+        date : datetime
+            Date de la prévision.
+        """
         raise NotImplementedError

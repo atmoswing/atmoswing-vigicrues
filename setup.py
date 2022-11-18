@@ -5,7 +5,7 @@ requirements = [
     'numpy',
     'PyYAML',
     'netCDF4',
-    'pysftp',
+    'paramiko',
     'atmoswing-toolbox',
     'eccodes',
     'requests'
