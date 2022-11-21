@@ -188,7 +188,7 @@ class Controller:
             if 'proxy_user' in options and options['proxy_user']:
                 proxy += f"--proxy-user={options['proxy_user']}"
 
-        full_cmd = f"{atmoswing_path} -f '{batch_file}' {cmd} {proxy}"
+        full_cmd = f"{atmoswing_path} -f \"{batch_file}\" {cmd} {proxy}"
 
         return full_cmd
 
