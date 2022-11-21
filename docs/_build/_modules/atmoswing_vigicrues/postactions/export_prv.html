@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>atmoswing_vigicrues.postactions.export_prv &mdash; AtmoSwing Vigicrues 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> AtmoSwing Vigicrues
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/module.html">Composants</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AtmoSwing Vigicrues</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>atmoswing_vigicrues.postactions.export_prv</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for atmoswing_vigicrues.postactions.export_prv</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">atmoswing_vigicrues</span> <span class="k">as</span> <span class="nn">asv</span>
+<span class="kn">from</span> <span class="nn">netCDF4</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">.postaction</span> <span class="kn">import</span> <span class="n">PostAction</span>
+
+
+<div class="viewcode-block" id="ExportPrv"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv">[docs]</a><span class="k">class</span> <span class="nc">ExportPrv</span><span class="p">(</span><span class="n">PostAction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export des prévisions au format PRV du logiciel Scores.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    options: objet</span>
+<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+
+<span class="sd">        * output_dir : str</span>
+<span class="sd">            Chemin cible pour l&#39;enregistrement des fichiers.</span>
+<span class="sd">        * frequencies : list</span>
+<span class="sd">            Les fréquences à extraire.</span>
+<span class="sd">            Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Export PRV&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_dir&#39;</span><span class="p">]</span>
+        <span class="n">asv</span><span class="o">.</span><span class="n">check_dir_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;frequencies&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;frequencies&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ExportPrv.run"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exécution de la post-action.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span><span class="p">:</span>
+            <span class="n">nc_file</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;NETCDF4&#39;</span><span class="p">)</span>
+            <span class="n">station_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_station_ids</span><span class="p">(</span><span class="n">nc_file</span><span class="p">)</span>
+            <span class="n">header_comments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_header_comments</span><span class="p">(</span><span class="n">nc_file</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">station_id</span> <span class="ow">in</span> <span class="n">station_ids</span><span class="p">:</span>
+                <span class="n">header_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_header_data</span><span class="p">(</span><span class="n">nc_file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">)</span>
+                <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_content</span><span class="p">(</span><span class="n">nc_file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">)</span>
+                <span class="n">full_content</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">header_comments</span><span class="si">}{</span><span class="n">header_data</span><span class="si">}{</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                <span class="c1"># File name</span>
+                <span class="n">file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_file_path</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">full_content</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_header_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
+        <span class="n">list_frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">]</span>
+
+        <span class="n">header</span> <span class="o">=</span> \
+            <span class="sa">f</span><span class="s2">&quot;# Sortie du module ExportPrv de AtmoSwing-Vigicrues</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# origin;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">origin</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# creation_date;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">creation_date</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# method_id;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# specific_tag;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">specific_tag</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# dataset_id;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">predictand_dataset_id</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;# freqs;</span><span class="si">{</span><span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_frequencies</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">header</span>
+
+    <span class="k">def</span> <span class="nf">_create_header_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> \
+            <span class="sa">f</span><span class="s2">&quot;Stations;</span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;Grandeur;RR</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;IdSeries;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_build_id_series</span><span class="p">(</span><span class="n">nc_file</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">header</span>
+
+    <span class="k">def</span> <span class="nf">_create_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">):</span>
+        <span class="c1"># Extracting variables</span>
+        <span class="n">station_ids</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;station_ids&#39;</span><span class="p">][:]</span>
+        <span class="n">target_dates</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;target_dates&#39;</span><span class="p">][:]</span>
+        <span class="n">target_dates</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">mjd_to_datetime</span><span class="p">(</span><span class="n">target_dates</span><span class="p">)</span>
+        <span class="n">analogs_nb</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;analogs_nb&#39;</span><span class="p">][:]</span>
+        <span class="n">analog_values</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;analog_values_raw&#39;</span><span class="p">][:]</span>
+
+        <span class="n">time_format_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_time_format</span><span class="p">(</span><span class="n">target_dates</span><span class="p">)</span>
+        <span class="n">i_station</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">station_ids</span> <span class="o">==</span> <span class="n">station_id</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">i_target</span><span class="p">,</span> <span class="n">target_date</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target_dates</span><span class="p">):</span>
+            <span class="c1"># Get start/end of the analogs</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">analogs_nb</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i_target</span><span class="p">])</span>
+            <span class="n">n_analogs</span> <span class="o">=</span> <span class="n">analogs_nb</span><span class="p">[</span><span class="n">i_target</span><span class="p">]</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">n_analogs</span>
+
+            <span class="c1"># Extract relevant values and build frequencies</span>
+            <span class="n">analog_values_sub</span> <span class="o">=</span> <span class="n">analog_values</span><span class="p">[</span><span class="n">i_station</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="n">analog_values_sub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">analog_values_sub</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="n">frequencies</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">build_cumulative_frequency</span><span class="p">(</span><span class="n">n_analogs</span><span class="p">)</span>
+
+            <span class="n">target_date_str</span> <span class="o">=</span> <span class="n">target_date</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_format_target</span><span class="p">)</span>
+            <span class="n">new_line</span> <span class="o">=</span> <span class="n">target_date_str</span>
+
+            <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">analog_values_sub</span><span class="p">)</span>
+                <span class="n">new_line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;;</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">content</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">content</span>
+
+    <span class="k">def</span> <span class="nf">_get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">local_path</span>
+
+    <span class="k">def</span> <span class="nf">_build_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">station_id</span><span class="p">):</span>
+        <span class="n">original_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">original_file_name</span><span class="p">:</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">original_file_name</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_missing&#39;</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">original_file_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">.csv&#39;</span>
+        <span class="k">if</span> <span class="s1">&#39;.nc&#39;</span> <span class="ow">in</span> <span class="n">original_file_name</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">original_file_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.nc&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">)</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_metadata</span><span class="p">(</span><span class="s1">&#39;forecast_date&#39;</span><span class="p">))</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">file_name</span>
+        <span class="k">return</span> <span class="n">file_path</span>
+
+    <span class="k">def</span> <span class="nf">_build_id_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">specific_tag</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">;&quot;</span>
+        <span class="k">return</span> <span class="n">ids</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_time_format</span><span class="p">(</span><span class="n">target_dates</span><span class="p">):</span>
+        <span class="n">time_step</span> <span class="o">=</span> <span class="n">target_dates</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">show_hour</span> <span class="o">=</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span>
+        <span class="n">time_format_target</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">show_hour</span><span class="p">:</span>
+            <span class="n">time_format_target</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M&quot;</span>
+        <span class="k">return</span> <span class="n">time_format_target</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Pascal Horton.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
