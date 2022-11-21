@@ -176,7 +176,12 @@ class DownloadGfsData(PreAction):
         return local_path
 
     def _build_levels_request(self):
-        levels = [f'lev_{int(level)}_mb=on&' for level in self.levels]
+        levels = []
+        for level in self.levels:
+            if isinstance(level, str) and level == 'surface':
+                levels.append(f'lev_surface=on&')
+            if isinstance(level, int) or isinstance(level, float):
+                levels.append(f'lev_{int(level)}_mb=on&')
         levels = ''.join(levels)
         return levels
 
