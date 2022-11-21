@@ -28,6 +28,7 @@ class ExportBdApBp(PostAction):
     """
 
     def __init__(self, options):
+        self.name = "Export BdApBp"
         self.status = 100
         self.message = ""
 

@@ -73,16 +73,20 @@ def test_download_gfs_default_succeeds(options):
     shutil.rmtree(options['output_dir'])
 
 
-def test_download_gfs_for_today_succeeds(options):
+def test_download_gfs_with_surface_var(options):
+    options['levels'] = [500, 1000, 'surface']
     action = asv.DownloadGfsData(options)
-    assert action.run(datetime.utcnow())
+    date = datetime.utcnow() - timedelta(days=1)
+    assert action.run(date)
     assert count_files_recursively(options) == 3
     shutil.rmtree(options['output_dir'])
 
 
-def test_download_gfs_skipped_if_exists_locally(options):
+def test_download_gfs_entire_atmosphere_var(options):
+    options['levels'] = ['entire_atmosphere']
+    options['variables'] = ['pwat']
     action = asv.DownloadGfsData(options)
-    assert action.run(datetime.utcnow())
+    date = datetime.utcnow() - timedelta(days=1)
+    assert action.run(date)
     assert count_files_recursively(options) == 3
-    assert action.run(datetime.utcnow()) is False
     shutil.rmtree(options['output_dir'])

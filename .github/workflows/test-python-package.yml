@@ -5,9 +5,13 @@ name: Test Python package
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+      - dev
 
 jobs:
   build:
@@ -29,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
+        python -m pip install flake8 pytest setuptools build
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
     - name: Lint with flake8
@@ -42,8 +46,11 @@ jobs:
     - name: Present working dir
       run: pwd
 
-    - name: Install the library
-      run: python setup.py install
+    - name: Build
+      run: python -m build
+
+    - name: Install
+      run: pip install -e .
 
     - name: Test with pytest
       run: |

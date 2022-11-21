@@ -1,5 +1,5 @@
 import atmoswing_vigicrues as asv
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
 
 from .preaction import PreAction
@@ -39,6 +39,7 @@ class DownloadGfsData(PreAction):
     """
 
     def __init__(self, options):
+        self.name = "Téléchargement GFS"
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 
@@ -163,8 +164,8 @@ class DownloadGfsData(PreAction):
                     open(file_path, 'wb').write(r.content)
                     break
                 else:
-                    print(r.status_code)
-                    print(r.text)
+                    # print(r.status_code)
+                    # print(r.text)
                     return False
 
         return True
@@ -175,7 +176,15 @@ class DownloadGfsData(PreAction):
         return local_path
 
     def _build_levels_request(self):
-        levels = [f'lev_{int(level)}_mb=on&' for level in self.levels]
+        levels = []
+        for level in self.levels:
+            if isinstance(level, str) and level == 'surface':
+                levels.append(f'lev_surface=on&')
+            if isinstance(level, str) and level == 'entire_atmosphere':
+                levels.append('lev_entire_atmosphere_%5C%28considered'
+                              '_as_a_single_layer%5C%29=on&')
+            if isinstance(level, int) or isinstance(level, float):
+                levels.append(f'lev_{int(level)}_mb=on&')
         levels = ''.join(levels)
         return levels
 
@@ -184,7 +193,7 @@ class DownloadGfsData(PreAction):
         right_lon = self.domain[1]
         bottom_lat = self.domain[2]
         top_lat = self.domain[3]
-        subregion = f'leftlon={left_lon}&rightlon={right_lon}&' \
+        subregion = f'subregion=&leftlon={left_lon}&rightlon={right_lon}&' \
                     f'toplat={top_lat}&bottomlat={bottom_lat}'
         return subregion
 

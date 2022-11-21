@@ -1,15 +1,9 @@
-import atmoswing_vigicrues as asv
-
-
 class Dissemination:
     """
     Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.
     """
 
     def __init__(self):
-        """
-        Initialisation de l'instance Dissemination
-        """
         self._file_paths = []
 
     def feed(self, file_paths):
