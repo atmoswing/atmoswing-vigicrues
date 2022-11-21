@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y libeccodes netcdf-bin ca-certificates
+    && apt-get install -y libeccodes0 netcdf-bin ca-certificates
 
 # Copy source code
 COPY ./ .
