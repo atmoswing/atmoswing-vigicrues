@@ -1,5 +1,5 @@
 import atmoswing_vigicrues as asv
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
 
 from .preaction import PreAction

@@ -1,6 +1,3 @@
-import atmoswing_vigicrues as asv
-
-
 class Dissemination:
     """
     Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.
