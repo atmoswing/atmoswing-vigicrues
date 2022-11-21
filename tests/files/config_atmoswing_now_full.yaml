@@ -3,9 +3,9 @@
 atmoswing:
   name: Forecast now
   with:
-    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    atmoswing_path: 'D:\Development\atmoswing\cmake-build-release\bin\atmoswing-forecaster.exe'
     batch_file: 'files/batch_file.xml'
-    output_dir: 'path/to/outputs/as/in/batch/file'
+    output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
     target: 'now'
     proxy: ''
     proxy_user: ''
@@ -14,7 +14,7 @@ pre_actions:
   - name: Download GFS data
     uses: DownloadGfsData
     with:
-      output_dir: '/tmp/gfs'
+      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\gfs'
       lead_time_max: 168
       variables: ['hgt']
       levels: [500, 1000]
@@ -29,21 +29,46 @@ post_actions:
   - name: Export BdApBp
     uses: ExportBdApBp
     with:
-      output_dir: '/tmp'
+      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
       number_analogs: 10
       only_relevant_stations: True
 
   - name: Export PRV for Scores
     uses: ExportPrv
     with:
-      output_dir: '/tmp'
+      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
       frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
 
 disseminations:
-  - name: Transfer SFTP
+  - name: Transfer SFTP netcdf
     uses: TransferSftp
     with:
+      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
+      extension: '.nc'
       hostname: '127.0.0.1'
-      username: 'username'
-      password: 'secret'
-      remote_dir: 'public'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: 'upload/netcdf'
+
+  - name: Transfer SFTP prv
+    uses: TransferSftp
+    with:
+      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
+      extension: '.json'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: 'upload/json'
+
+  - name: Transfer SFTP prv
+    uses: TransferSftp
+    with:
+      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
+      extension: '.csv'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: 'upload/prv'
