@@ -8,7 +8,7 @@ import pytest
 import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
-RUN_ATMOSWING = True
+RUN_ATMOSWING = False
 
 
 def test_controller_instance_fails_if_config_is_none():
