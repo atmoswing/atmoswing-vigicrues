@@ -4,9 +4,7 @@ class Dissemination:
     """
 
     def __init__(self):
-        """
-        Initialisation de l'instance Dissemination
-        """
+        self.name = "Dissémination"
         self._file_paths = []
 
     def feed(self, file_paths):

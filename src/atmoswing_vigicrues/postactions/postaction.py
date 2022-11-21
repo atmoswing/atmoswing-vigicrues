@@ -9,6 +9,7 @@ class PostAction:
     """
 
     def __init__(self):
+        self.name = "Post-action"
         self._file_paths = []
         self._file_contents = []
         self._metadata = None

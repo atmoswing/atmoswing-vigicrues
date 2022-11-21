@@ -25,6 +25,7 @@ class ExportPrv(PostAction):
     """
 
     def __init__(self, options):
+        self.name = "Export PRV"
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 

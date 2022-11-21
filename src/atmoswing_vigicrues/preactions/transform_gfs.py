@@ -27,6 +27,7 @@ class TransformGfsData(PreAction):
                 Variables à télécharger.
                 Valeur par défaut: ['hgt']
         """
+        self.name = "Transformation données GFS"
         self.input_dir = options.get('transform_gfs_input_dir')
         self.output_dir = options.get('transform_gfs_output_dir')
         asv.check_dir_exists(self.output_dir, True)

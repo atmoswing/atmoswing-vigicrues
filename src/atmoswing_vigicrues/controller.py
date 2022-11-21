@@ -131,6 +131,7 @@ class Controller:
         while attempts < self.max_attempts:
             success = True
             for action in self.pre_actions:
+                self._display_message(f"Exécution de : '{action.name}'")
                 if not action.run(self.date):
                     attempts += 1
                     success = False
@@ -148,7 +149,7 @@ class Controller:
         name = run['name']
         options = run['with']
         full_cmd = self._build_atmoswing_cmd(options)
-        print(f"Exécution de '{name}'")
+        self._display_message(f"Exécution de : '{name}'")
 
         ret = subprocess.run(full_cmd, capture_output=True)
 
@@ -197,6 +198,7 @@ class Controller:
         """
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
+            self._display_message(f"Exécution de : '{action.name}'")
             action.feed(files, {'forecast_date': self.date})
             action.run()
 
@@ -205,6 +207,7 @@ class Controller:
         Exécute les opérations de diffusion.
         """
         for action in self.disseminations:
+            self._display_message(f"Exécution de : '{action.name}'")
             local_dir = action.local_dir
             extension = action.extension
             files = self._list_files(local_dir, extension)

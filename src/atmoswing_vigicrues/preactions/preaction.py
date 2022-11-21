@@ -4,9 +4,7 @@ class PreAction:
     """
 
     def __init__(self):
-        """
-        Initialisation de l'instance PreAction
-        """
+        self.name = "Pré-action"
 
     def run(self, date) -> bool:
         """ Exécution de la pre-action. """

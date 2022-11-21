@@ -36,6 +36,7 @@ class TransferSftp(Dissemination):
         """
         Initialisation de l'instance TransferSftp
         """
+        self.name = "Transfert SFTP"
         self.local_dir = options['local_dir']
         self.extension = options['extension']
         self.hostname = options['hostname']

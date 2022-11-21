@@ -27,6 +27,7 @@ class TransformEcmwfData(PreAction):
                 Variables à télécharger.
                 Valeur par défaut: ['hgt']
         """
+        self.name = "Transformation données ECMWF"
         self.input_dir = options.get('transform_ecmwf_input_dir')
         self.output_dir = options.get('transform_ecmwf_output_dir')
         asv.check_dir_exists(self.output_dir, True)

@@ -39,6 +39,7 @@ class DownloadGfsData(PreAction):
     """
 
     def __init__(self, options):
+        self.name = "Téléchargement GFS"
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 
@@ -163,8 +164,8 @@ class DownloadGfsData(PreAction):
                     open(file_path, 'wb').write(r.content)
                     break
                 else:
-                    print(r.status_code)
-                    print(r.text)
+                    # print(r.status_code)
+                    # print(r.text)
                     return False
 
         return True
