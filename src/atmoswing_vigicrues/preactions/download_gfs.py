@@ -180,6 +180,9 @@ class DownloadGfsData(PreAction):
         for level in self.levels:
             if isinstance(level, str) and level == 'surface':
                 levels.append(f'lev_surface=on&')
+            if isinstance(level, str) and level == 'entire_atmosphere':
+                levels.append('lev_entire_atmosphere_%5C%28considered'
+                              '_as_a_single_layer%5C%29=on&')
             if isinstance(level, int) or isinstance(level, float):
                 levels.append(f'lev_{int(level)}_mb=on&')
         levels = ''.join(levels)
@@ -190,7 +193,7 @@ class DownloadGfsData(PreAction):
         right_lon = self.domain[1]
         bottom_lat = self.domain[2]
         top_lat = self.domain[3]
-        subregion = f'leftlon={left_lon}&rightlon={right_lon}&' \
+        subregion = f'subregion=&leftlon={left_lon}&rightlon={right_lon}&' \
                     f'toplat={top_lat}&bottomlat={bottom_lat}'
         return subregion
 
