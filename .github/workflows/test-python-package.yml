@@ -42,8 +42,11 @@ jobs:
     - name: Present working dir
       run: pwd
 
-    - name: Install the library
-      run: python setup.py install
+    - name: Build
+      run: python -m build
+
+    - name: Install
+      run: pip install -e .
 
     - name: Test with pytest
       run: |
