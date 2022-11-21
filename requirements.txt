@@ -1,0 +1,8 @@
+eccodes
+netCDF4
+numpy
+atmoswing-toolbox
+PyYAML
+paramiko
+python-dateutil
+requests
