@@ -13,6 +13,7 @@ atmoswing:
 pre_actions:
   - name: Download GFS data
     uses: DownloadGfsData
+    active: True
     with:
       output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\gfs'
       lead_time_max: 168
@@ -28,6 +29,7 @@ pre_actions:
 post_actions:
   - name: Export BdApBp
     uses: ExportBdApBp
+    active: True
     with:
       output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
       number_analogs: 10
@@ -35,6 +37,7 @@ post_actions:
 
   - name: Export PRV for Scores
     uses: ExportPrv
+    enable: True
     with:
       output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
       frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
@@ -42,6 +45,7 @@ post_actions:
 disseminations:
   - name: Transfer SFTP netcdf
     uses: TransferSftp
+    active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
       extension: '.nc'
@@ -53,6 +57,7 @@ disseminations:
 
   - name: Transfer SFTP prv
     uses: TransferSftp
+    active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
       extension: '.json'
@@ -64,6 +69,7 @@ disseminations:
 
   - name: Transfer SFTP prv
     uses: TransferSftp
+    active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
       extension: '.csv'

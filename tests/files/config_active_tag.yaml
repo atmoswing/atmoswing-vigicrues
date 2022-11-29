@@ -1,0 +1,79 @@
+# Exemple de fichier de configuration
+
+pre_actions:
+  - name: Download hgt GFS data
+    uses: DownloadGfsData
+    active: True
+    with:
+      output_dir: '/tmp'
+      variables: ['hgt']
+
+  - name: Download pwat GFS data
+    uses: DownloadGfsData
+    with:
+      output_dir: '/tmp'
+      variables: ['pwat']
+
+  - name: Download rhum GFS data
+    uses: DownloadGfsData
+    active: False
+    with:
+      output_dir: '/tmp'
+      variables: ['rhum']
+
+post_actions:
+  - name: Export BdApBp
+    uses: ExportBdApBp
+    active: True
+    with:
+      output_dir: '/tmp'
+      number_analogs: 10
+
+  - name: Export BdApBp
+    uses: ExportBdApBp
+    with:
+      output_dir: '/tmp'
+      number_analogs: 10
+
+  - name: Export BdApBp
+    uses: ExportBdApBp
+    active: False
+    with:
+      output_dir: '/tmp'
+      number_analogs: 10
+
+disseminations:
+  - name: Transfer SFTP netcdf
+    uses: TransferSftp
+    active: True
+    with:
+      local_dir: '/tmp'
+      extension: '.nc'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: '/tmp'
+
+  - name: Transfer SFTP json
+    uses: TransferSftp
+    with:
+      local_dir: '/tmp'
+      extension: '.json'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: '/tmp'
+
+  - name: Transfer SFTP csv
+    uses: TransferSftp
+    active: False
+    with:
+      local_dir: '/tmp'
+      extension: '.csv'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: '/tmp'

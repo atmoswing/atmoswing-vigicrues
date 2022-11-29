@@ -87,6 +87,8 @@ class Controller:
         """
         if self.options.has('pre_actions'):
             for action in self.options.get('pre_actions'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la pre-action '{name}'")
@@ -101,6 +103,8 @@ class Controller:
         """
         if self.options.has('post_actions'):
             for action in self.options.get('post_actions'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la post-action '{name}'")
@@ -115,6 +119,8 @@ class Controller:
         """
         if self.options.has('disseminations'):
             for action in self.options.get('disseminations'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la disseminations '{name}'")
