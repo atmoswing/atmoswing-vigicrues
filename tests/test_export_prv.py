@@ -1,5 +1,6 @@
 import glob
 import os
+import shutil
 import tempfile
 import types
 
@@ -46,4 +47,14 @@ def test_export_prv_runs(options, forecast_files, metadata):
     export = asv.ExportPrv(options)
     export.feed(forecast_files, metadata)
     export.run()
+    assert count_files_recursively(options) == 3
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_prv_runs_separate_files(options, forecast_files, metadata):
+    options['combine_stations_in_one_file'] = False
+    export = asv.ExportPrv(options)
+    export.feed(forecast_files, metadata)
+    export.run()
     assert count_files_recursively(options) == 21
+    shutil.rmtree(options['output_dir'])

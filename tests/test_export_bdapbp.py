@@ -111,5 +111,5 @@ def test_export_bdapbp_with_all_stations(options, forecast_files, metadata):
         file_path = options['output_dir'] + '/2022/10/01/' + created_file
         with open(file_path) as f:
             data = json.load(f)
-            assert data['statut'] == 0
+            assert data['status'] == 0
     shutil.rmtree(options['output_dir'])
