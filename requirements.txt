@@ -2,5 +2,6 @@ netCDF4
 numpy
 PyYAML
 paramiko
+PySocks
 python-dateutil
 requests

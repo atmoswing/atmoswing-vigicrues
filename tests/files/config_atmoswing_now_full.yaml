@@ -53,6 +53,8 @@ disseminations:
       port: 4422
       username: 'foo'
       password: 'pass'
+      proxy_host: ''
+      proxy_port: ''
       remote_dir: 'upload/netcdf'
 
   - name: Transfer SFTP prv
@@ -65,6 +67,8 @@ disseminations:
       port: 4422
       username: 'foo'
       password: 'pass'
+      proxy_host: ''
+      proxy_port: ''
       remote_dir: 'upload/json'
 
   - name: Transfer SFTP prv
@@ -77,4 +81,6 @@ disseminations:
       port: 4422
       username: 'foo'
       password: 'pass'
+      proxy_host: ''
+      proxy_port: ''
       remote_dir: 'upload/prv'
