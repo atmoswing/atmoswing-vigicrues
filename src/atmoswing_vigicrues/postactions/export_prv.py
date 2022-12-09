@@ -3,7 +3,6 @@ import numpy as np
 from pathlib import Path
 
 import atmoswing_vigicrues as asv
-from netCDF4 import Dataset
 
 from .postaction import PostAction
 
@@ -27,6 +26,9 @@ class ExportPrv(PostAction):
     """
 
     def __init__(self, options):
+        if not asv.has_netcdf:
+            raise ImportError("Le paquet netCDF4 est requis pour cette action.")
+
         self.name = "Export PRV"
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
@@ -43,15 +45,12 @@ class ExportPrv(PostAction):
 
         super().__init__()
 
-    def __del__(self):
-        super().__del__()
-
     def run(self):
         """
         Exécution de la post-action.
         """
         for file in self._file_paths:
-            nc_file = Dataset(file, 'r', format='NETCDF4')
+            nc_file = asv.Dataset(file, 'r', format='NETCDF4')
             station_ids = self._extract_station_ids(nc_file)
             header_comments = self._create_header_comments(nc_file)
             if self.combine_stations_in_one_file:
@@ -75,6 +74,8 @@ class ExportPrv(PostAction):
 
                     with open(file_path, 'w', encoding="utf-8", newline='\r\n') as outfile:
                         outfile.write(full_content)
+
+            nc_file.close()
 
     def _create_header_comments(self, nc_file):
         list_frequencies = [str(int(100 * i)) for i in self.frequencies]

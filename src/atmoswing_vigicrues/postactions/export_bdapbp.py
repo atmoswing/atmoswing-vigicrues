@@ -2,7 +2,6 @@ import json
 import datetime
 import numpy as np
 from pathlib import Path
-from netCDF4 import Dataset
 
 import atmoswing_vigicrues as asv
 
@@ -30,6 +29,9 @@ class ExportBdApBp(PostAction):
     """
 
     def __init__(self, options):
+        if not asv.has_netcdf:
+            raise ImportError("Le paquet netCDF4 est requis pour cette action.")
+
         self.name = "Export BdApBp"
         self.status = 100
         self.message = ""
@@ -56,9 +58,6 @@ class ExportBdApBp(PostAction):
 
         super().__init__()
 
-    def __del__(self):
-        super().__del__()
-
     def run(self):
         """
         Exécution de la post-action.
@@ -79,7 +78,7 @@ class ExportBdApBp(PostAction):
                 self.message = "Absence du fichier netcdf."
             else:
                 try:
-                    nc_file = Dataset(file, 'r', format='NETCDF4')
+                    nc_file = asv.Dataset(file, 'r', format='NETCDF4')
                 except:
                     self.status = 110
                     self.message = "Fichier netcdf corrompu."
@@ -120,6 +119,9 @@ class ExportBdApBp(PostAction):
                     json.dump(data, outfile, indent=4, ensure_ascii=False)
                 else:
                     json.dump(data, outfile, ensure_ascii=False)
+
+            if nc_file:
+                nc_file.close()
 
     def _create_metadata_block(self, nc_file):
         block = {
