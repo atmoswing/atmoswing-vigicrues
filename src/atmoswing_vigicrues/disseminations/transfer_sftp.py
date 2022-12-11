@@ -49,10 +49,10 @@ class TransferSftp(Dissemination):
         self.password = options['password']
         self.remote_dir = options['remote_dir']
 
-        if options.has('proxy_host'):
-            self.proxy_host = options.get('proxy_host')
-            if options.has('proxy_port'):
-                self.proxy_port = options.get('proxy_port')
+        if 'proxy_host' in options:
+            self.proxy_host = options['proxy_host']
+            if 'proxy_port' in options:
+                self.proxy_port = options['proxy_port']
             else:
                 self.proxy_port = 1080
         else:
