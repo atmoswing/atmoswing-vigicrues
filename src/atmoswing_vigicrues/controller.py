@@ -158,10 +158,14 @@ class Controller:
         self._display_message(f"Exécution de : '{name}'")
         print("Commande: " + full_cmd)
 
-        ret = subprocess.run(full_cmd, capture_output=True)
+        try:
+            ret = subprocess.run(full_cmd, capture_output=True)
 
-        if ret.returncode != 0:
-            raise asv.Error("L'exécution de la prévision a échoué.")
+            if ret.returncode != 0:
+                print("L'exécution de la prévision a échoué.")
+                raise asv.Error("L'exécution de la prévision a échoué.")
+        except Exception as e:
+            print(f"Exception lors de l'exécution de la prévision: {e}")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
