@@ -2,4 +2,8 @@
 from setuptools import setup
 
 if __name__ == "__main__":
-    setup()
+    setup(
+        name="atmoswing-vigicrues",
+        version="0.9.2",
+        author="Pascal Horton",
+    )

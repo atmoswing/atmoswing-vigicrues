@@ -1,22 +1,23 @@
 ##
-# terranum/voltoo:bullseye
+# atmoswing/atmoswing-vigicrues
 
 # Steps ordered from the less frequently changed to the more frequently
 # changed to ensure the build cache is reused.
 
-FROM python:3.11
+FROM atmoswing/forecaster:main
 
 WORKDIR /app
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y libeccodes0 netcdf-bin ca-certificates
+    && apt-get install -y libeccodes0 netcdf-bin ca-certificates python3-pip
 
 # Copy source code
 COPY ./ .
 
 # Install Python dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt \
+    && pip install -r requirements-optional.txt
 
 # Install own module
 RUN pip install -e .
