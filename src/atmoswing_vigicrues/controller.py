@@ -187,8 +187,9 @@ class Controller:
                 cmd = f'--forecast-date={date}'
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            raise asv.Error(f"Option 'atmoswing_path' non fournie.")
-        atmoswing_path = options['atmoswing_path']
+            atmoswing_path = 'atmoswing-forecaster'
+        else:
+            atmoswing_path = options['atmoswing_path']
 
         if 'batch_file' not in options or not options['batch_file']:
             raise asv.Error(f"Option 'batch_file' non fournie.")
@@ -199,7 +200,7 @@ class Controller:
             if 'proxy_user' in options and options['proxy_user']:
                 proxy += f"--proxy-user={options['proxy_user']}"
 
-        full_cmd = f"{atmoswing_path} -f \"{batch_file}\" {cmd} {proxy}"
+        full_cmd = [atmoswing_path, "-f", batch_file, cmd, proxy]
 
         return full_cmd
 
