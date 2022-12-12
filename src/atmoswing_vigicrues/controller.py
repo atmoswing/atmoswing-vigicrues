@@ -159,7 +159,7 @@ class Controller:
         print("Commande: " + str(full_cmd))
 
         try:
-            ret = subprocess.run(full_cmd, capture_output=True)
+            ret = subprocess.run(full_cmd, capture_output=True, shell=True, check=True)
 
             if ret.returncode != 0:
                 print("L'exécution de la prévision a échoué.")
@@ -171,6 +171,17 @@ class Controller:
         now_str = self.date.strftime("%Y%m%d%H")
         cmd = f'--forecast-date={now_str}'
         proxy = ''
+
+        if 'atmoswing_path' not in options or not options['atmoswing_path']:
+            atmoswing_path = 'atmoswing-forecaster'
+        else:
+            atmoswing_path = options['atmoswing_path']
+        full_cmd = [atmoswing_path]
+
+        if 'batch_file' not in options or not options['batch_file']:
+            raise asv.Error(f"Option 'batch_file' non fournie.")
+        full_cmd.append('-f')
+        full_cmd.append(options['batch_file'])
 
         if 'target' in options:
             if options['target'] == 'now':
@@ -185,22 +196,12 @@ class Controller:
                     raise asv.Error(f"Option 'target_date' non fournie.")
                 date = options['target_date']
                 cmd = f'--forecast-date={date}'
-
-        if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            atmoswing_path = 'atmoswing-forecaster'
-        else:
-            atmoswing_path = options['atmoswing_path']
-
-        if 'batch_file' not in options or not options['batch_file']:
-            raise asv.Error(f"Option 'batch_file' non fournie.")
-        batch_file = options['batch_file']
+        full_cmd.append(cmd)
 
         if 'proxy' in options and options['proxy']:
-            proxy = f"--proxy={options['proxy']} "
+            full_cmd.append(f"--proxy={options['proxy']}")
             if 'proxy_user' in options and options['proxy_user']:
-                proxy += f"--proxy-user={options['proxy_user']}"
-
-        full_cmd = [atmoswing_path, "-f", batch_file, cmd, proxy]
+                full_cmd.append(f"--proxy-user={options['proxy_user']}")
 
         return full_cmd
 
