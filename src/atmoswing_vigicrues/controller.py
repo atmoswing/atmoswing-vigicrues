@@ -173,29 +173,29 @@ class Controller:
         proxy = ''
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            atmoswing_path = 'atmoswing-forecaster'
+            atmoswing_path = "atmoswing-forecaster"
         else:
             atmoswing_path = options['atmoswing_path']
         full_cmd = [atmoswing_path]
 
         if 'batch_file' not in options or not options['batch_file']:
             raise asv.Error(f"Option 'batch_file' non fournie.")
-        full_cmd.append('-f')
+        full_cmd.append("-f")
         full_cmd.append(options['batch_file'])
 
         if 'target' in options:
             if options['target'] == 'now':
-                cmd = f'--forecast-date={now_str}'
+                cmd = f"--forecast-date={now_str}"
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
                     raise asv.Error(f"Option 'target_nb_days' non fournie.")
                 nb_days = options['target_nb_days']
-                cmd = f'--forecast-past={nb_days}'
+                cmd = f"--forecast-past={nb_days}"
             elif options['target'] == 'date':
                 if 'target_date' not in options or not options['target_date']:
                     raise asv.Error(f"Option 'target_date' non fournie.")
                 date = options['target_date']
-                cmd = f'--forecast-date={date}'
+                cmd = f"--forecast-date={date}"
         full_cmd.append(cmd)
 
         if 'proxy' in options and options['proxy']:
