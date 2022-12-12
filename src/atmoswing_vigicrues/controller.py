@@ -156,7 +156,7 @@ class Controller:
         options = run['with']
         full_cmd = self._build_atmoswing_cmd(options)
         self._display_message(f"Exécution de : '{name}'")
-        print("Commande: " + full_cmd)
+        print("Commande: " + str(full_cmd))
 
         try:
             ret = subprocess.run(full_cmd, capture_output=True)
