@@ -3,6 +3,5 @@ numpy
 PyYAML
 paramiko
 PySocks
-python-crontab
 python-dateutil
 requests
