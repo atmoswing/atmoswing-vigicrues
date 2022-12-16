@@ -43,7 +43,7 @@ def test_download_gfs_025_succeeds(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
 
 
@@ -52,7 +52,7 @@ def test_download_gfs_050_succeeds(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
 
 
@@ -61,7 +61,7 @@ def test_download_gfs_100_succeeds(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
 
 
@@ -69,7 +69,7 @@ def test_download_gfs_default_succeeds(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.download(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
 
 
@@ -78,7 +78,7 @@ def test_download_gfs_with_surface_var(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.run(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
 
 
@@ -88,5 +88,5 @@ def test_download_gfs_entire_atmosphere_var(options):
     action = asv.DownloadGfsData(options)
     date = datetime.utcnow() - timedelta(days=1)
     assert action.run(date)
-    assert count_files_recursively(options) == 3
+    assert count_files_recursively(options) == 3 * 4
     shutil.rmtree(options['output_dir'])
