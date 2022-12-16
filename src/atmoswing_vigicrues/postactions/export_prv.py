@@ -136,14 +136,21 @@ class ExportPrv(PostAction):
 
             for station_id in station_ids:
                 i_station = np.where(ids == station_id)
-                assert len(i_station) == 1
+                if len(i_station[0]) == 0:
+                    raise RuntimeError("La station n'a pas été trouvée lors de "
+                                       "l'export PRV.")
+                if len(i_station[0]) > 1:
+                    raise RuntimeError("Le nombre d'entités trouvées est supérieur à 1"
+                                       " lors de l'export PRV.")
                 # Extract relevant values and build frequencies
                 analog_values_sub = analog_values[i_station, start:end]
                 analog_values_sub = np.sort(analog_values_sub).flatten()
                 frequencies = asv.utils.build_cumulative_frequency(n_analogs)
 
                 for freq in self.frequencies:
-                    assert len(frequencies) == len(analog_values_sub)
+                    if len(frequencies) != len(analog_values_sub):
+                        raise RuntimeError("La taille des vecteurs dans l'export PRV "
+                                           "n'est pas cohérente.")
                     val = np.interp(freq, frequencies, analog_values_sub)
                     new_line += f";{round(val, 2)}"
 

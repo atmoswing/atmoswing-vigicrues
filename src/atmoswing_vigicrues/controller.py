@@ -74,11 +74,11 @@ class Controller:
             self._run_disseminations()
         except asv.Error as e:
             print("La prévision a échoué.")
-            print(e)
+            print(f"Erreur: {e}")
             return -1
         except Exception as e:
             print("La prévision a échoué.")
-            print(e)
+            print(f"Erreur: {e}")
             return -1
 
         return 0

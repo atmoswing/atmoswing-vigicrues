@@ -58,3 +58,15 @@ def test_export_prv_runs_separate_files(options, forecast_files, metadata):
     export.run()
     assert count_files_recursively(options) == 21
     shutil.rmtree(options['output_dir'])
+
+
+def test_export_prv_runs_multi_time_steps(options):
+    files = glob.glob(DIR_PATH + "/files/atmoswing-forecasts-v2.1/2022/12/16/*.nc")
+    metadata = {
+        "forecast_date": "2022-12-16 00:00:00",
+    }
+    export = asv.ExportPrv(options)
+    export.feed(files, metadata)
+    export.run()
+    assert count_files_recursively(options) == 4
+    shutil.rmtree(options['output_dir'])
