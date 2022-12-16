@@ -136,12 +136,14 @@ class ExportPrv(PostAction):
 
             for station_id in station_ids:
                 i_station = np.where(ids == station_id)
+                assert len(i_station) == 1
                 # Extract relevant values and build frequencies
                 analog_values_sub = analog_values[i_station, start:end]
                 analog_values_sub = np.sort(analog_values_sub).flatten()
                 frequencies = asv.utils.build_cumulative_frequency(n_analogs)
 
                 for freq in self.frequencies:
+                    assert len(frequencies) == len(analog_values_sub)
                     val = np.interp(freq, frequencies, analog_values_sub)
                     new_line += f";{round(val, 2)}"
 
