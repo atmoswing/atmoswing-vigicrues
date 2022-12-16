@@ -169,41 +169,43 @@ class Controller:
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
-        cmd = f'--forecast-date={now_str}'
         proxy = ''
+        cmd = []
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            atmoswing_path = "atmoswing-forecaster"
+            cmd.append("sh")
+            cmd.append("-c")
+            cmd.append("atmoswing-forecaster")
         else:
-            atmoswing_path = options['atmoswing_path']
-        full_cmd = [atmoswing_path]
+            cmd.append(options['atmoswing_path'])
 
         if 'batch_file' not in options or not options['batch_file']:
             raise asv.Error(f"Option 'batch_file' non fournie.")
-        full_cmd.append("-f")
-        full_cmd.append(options['batch_file'])
+        cmd.append("-f")
+        cmd.append(options['batch_file'])
 
         if 'target' in options:
             if options['target'] == 'now':
-                cmd = f"--forecast-date={now_str}"
+                cmd.append(f"--forecast-date={now_str}")
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
                     raise asv.Error(f"Option 'target_nb_days' non fournie.")
                 nb_days = options['target_nb_days']
-                cmd = f"--forecast-past={nb_days}"
+                cmd.append(f"--forecast-past={nb_days}")
             elif options['target'] == 'date':
                 if 'target_date' not in options or not options['target_date']:
                     raise asv.Error(f"Option 'target_date' non fournie.")
                 date = options['target_date']
-                cmd = f"--forecast-date={date}"
-        full_cmd.append(cmd)
+                cmd.append(f"--forecast-date={date}")
+        else:
+            cmd.append(f"--forecast-date={now_str}")
 
         if 'proxy' in options and options['proxy']:
-            full_cmd.append(f"--proxy={options['proxy']}")
+            cmd.append(f"--proxy={options['proxy']}")
             if 'proxy_user' in options and options['proxy_user']:
-                full_cmd.append(f"--proxy-user={options['proxy_user']}")
+                cmd.append(f"--proxy-user={options['proxy_user']}")
 
-        return full_cmd
+        return cmd
 
     def _run_post_actions(self):
         """
