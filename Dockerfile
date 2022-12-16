@@ -23,4 +23,4 @@ RUN pip install -r requirements.txt \
 RUN pip install -e .
 
 
-ENTRYPOINT ["python3", "/app/cli.py"]
+ENTRYPOINT ["python3", "-m", "atmoswing_vigicrues"]
