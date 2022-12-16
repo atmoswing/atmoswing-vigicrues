@@ -154,12 +154,12 @@ class Controller:
         run = self.options.get('atmoswing')
         name = run['name']
         options = run['with']
-        full_cmd = self._build_atmoswing_cmd(options)
+        cmd = self._build_atmoswing_cmd(options)
         self._display_message(f"Exécution de : '{name}'")
-        print("Commande: " + ' '.join(full_cmd))
+        print("Commande: " + ' '.join(cmd))
 
         try:
-            ret = subprocess.run(full_cmd, capture_output=True, check=True)
+            ret = subprocess.run(cmd, capture_output=True, check=True)
 
             if ret.returncode != 0:
                 print("L'exécution d'AtmoSwing Forecaster a échoué.")
@@ -175,8 +175,6 @@ class Controller:
         cmd = []
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            cmd.append("sh")
-            cmd.append("-c")
             cmd.append("atmoswing-forecaster")
         else:
             cmd.append(options['atmoswing_path'])
