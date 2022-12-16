@@ -135,6 +135,9 @@ class Controller:
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
         """
+        if not self.pre_actions:
+            return
+
         attempts = 0
         while attempts < self.max_attempts:
             success = True
@@ -213,6 +216,9 @@ class Controller:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
+        if not self.post_actions:
+            return
+
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
             self._display_message(f"Exécution de : '{action.name}'")
@@ -223,6 +229,9 @@ class Controller:
         """
         Exécute les opérations de diffusion.
         """
+        if not self.disseminations:
+            return
+
         for action in self.disseminations:
             self._display_message(f"Exécution de : '{action.name}'")
             local_dir = action.local_dir
