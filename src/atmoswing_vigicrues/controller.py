@@ -72,11 +72,13 @@ class Controller:
             self._run_atmoswing()
             self._run_post_actions()
             self._run_disseminations()
-        except asv.Error:
+        except asv.Error as e:
             print("La prévision a échoué.")
+            print(e)
             return -1
-        except Exception:
+        except Exception as e:
             print("La prévision a échoué.")
+            print(e)
             return -1
 
         return 0
