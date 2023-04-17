@@ -54,7 +54,7 @@ post_actions:
 
 disseminations:
   - name: Transfer SFTP
-    uses: TransferSftp
+    uses: TransferSftpOut
     with:
       hostname: '127.0.0.1'
       username: 'username'

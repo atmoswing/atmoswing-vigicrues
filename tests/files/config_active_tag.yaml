@@ -44,7 +44,7 @@ post_actions:
 
 disseminations:
   - name: Transfer SFTP netcdf
-    uses: TransferSftp
+    uses: TransferSftpOut
     active: True
     with:
       local_dir: '/tmp'
@@ -56,7 +56,7 @@ disseminations:
       remote_dir: '/tmp'
 
   - name: Transfer SFTP json
-    uses: TransferSftp
+    uses: TransferSftpOut
     with:
       local_dir: '/tmp'
       extension: '.json'
@@ -67,7 +67,7 @@ disseminations:
       remote_dir: '/tmp'
 
   - name: Transfer SFTP csv
-    uses: TransferSftp
+    uses: TransferSftpOut
     active: False
     with:
       local_dir: '/tmp'
