@@ -1,15 +1,18 @@
 import os
+import fnmatch
+from pathlib import Path
+import tarfile
 
 import paramiko, socks
 
 import atmoswing_vigicrues as asv
 
-from .dissemination import Dissemination
+from .preaction import PreAction
 
 
-class TransferSftp(Dissemination):
+class TransferSftpIn(PreAction):
     """
-    Transfer des résultats par SFTP.
+    Récupération des prévisions des modèles météo par SFTP.
 
     Parameters
     ----------
@@ -17,11 +20,11 @@ class TransferSftp(Dissemination):
         L'instance contenant les options de l'action. Les champs possibles sont:
 
         * local_dir : str
-            Répertoire local contenant les fichiers à exporter.
-        * extension : str
-            Extension des fichiers à exporter.
+            Répertoire cible pour l'enregistrement des fichiers.
+        * prefix : str
+            Prefix des fichiers à importer.
         * hostname : str
-            Adresse du serveur pour la diffusion des résultats.
+            Adresse du serveur distant.
         * port : int
             Port du serveur distant.
         * username : str
@@ -33,7 +36,7 @@ class TransferSftp(Dissemination):
         * proxy_port : int
             Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
-            Chemin sur le serveur distant où enregistrer les fichiers.
+            Chemin sur le serveur distant où se trouvent les fichiers.
     """
 
     def __init__(self, options):
@@ -42,7 +45,7 @@ class TransferSftp(Dissemination):
         """
         self.name = "Transfert SFTP"
         self.local_dir = options['local_dir']
-        self.extension = options['extension']
+        self.prefix = options['prefix']
         self.hostname = options['hostname']
         self.port = options['port']
         self.username = options['username']
@@ -62,7 +65,7 @@ class TransferSftp(Dissemination):
 
     def run(self, date):
         """
-        Exécution de la diffusion par SFTP.
+        Exécution de la récupération par SFTP.
 
         Parameters
         ----------
@@ -84,15 +87,18 @@ class TransferSftp(Dissemination):
 
             transport.connect(None, self.username, self.password)
             sftp = paramiko.SFTPClient.from_transport(transport)
-            self._chdir_or_mkdir(self.remote_dir, sftp)
-            self._chdir_or_mkdir(date.strftime('%Y'), sftp)
-            self._chdir_or_mkdir(date.strftime('%m'), sftp)
-            self._chdir_or_mkdir(date.strftime('%d'), sftp)
+            sftp.chdir(self.remote_dir)
 
-            for file in self._file_paths:
-                filename = os.path.basename(file)
-                asv.check_file_exists(file)
-                sftp.put(file, filename)
+            local_path = Path(self._get_local_path(date))
+            forecast_date = date.strftime("%Y%m%d")
+
+            for remote_file in sftp.listdir('.'):
+                if fnmatch.fnmatch(remote_file, f'{self.prefix}*_{forecast_date}*.*'):
+                    local_file = local_path / remote_file
+                    if local_file.exists():
+                        continue
+                    sftp.get(remote_file, str(local_file))
+                    self._unpack_if_needed(local_file, local_path)
 
             if sftp:
                 sftp.close()
@@ -116,9 +122,26 @@ class TransferSftp(Dissemination):
         except Exception as e:
             print(f"La diffusion SFTP a échoué ({e}).")
 
-    def _chdir_or_mkdir(self, dir, sftp):
+    @staticmethod
+    def _chdir_or_mkdir(dir_path, sftp):
         try:
-            sftp.chdir(dir)
+            sftp.chdir(dir_path)
         except IOError:
-            sftp.mkdir(dir)
-            sftp.chdir(dir)
+            sftp.mkdir(dir_path)
+            sftp.chdir(dir_path)
+
+    def _get_local_path(self, date):
+        local_path = asv.build_date_dir_structure(self.local_dir, date)
+        local_path.mkdir(parents=True, exist_ok=True)
+        return local_path
+
+    @staticmethod
+    def _unpack_if_needed(local_file, local_path):
+        if local_file.suffix in ['.gz', '.tgz', '.xz', '.txz', '.bz2',
+                                 '.tbz', '.tbz2', '.tb2']:
+            file = tarfile.open(local_file)
+            for member in file.getmembers():
+                if member.isreg():
+                    member.name = os.path.basename(member.name)
+                    file.extract(member, local_path)
+            file.close()
