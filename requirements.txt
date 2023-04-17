@@ -1,8 +1,7 @@
-eccodes
 netCDF4
 numpy
-atmoswing-toolbox
 PyYAML
 paramiko
+PySocks
 python-dateutil
 requests

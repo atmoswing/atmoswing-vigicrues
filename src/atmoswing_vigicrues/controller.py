@@ -72,11 +72,13 @@ class Controller:
             self._run_atmoswing()
             self._run_post_actions()
             self._run_disseminations()
-        except asv.Error:
+        except asv.Error as e:
             print("La prévision a échoué.")
+            print(f"Erreur: {e}")
             return -1
-        except Exception:
+        except Exception as e:
             print("La prévision a échoué.")
+            print(f"Erreur: {e}")
             return -1
 
         return 0
@@ -87,6 +89,8 @@ class Controller:
         """
         if self.options.has('pre_actions'):
             for action in self.options.get('pre_actions'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la pre-action '{name}'")
@@ -101,6 +105,8 @@ class Controller:
         """
         if self.options.has('post_actions'):
             for action in self.options.get('post_actions'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la post-action '{name}'")
@@ -115,6 +121,8 @@ class Controller:
         """
         if self.options.has('disseminations'):
             for action in self.options.get('disseminations'):
+                if 'active' in action and not action['active']:
+                    continue
                 name = action['name']
                 module = action['uses']
                 self._display_message(f"Chargement de la disseminations '{name}'")
@@ -127,6 +135,9 @@ class Controller:
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
         """
+        if not self.pre_actions:
+            return
+
         attempts = 0
         while attempts < self.max_attempts:
             success = True
@@ -148,54 +159,66 @@ class Controller:
         run = self.options.get('atmoswing')
         name = run['name']
         options = run['with']
-        full_cmd = self._build_atmoswing_cmd(options)
+        cmd = self._build_atmoswing_cmd(options)
         self._display_message(f"Exécution de : '{name}'")
+        print("Commande: " + ' '.join(cmd))
 
-        ret = subprocess.run(full_cmd, capture_output=True)
+        try:
+            ret = subprocess.run(cmd, capture_output=True, check=True)
 
-        if ret.returncode != 0:
-            raise asv.Error("L'exécution de la prévision a échoué.")
+            if ret.returncode != 0:
+                print("L'exécution d'AtmoSwing Forecaster a échoué.")
+                raise asv.Error("L'exécution d'AtmoSwing Forecaster a échoué.")
+            else:
+                print("AtmoSwing Forecaster a été exécuté avec succès.")
+        except Exception as e:
+            print(f"Exception lors de l'exécution d'AtmoSwing Forecaster: {e}")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
-        cmd = f'--forecast-date={now_str}'
         proxy = ''
+        cmd = []
+
+        if 'atmoswing_path' not in options or not options['atmoswing_path']:
+            cmd.append("atmoswing-forecaster")
+        else:
+            cmd.append(options['atmoswing_path'])
+
+        if 'batch_file' not in options or not options['batch_file']:
+            raise asv.Error(f"Option 'batch_file' non fournie.")
+        cmd.append("-f")
+        cmd.append(options['batch_file'])
 
         if 'target' in options:
             if options['target'] == 'now':
-                cmd = f'--forecast-date={now_str}'
+                cmd.append(f"--forecast-date={now_str}")
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
                     raise asv.Error(f"Option 'target_nb_days' non fournie.")
                 nb_days = options['target_nb_days']
-                cmd = f'--forecast-past={nb_days}'
+                cmd.append(f"--forecast-past={nb_days}")
             elif options['target'] == 'date':
                 if 'target_date' not in options or not options['target_date']:
                     raise asv.Error(f"Option 'target_date' non fournie.")
                 date = options['target_date']
-                cmd = f'--forecast-date={date}'
-
-        if 'atmoswing_path' not in options or not options['atmoswing_path']:
-            raise asv.Error(f"Option 'atmoswing_path' non fournie.")
-        atmoswing_path = options['atmoswing_path']
-
-        if 'batch_file' not in options or not options['batch_file']:
-            raise asv.Error(f"Option 'batch_file' non fournie.")
-        batch_file = options['batch_file']
+                cmd.append(f"--forecast-date={date}")
+        else:
+            cmd.append(f"--forecast-date={now_str}")
 
         if 'proxy' in options and options['proxy']:
-            proxy = f"--proxy={options['proxy']} "
+            cmd.append(f"--proxy={options['proxy']}")
             if 'proxy_user' in options and options['proxy_user']:
-                proxy += f"--proxy-user={options['proxy_user']}"
+                cmd.append(f"--proxy-user={options['proxy_user']}")
 
-        full_cmd = f"{atmoswing_path} -f \"{batch_file}\" {cmd} {proxy}"
-
-        return full_cmd
+        return cmd
 
     def _run_post_actions(self):
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
+        if not self.post_actions:
+            return
+
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
             self._display_message(f"Exécution de : '{action.name}'")
@@ -206,6 +229,9 @@ class Controller:
         """
         Exécute les opérations de diffusion.
         """
+        if not self.disseminations:
+            return
+
         for action in self.disseminations:
             self._display_message(f"Exécution de : '{action.name}'")
             local_dir = action.local_dir

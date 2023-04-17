@@ -35,6 +35,6 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         context: .
-        file: build/docker/Dockerfile
+        file: Dockerfile
         push: true
-        tags: terranum/atmoswing-vigicrues:latest
+        tags: atmoswing/atmoswing-vigicrues:latest

@@ -34,6 +34,15 @@ def test_controller_instance_succeeds():
     asv.Controller(options)
 
 
+def test_controller_active_option():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_active_tag.yaml')
+    controller = asv.Controller(options)
+    assert len(controller.pre_actions) == 2
+    assert len(controller.post_actions) == 2
+    assert len(controller.disseminations) == 2
+
+
 def test_controller_can_identify_non_existing_actions():
     assert not hasattr(importlib.import_module('atmoswing_vigicrues'), 'FakeAction')
 

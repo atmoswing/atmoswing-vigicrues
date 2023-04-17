@@ -1,6 +1,6 @@
 import os
 
-import paramiko
+import paramiko, socks
 
 import atmoswing_vigicrues as asv
 
@@ -28,6 +28,10 @@ class TransferSftp(Dissemination):
             Utilisateur ayant un accès au serveur.
         * password : str
             Mot de passe de l'utilisateur sur le serveur.
+        * proxy_host : str
+            Adresse du proxy, si nécessaire.
+        * proxy_port : int
+            Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
     """
@@ -45,6 +49,15 @@ class TransferSftp(Dissemination):
         self.password = options['password']
         self.remote_dir = options['remote_dir']
 
+        if 'proxy_host' in options:
+            self.proxy_host = options['proxy_host']
+            if 'proxy_port' in options:
+                self.proxy_port = options['proxy_port']
+            else:
+                self.proxy_port = 1080
+        else:
+            self.proxy_host = None
+
         super().__init__()
 
     def run(self, date):
@@ -57,7 +70,18 @@ class TransferSftp(Dissemination):
             Date de la prévision.
         """
         try:
-            transport = paramiko.Transport((self.hostname, self.port))
+            if self.proxy_host:
+                sock = socks.socksocket()
+                sock.set_proxy(
+                    proxy_type=socks.SOCKS5,
+                    addr=self.proxy_host,
+                    port=self.proxy_port
+                )
+                sock.connect((self.hostname, self.port))
+                transport = paramiko.Transport(sock)
+            else:
+                transport = paramiko.Transport((self.hostname, self.port))
+
             transport.connect(None, self.username, self.password)
             sftp = paramiko.SFTPClient.from_transport(transport)
             self._chdir_or_mkdir(self.remote_dir, sftp)

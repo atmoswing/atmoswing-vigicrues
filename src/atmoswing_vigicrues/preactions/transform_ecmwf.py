@@ -1,6 +1,7 @@
 import atmoswing_vigicrues as asv
 from datetime import datetime
-#from atmoswing_toolbox.datasets import generic, grib_dataset
+#if asv.has_eccodes and asv.has_netcdf:
+#    from atmoswing_toolbox.datasets import generic, grib_dataset
 
 
 from .preaction import PreAction
@@ -27,6 +28,11 @@ class TransformEcmwfData(PreAction):
                 Variables à télécharger.
                 Valeur par défaut: ['hgt']
         """
+        if not asv.has_netcdf:
+            raise ImportError("Le paquet netCDF4 est requis pour cette action.")
+        if not asv.has_eccodes:
+            raise ImportError("Le paquet eccodes est requis pour cette action.")
+
         self.name = "Transformation données ECMWF"
         self.input_dir = options.get('transform_ecmwf_input_dir')
         self.output_dir = options.get('transform_ecmwf_output_dir')

@@ -1,5 +1,5 @@
 import atmoswing_vigicrues as asv
-from datetime import datetime
+import datetime
 import requests
 
 from .preaction import PreAction
@@ -88,6 +88,10 @@ class DownloadGfsData(PreAction):
                     self.proxies = proxies
                     continue
 
+        # Télécharge également les 4 pas de temps précédents (pas de temps de 6 h)
+        self.time_increment = 6
+        self.time_step_back = 4
+
         super().__init__()
 
     def run(self, date) -> bool:
@@ -125,48 +129,52 @@ class DownloadGfsData(PreAction):
         if resol == '0p50':
             sub_product = 'pgrb2full'
 
-        for lead_time in range(0, self.lead_time_max + 1, 6):
-            lead_time_str = f'{lead_time:03d}'
+        for time_step_back in range(0, self.time_step_back):
+            date_ref = date - datetime.timedelta(
+                hours=self.time_increment * time_step_back
+            )
+            for lead_time in range(0, self.lead_time_max + 1, 6):
+                lead_time_str = f'{lead_time:03d}'
 
-            for variable in self.variables:
+                for variable in self.variables:
 
-                forecast_date, forecast_hour = self._format_forecast_date(date)
+                    forecast_date, forecast_hour = self._format_forecast_date(date_ref)
 
-                url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
-                      f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
-                      f"f{lead_time_str}&{levels}var_{variable.upper()}=on&" \
-                      f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
-                      f"{forecast_hour}%2Fatmos"
+                    url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
+                          f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
+                          f"f{lead_time_str}&{levels}var_{variable.upper()}=on&" \
+                          f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
+                          f"{forecast_hour}%2Fatmos"
 
-                file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
-                            f'{variable.lower()}.{lead_time_str}.grib2'
+                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
+                                f'{variable.lower()}.{lead_time_str}.grib2'
 
-                local_path = self._get_local_path(date)
-                file_path = local_path / file_name
+                    local_path = self._get_local_path(date_ref)
+                    file_path = local_path / file_name
 
-                if file_path.exists():
-                    continue
+                    if file_path.exists():
+                        continue
 
-                try:
-                    if self.proxies:
-                        r = requests.get(url, proxies=self.proxies)
+                    try:
+                        if self.proxies:
+                            r = requests.get(url, proxies=self.proxies)
+                        else:
+                            r = requests.get(url)
+                    except requests.exceptions.RequestException as e:
+                        print(e)
+                        print("Le téléchargement de GFS a échoué.")
+                        return False
+                    except Exception:
+                        print("Le téléchargement de GFS a échoué.")
+                        return False
+
+                    if r.status_code == 200:
+                        open(file_path, 'wb').write(r.content)
+                        break
                     else:
-                        r = requests.get(url)
-                except requests.exceptions.RequestException as e:
-                    print(e)
-                    print("Le téléchargement de GFS a échoué.")
-                    return False
-                except:
-                    print("Le téléchargement de GFS a échoué.")
-                    return False
-
-                if r.status_code == 200:
-                    open(file_path, 'wb').write(r.content)
-                    break
-                else:
-                    # print(r.status_code)
-                    # print(r.text)
-                    return False
+                        # print(r.status_code)
+                        # print(r.text)
+                        return False
 
         return True
 

@@ -2,7 +2,6 @@ import json
 import datetime
 import numpy as np
 from pathlib import Path
-from netCDF4 import Dataset
 
 import atmoswing_vigicrues as asv
 
@@ -25,9 +24,14 @@ class ExportBdApBp(PostAction):
             -1 pour toutes les analogues.
         * only_relevant_stations : bool
             Exporter uniquement les stations pour lesquelles la méthode a été calibrée.
+        * use_indentation : bool
+            Ajouter une indentation aux fichiers produits.
     """
 
     def __init__(self, options):
+        if not asv.has_netcdf:
+            raise ImportError("Le paquet netCDF4 est requis pour cette action.")
+
         self.name = "Export BdApBp"
         self.status = 100
         self.message = ""
@@ -45,12 +49,14 @@ class ExportBdApBp(PostAction):
         else:
             self.only_relevant_stations = True
 
+        if 'use_indentation' in options:
+            self.use_indentation = options['use_indentation']
+        else:
+            self.use_indentation = False
+
         self._reset_status()
 
         super().__init__()
-
-    def __del__(self):
-        super().__del__()
 
     def run(self):
         """
@@ -72,7 +78,7 @@ class ExportBdApBp(PostAction):
                 self.message = "Absence du fichier netcdf."
             else:
                 try:
-                    nc_file = Dataset(file, 'r', format='NETCDF4')
+                    nc_file = asv.Dataset(file, 'r', format='NETCDF4')
                 except:
                     self.status = 110
                     self.message = "Fichier netcdf corrompu."
@@ -88,12 +94,17 @@ class ExportBdApBp(PostAction):
                 self.status = 200
                 self.message = "Erreur lors du traitement fichier netcdf."
 
+            exported_analogs = "full"
+            if self.number_analogs > 0:
+                exported_analogs = f"{self.number_analogs} best"
+
             data = {
-                'statut': self.status,
-                'rapport': {
-                    'fichier': file.name,
+                'status': self.status,
+                'report': {
+                    'file': file.name,
                     'date': self._get_now_formatted(),
-                    'message': self.message
+                    'message': self.message,
+                    'exported_analogs': exported_analogs
                 },
                 'metadata': metadata,
                 'data': data,
@@ -104,7 +115,13 @@ class ExportBdApBp(PostAction):
             file_path = self._build_file_path(file)
 
             with open(file_path, "w", encoding="utf-8", newline='\r\n') as outfile:
-                json.dump(data, outfile, indent=4, ensure_ascii=False)
+                if self.use_indentation:
+                    json.dump(data, outfile, indent=4, ensure_ascii=False)
+                else:
+                    json.dump(data, outfile, ensure_ascii=False)
+
+            if nc_file:
+                nc_file.close()
 
     def _create_metadata_block(self, nc_file):
         block = {
@@ -124,12 +141,20 @@ class ExportBdApBp(PostAction):
                 'specific_tag': nc_file.specific_tag,
                 'specific_tag_display': nc_file.specific_tag_display,
             },
-            'entites': {
-                'names': self._to_str_dict(nc_file['station_names'][:]),
-                'ids': self._to_int_dict(nc_file['station_ids'][:]),
-                'official_ids': self._to_str_dict(nc_file['station_official_ids'][:])
-            },
+            'entities': self._create_entities_block(nc_file),
         }
+
+        return block
+
+    @staticmethod
+    def _create_entities_block(nc_file):
+        ids = [str(x) for x in nc_file['station_ids'][:]]
+        names = [str(x) for x in nc_file['station_names'][:]]
+        oids = [str(x) for x in nc_file['station_official_ids'][:]]
+
+        block = {}
+        for id, name, oid in zip(ids, names, oids):
+            block[id] = [name, oid]
 
         return block
 
@@ -158,7 +183,7 @@ class ExportBdApBp(PostAction):
             i_station = np.where(station_ids == station_id)
             block_target_date = {}
             for i_target, target_date in enumerate(target_dates):
-                block_analogs = {}
+                block_analogs = []
 
                 # Get start/end of the analogs
                 start = np.sum(analogs_nb[0:i_target])
@@ -188,13 +213,12 @@ class ExportBdApBp(PostAction):
                     frequency = frequency[0:self.number_analogs]
 
                 for i_analog, analog_date in enumerate(analog_dates_sub):
-                    block_analogs[str(i_analog)] = {
-                        '0': int(ranks[i_analog]),
-                        '1': round(frequency[i_analog], 3),
-                        '2': analog_date.item().strftime(time_format_analogs),
-                        '3': round(float(analog_criteria_sub[i_analog]), 2),
-                        '4': round(float(analog_values_sub[i_analog]), 2)
-                    }
+                    block_analogs.append([
+                        round(frequency[i_analog], 3),
+                        analog_date.item().strftime(time_format_analogs),
+                        round(float(analog_criteria_sub[i_analog]), 2),
+                        round(float(analog_values_sub[i_analog]), 2)
+                    ])
 
                 target_date_str = target_date.item().strftime(time_format_target)
                 block_target_date[target_date_str] = block_analogs
@@ -222,7 +246,7 @@ class ExportBdApBp(PostAction):
             i_station = np.where(station_ids == station_id)
             block_target_date = {}
             for i_target, target_date in enumerate(target_dates):
-                block_analogs = {}
+                block_analogs = []
 
                 # Get start/end of the analogs
                 start = np.sum(analogs_nb[0:i_target])
@@ -239,10 +263,10 @@ class ExportBdApBp(PostAction):
                 frequency = np.flip(frequency)
 
                 for i_analog, analog_value in enumerate(analog_values_sub):
-                    block_analogs[str(i_analog)] = {
-                        '0': round(frequency[i_analog], 3),
-                        '1': round(float(analog_value), 2)
-                    }
+                    block_analogs.append([
+                        round(frequency[i_analog], 3),
+                        round(float(analog_value), 2)
+                    ])
 
                 target_date_str = target_date.item().strftime(time_format_target)
                 block_target_date[target_date_str] = block_analogs
@@ -298,3 +322,4 @@ class ExportBdApBp(PostAction):
         output_dir = self._get_output_path(self._get_metadata('forecast_date'))
         file_path = output_dir / file_name
         return file_path
+

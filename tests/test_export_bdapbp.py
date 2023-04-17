@@ -47,7 +47,7 @@ def test_export_bdapbp_reports_if_files_not_found(options, metadata):
     file_path = options['output_dir'] + '/2022/10/01/path.json'
     with open(file_path) as f:
         data = json.load(f)
-        assert data['statut'] == 200
+        assert data['status'] == 200
     shutil.rmtree(options['output_dir'])
 
 
@@ -71,7 +71,7 @@ def test_export_bdapbp_runs(options, forecast_files, metadata):
         file_path = options['output_dir'] + '/2022/10/01/' + created_file
         with open(file_path) as f:
             data = json.load(f)
-            assert data['statut'] == 0
+            assert data['status'] == 0
     shutil.rmtree(options['output_dir'])
 
 
@@ -91,7 +91,7 @@ def test_export_bdapbp_with_no_limit(options, forecast_files, metadata):
         file_path = options['output_dir'] + '/2022/10/01/' + created_file
         with open(file_path) as f:
             data = json.load(f)
-            assert data['statut'] == 0
+            assert data['status'] == 0
     shutil.rmtree(options['output_dir'])
 
 
@@ -111,5 +111,5 @@ def test_export_bdapbp_with_all_stations(options, forecast_files, metadata):
         file_path = options['output_dir'] + '/2022/10/01/' + created_file
         with open(file_path) as f:
             data = json.load(f)
-            assert data['statut'] == 0
+            assert data['status'] == 0
     shutil.rmtree(options['output_dir'])
