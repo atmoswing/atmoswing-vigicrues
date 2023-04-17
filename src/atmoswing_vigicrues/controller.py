@@ -38,7 +38,7 @@ class Controller:
         self.options = asv.Options(cli_options)
         self.verbose = True
         self.max_attempts = 8
-        self.time_increment = 24
+        self.time_increment = 6
         self.date = datetime.datetime.utcnow()
         self.pre_actions = []
         self.post_actions = []
