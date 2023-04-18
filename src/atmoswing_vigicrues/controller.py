@@ -176,7 +176,6 @@ class Controller:
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
-        proxy = ''
         cmd = []
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
