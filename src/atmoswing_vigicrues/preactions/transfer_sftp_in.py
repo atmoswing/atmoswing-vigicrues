@@ -63,7 +63,7 @@ class TransferSftpIn(PreAction):
 
         super().__init__()
 
-    def run(self, date):
+    def run(self, date) -> bool:
         """
         Exécution de la récupération par SFTP.
 
@@ -107,20 +107,30 @@ class TransferSftpIn(PreAction):
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
+            return False
         except paramiko.ssh_exception.BadAuthenticationType as e:
             print(f"SFTP BadAuthenticationType {e}")
+            return False
         except paramiko.ssh_exception.AuthenticationException as e:
             print(f"SFTP AuthenticationException {e}")
+            return False
         except paramiko.ssh_exception.ChannelException as e:
             print(f"SFTP ChannelException {e}")
+            return False
         except paramiko.ssh_exception.ProxyCommandFailure as e:
             print(f"SFTP ProxyCommandFailure {e}")
+            return False
         except paramiko.ssh_exception.SSHException as e:
             print(f"SFTP SSHException {e}")
+            return False
         except FileNotFoundError as e:
             print(f"SFTP FileNotFoundError {e}")
+            return False
         except Exception as e:
             print(f"Le rapatriement des données par SFTP a échoué ({e}).")
+            return False
+
+        return True
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):
