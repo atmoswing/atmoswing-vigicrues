@@ -120,7 +120,7 @@ class TransferSftpIn(PreAction):
         except FileNotFoundError as e:
             print(f"SFTP FileNotFoundError {e}")
         except Exception as e:
-            print(f"La diffusion SFTP a échoué ({e}).")
+            print(f"Le rapatriement des données par SFTP a échoué ({e}).")
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):

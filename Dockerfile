@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y libeccodes0 netcdf-bin ca-certificates python3-pip
+    && apt-get install -y libeccodes0 netcdf-bin ca-certificates python3-pip ssh
 
 # Copy source code
 COPY ./ .
