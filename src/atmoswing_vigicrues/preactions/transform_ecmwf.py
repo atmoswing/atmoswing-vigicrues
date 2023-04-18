@@ -78,7 +78,7 @@ class TransformEcmwfData(PreAction):
         forecast_date, forecast_hour = self._format_forecast_date(date)
 
         for variable in self.variables:
-            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS_Forecast.' \
+            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
                                 f'{variable.lower()}.*.grib2'
 
             input_files = sorted(input_dir.glob(file_name_pattern))

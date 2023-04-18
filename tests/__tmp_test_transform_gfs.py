@@ -43,7 +43,7 @@ def test_eccodes_import():
     if not has_required_packages():
         return
     file = Path(DIR_PATH) / 'files' / 'gfs-grib2' / '2022' / '10' / '01'
-    file = file / '2022100100.NWS_GFS_Forecast.hgt.006.grib2'
+    file = file / '2022100100.NWS_GFS.hgt.006.grib2'
     assert file.exists()
     f = open(file, 'rb')
     msgid = asv.eccodes.codes_new_from_file(f, asv.eccodes.CODES_PRODUCT_GRIB)

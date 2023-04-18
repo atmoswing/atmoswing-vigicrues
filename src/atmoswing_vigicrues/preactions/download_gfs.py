@@ -146,7 +146,7 @@ class DownloadGfsData(PreAction):
                           f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
                           f"{forecast_hour}%2Fatmos"
 
-                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
+                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS.' \
                                 f'{variable.lower()}.{lead_time_str}.grib2'
 
                     local_path = self._get_local_path(date_ref)
