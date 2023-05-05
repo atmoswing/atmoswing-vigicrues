@@ -96,3 +96,14 @@ def test_run_atmoswing_now_full_pipeline():
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+
+
+def test_special_characters_in_config_file():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_with_special_characters.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    decoded_password = controller.options.config['pre_actions'][0]['with']['password']
+    assert decoded_password == '@#°§&£¢$*[]{}()+'
+
