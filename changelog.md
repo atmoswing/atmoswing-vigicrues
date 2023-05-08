@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.0.3 - 08 Mai 2023
+
+### Changements
+
+*   Mise à jour de l'image d'AtmoSwing Forecaster.
+
+
 ## v1.0.2 - 05 Mai 2023
 
 ### Résolu
