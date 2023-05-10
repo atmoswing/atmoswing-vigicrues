@@ -164,6 +164,7 @@ class Controller:
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
         print(f"Exécution de : '{name}'")
+        print(f"Prévision pour la date : {self.date.strftime('%Y-%m-%d %H')}")
         print("Commande: " + ' '.join(cmd))
 
         try:
