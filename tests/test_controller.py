@@ -116,3 +116,13 @@ def test_catches_atmoswing_when_failing():
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+
+
+def test_flux_stops_when_preprocess_failing():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
+        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()

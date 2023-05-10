@@ -154,6 +154,7 @@ class Controller:
                 self._back_in_time()
         else:
             print("  -> Échec de l'exécution")
+            raise asv.Error(f"Nombre maximum de tentatives atteint pour la pré-action.")
 
     def _run_atmoswing(self):
         """
