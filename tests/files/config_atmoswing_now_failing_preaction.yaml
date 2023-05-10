@@ -1,0 +1,26 @@
+# Exemple de fichier de configuration
+
+atmoswing:
+  name: Forecast now
+  with:
+    atmoswing_path: 'D:\Development\atmoswing\cmake-build-release\bin\atmoswing-forecaster.exe'
+    batch_file: 'files/batch_file.xml'
+    output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
+    target: 'now'
+    proxy: ''
+    proxy_user: ''
+
+pre_actions:
+  - name: Transfer SFTP CEP
+    uses: TransferSftpIn
+    active: True
+    with:
+      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\cep'
+      prefix: 'CEP'
+      hostname: 'some.sftp.address'
+      port: 22
+      username: ''
+      password: ''
+      remote_dir: '/some/directory'
+      proxy_host: ''
+      proxy_port: 1080

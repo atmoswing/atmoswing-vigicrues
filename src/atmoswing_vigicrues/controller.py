@@ -36,7 +36,7 @@ class Controller:
             Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
-        self.max_attempts = 8
+        self.max_attempts = 4
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
         self.pre_actions = []
