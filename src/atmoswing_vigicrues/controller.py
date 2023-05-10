@@ -134,7 +134,7 @@ class Controller:
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
         """
-        if not self.pre_actions:
+        if not self.pre_actions or len(self.pre_actions) == 0:
             return
 
         attempts = 0
@@ -220,7 +220,7 @@ class Controller:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
-        if not self.post_actions:
+        if not self.post_actions or len(self.post_actions) == 0:
             return
 
         files = self._list_atmoswing_output_files()
@@ -236,7 +236,7 @@ class Controller:
         """
         Exécute les opérations de diffusion.
         """
-        if not self.disseminations:
+        if not self.disseminations or len(self.disseminations) == 0:
             return
 
         for action in self.disseminations:
