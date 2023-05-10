@@ -1,6 +1,20 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.0.4 - 10 Mai 2023
+
+### Ajouts
+
+*   Ajouts de messages pour renseigner sur le succès (ou non) après l'exécution d'une action.
+*   Ajouts du nom de l'action (selon le fichier de configuration) dans les messages.
+*   La plage temporelle dans laquelle les fichiers des modèles météo sont cherchés peut être spécifié par pré-action.
+
+### Changements
+
+*   Les post-actions échouent lorsqu'il n'y a pas de fichier disponible
+*   Le flux de la prévision est arrêté lorsqu'une pré-action échoue.
+
+
 ## v1.0.3 - 08 Mai 2023
 
 ### Changements
