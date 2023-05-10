@@ -14,6 +14,8 @@ class ExportBdApBp(PostAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -28,11 +30,12 @@ class ExportBdApBp(PostAction):
             Ajouter une indentation aux fichiers produits.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
 
-        self.name = "Export BdApBp"
+        self.type_name = "Export BdApBp"
+        self.name = name
         self.status = 100
         self.message = ""
 

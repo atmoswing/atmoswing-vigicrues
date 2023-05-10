@@ -12,12 +12,14 @@ class TransformGfsData(PreAction):
     Transforme les prévisions émises par GFS en fichier netcdf.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         """
         Initialisation de l'instance TransformGfsData
 
         Parameters
         ----------
+        name: str
+            Le nom de l'action
         options
             L'instance contenant les options de l'action. Les champs possibles sont:
             * transform_gfs_input_dir: str
@@ -33,7 +35,8 @@ class TransformGfsData(PreAction):
         if not asv.has_eccodes:
             raise ImportError("Le paquet eccodes est requis pour cette action.")
 
-        self.name = "Transformation données GFS"
+        self.type_name = "Transformation données GFS"
+        self.name = name
         self.input_dir = options.get('transform_gfs_input_dir')
         self.output_dir = options.get('transform_gfs_output_dir')
         asv.check_dir_exists(self.output_dir, True)

@@ -16,6 +16,8 @@ class TransferSftpIn(PreAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -39,11 +41,12 @@ class TransferSftpIn(PreAction):
             Chemin sur le serveur distant où se trouvent les fichiers.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         """
         Initialisation de l'instance TransferSftp
         """
-        self.name = "Transfert SFTP"
+        self.type_name = "Transfert SFTP"
+        self.name = name
         self.local_dir = options['local_dir']
         self.prefix = options['prefix']
         self.hostname = options['hostname']

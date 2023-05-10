@@ -13,6 +13,8 @@ class TransferSftpOut(Dissemination):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -36,11 +38,12 @@ class TransferSftpOut(Dissemination):
             Chemin sur le serveur distant où enregistrer les fichiers.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         """
         Initialisation de l'instance TransferSftp
         """
-        self.name = "Transfert SFTP"
+        self.type_name = "Transfert SFTP"
+        self.name = name
         self.local_dir = options['local_dir']
         self.extension = options['extension']
         self.hostname = options['hostname']

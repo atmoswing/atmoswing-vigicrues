@@ -1,7 +1,7 @@
 # Exemple de fichier de configuration
 
 pre_actions:
-  - name: Download GFS data
+  - name: Download GFS data (Z)
     uses: DownloadGfsData
     with:
       output_dir: '/tmp/gfs'

@@ -96,7 +96,7 @@ class Controller:
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.pre_actions.append(fct(action['with']))
+                self.pre_actions.append(fct(name, action['with']))
 
     def _register_post_actions(self):
         """
@@ -112,7 +112,7 @@ class Controller:
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.post_actions.append(fct(action['with']))
+                self.post_actions.append(fct(name, action['with']))
 
     def _register_disseminations(self):
         """
@@ -128,7 +128,7 @@ class Controller:
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.disseminations.append(fct(action['with']))
+                self.disseminations.append(fct(name, action['with']))
 
     def _run_pre_actions(self):
         """
@@ -141,7 +141,7 @@ class Controller:
         while attempts < self.max_attempts:
             success = True
             for action in self.pre_actions:
-                print(f"Exécution de : '{action.name}'")
+                print(f"Exécution de : '{action.type_name}' [{action.name}]")
                 if not action.run(self.date):
                     attempts += 1
                     success = False
@@ -223,7 +223,7 @@ class Controller:
 
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
-            print(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
             if action.run():
                 print("  -> Exécution correcte")
@@ -238,7 +238,7 @@ class Controller:
             return
 
         for action in self.disseminations:
-            print(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.type_name}' [{action.name}]")
             local_dir = action.local_dir
             extension = action.extension
             files = self._list_files(local_dir, extension)

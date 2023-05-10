@@ -11,6 +11,8 @@ class DownloadGfsData(PreAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -38,8 +40,9 @@ class DownloadGfsData(PreAction):
             L'utilisateur et le mot de passe pour le proxy. Format : username:password
     """
 
-    def __init__(self, options):
-        self.name = "Téléchargement GFS"
+    def __init__(self, name, options):
+        self.type_name = "Téléchargement GFS"
+        self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 

@@ -13,6 +13,8 @@ class ExportPrv(PostAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -25,11 +27,12 @@ class ExportPrv(PostAction):
             Combinaison des différentes stations (entités) dans un seul fichier.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
 
-        self.name = "Export PRV"
+        self.type_name = "Export PRV"
+        self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 
@@ -81,7 +84,7 @@ class ExportPrv(PostAction):
 
             nc_file.close()
 
-            return True
+        return True
 
     def _create_header_comments(self, nc_file):
         list_frequencies = [str(int(100 * i)) for i in self.frequencies]

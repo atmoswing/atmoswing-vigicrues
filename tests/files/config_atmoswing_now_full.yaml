@@ -11,7 +11,7 @@ atmoswing:
     proxy_user: ''
 
 pre_actions:
-  - name: Download GFS data
+  - name: Download GFS data (Z)
     uses: DownloadGfsData
     active: True
     with:
