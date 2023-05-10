@@ -58,7 +58,7 @@ class ExportBdApBp(PostAction):
 
         super().__init__()
 
-    def run(self):
+    def run(self) -> bool:
         """
         Exécution de la post-action.
 
@@ -67,6 +67,10 @@ class ExportBdApBp(PostAction):
         * 100 : Absence du fichier netcdf.
         * 110 : Fichier netcdf corrompu.
         * 200 : Erreur lors du traitement fichier netcdf.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
         for file in self._file_paths:
             file = Path(file)
@@ -122,6 +126,8 @@ class ExportBdApBp(PostAction):
 
             if nc_file:
                 nc_file.close()
+
+        return True
 
     def _create_metadata_block(self, nc_file):
         block = {

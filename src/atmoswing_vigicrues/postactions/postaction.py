@@ -25,7 +25,7 @@ class PostAction:
         self._file_paths = file_paths
         self._metadata = metadata
 
-    def run(self):
+    def run(self) -> bool:
         raise NotImplementedError
 
     def _get_metadata(self, key):

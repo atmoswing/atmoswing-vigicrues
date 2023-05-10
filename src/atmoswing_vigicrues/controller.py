@@ -36,7 +36,6 @@ class Controller:
             Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
-        self.verbose = True
         self.max_attempts = 8
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
@@ -93,7 +92,7 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la pre-action '{name}'")
+                print(f"Chargement de la pre-action '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
@@ -109,7 +108,7 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la post-action '{name}'")
+                print(f"Chargement de la post-action '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
@@ -125,7 +124,7 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la disseminations '{name}'")
+                print(f"Chargement de la disseminations '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
@@ -142,15 +141,19 @@ class Controller:
         while attempts < self.max_attempts:
             success = True
             for action in self.pre_actions:
-                self._display_message(f"Exécution de : '{action.name}'")
+                print(f"Exécution de : '{action.name}'")
                 if not action.run(self.date):
                     attempts += 1
                     success = False
                     break
             if success:
+                print("  -> Exécution correcte")
                 break
             else:
+                print("  -> Recul de l'heure de la prévision")
                 self._back_in_time()
+        else:
+            print("  -> Échec de l'exécution")
 
     def _run_atmoswing(self):
         """
@@ -160,7 +163,7 @@ class Controller:
         name = run['name']
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
-        self._display_message(f"Exécution de : '{name}'")
+        print(f"Exécution de : '{name}'")
         print("Commande: " + ' '.join(cmd))
 
         try:
@@ -170,7 +173,7 @@ class Controller:
                 print("L'exécution d'AtmoSwing Forecaster a échoué.")
                 raise asv.Error("L'exécution d'AtmoSwing Forecaster a échoué.")
             else:
-                print("AtmoSwing Forecaster a été exécuté avec succès.")
+                print("  -> Exécution correcte")
         except Exception as e:
             print(f"Exception lors de l'exécution d'AtmoSwing Forecaster: {e}")
 
@@ -220,9 +223,12 @@ class Controller:
 
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
-            self._display_message(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.name}'")
             action.feed(files, {'forecast_date': self.date})
-            action.run()
+            if action.run():
+                print("  -> Exécution correcte")
+            else:
+                print("  -> Échec de l'exécution")
 
     def _run_disseminations(self):
         """
@@ -232,16 +238,15 @@ class Controller:
             return
 
         for action in self.disseminations:
-            self._display_message(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.name}'")
             local_dir = action.local_dir
             extension = action.extension
             files = self._list_files(local_dir, extension)
             action.feed(files)
-            action.run(self.date)
-
-    def _display_message(self, message):
-        if self.verbose:
-            print(message)
+            if action.run(self.date):
+                print("  -> Exécution correcte")
+            else:
+                print("  -> Échec de l'exécution")
 
     def _fix_date(self):
         date = self.date

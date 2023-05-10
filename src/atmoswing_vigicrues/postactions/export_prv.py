@@ -45,9 +45,13 @@ class ExportPrv(PostAction):
 
         super().__init__()
 
-    def run(self):
+    def run(self) -> bool:
         """
         Exécution de la post-action.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
         for file in self._file_paths:
             nc_file = asv.Dataset(file, 'r', format='NETCDF4')
@@ -76,6 +80,8 @@ class ExportPrv(PostAction):
                         outfile.write(full_content)
 
             nc_file.close()
+
+            return True
 
     def _create_header_comments(self, nc_file):
         list_frequencies = [str(int(100 * i)) for i in self.frequencies]
