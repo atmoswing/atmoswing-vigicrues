@@ -17,11 +17,6 @@ class Controller:
         lignes de commandes et les options du fichier de configuration.
     verbose : bool
         Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
-    max_attempts : int
-        Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
-        (soustrayant 6 h). Valeur par défaut : 8
-    time_increment : int
-        Pas de temps (h) auquel émettre la prévision (p. ex. toutes les 6h)
     date : datetime
         Date de la prévision.
     """
@@ -36,7 +31,6 @@ class Controller:
             Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
-        self.max_attempts = 4
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
         self.pre_actions = []
@@ -137,13 +131,19 @@ class Controller:
         if not self.pre_actions or len(self.pre_actions) == 0:
             return
 
-        attempts = 0
-        while attempts < self.max_attempts:
+        attempts_max_hours = 7 * 24
+        attempts_step_hours = 6
+        for action in self.pre_actions:
+            attempts_max_hours = min(attempts_max_hours, action.attempts_max_hours)
+            attempts_step_hours = max(attempts_step_hours, action.attempts_step_hours)
+
+        attempts_hours = 0
+        while attempts_hours < attempts_max_hours:
             success = True
             for action in self.pre_actions:
                 print(f"Exécution de : '{action.type_name}' [{action.name}]")
                 if not action.run(self.date):
-                    attempts += 1
+                    attempts_hours += attempts_step_hours
                     success = False
                     break
             if success:
@@ -151,7 +151,7 @@ class Controller:
                 break
             else:
                 print("  -> Recul de l'heure de la prévision")
-                self._back_in_time()
+                self._back_in_time(attempts_step_hours)
         else:
             print("  -> Échec de l'exécution")
             raise asv.Error(f"Nombre maximum de tentatives atteint pour la pré-action.")
@@ -258,8 +258,8 @@ class Controller:
         hour = self.time_increment * (hour // self.time_increment)
         self.date = datetime.datetime(date.year, date.month, date.day, hour)
 
-    def _back_in_time(self):
-        self.date = self.date - datetime.timedelta(hours=self.time_increment)
+    def _back_in_time(self, time_increment):
+        self.date = self.date - datetime.timedelta(hours=time_increment)
 
     def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']

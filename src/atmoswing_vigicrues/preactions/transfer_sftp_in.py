@@ -39,6 +39,10 @@ class TransferSftpIn(PreAction):
             Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
             Chemin sur le serveur distant où se trouvent les fichiers.
+        * attempts_max_hours : int
+            Décalage temporel autorisé pour rechercher d'anciens fichiers
+        * attempts_step_hours : int
+            Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     """
 
     def __init__(self, name, options):
@@ -54,6 +58,8 @@ class TransferSftpIn(PreAction):
         self.username = options['username']
         self.password = options['password']
         self.remote_dir = options['remote_dir']
+
+        self._set_attempts_attributes(options)
 
         if 'proxy_host' in options:
             self.proxy_host = options['proxy_host']

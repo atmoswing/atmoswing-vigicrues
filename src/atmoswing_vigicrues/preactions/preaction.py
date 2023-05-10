@@ -9,3 +9,14 @@ class PreAction:
     def run(self, date) -> bool:
         """ Exécution de la pre-action. """
         raise NotImplementedError
+
+    def _set_attempts_attributes(self, options):
+        if 'attempts_max_hours' in options:
+            self.attempts_max_hours = options['attempts_max_hours']
+        else:
+            self.attempts_max_hours = 24
+
+        if 'attempts_step_hours' in options:
+            self.attempts_step_hours = options['attempts_step_hours']
+        else:
+            self.attempts_step_hours = 6

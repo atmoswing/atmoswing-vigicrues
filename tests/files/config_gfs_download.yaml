@@ -10,6 +10,8 @@ pre_actions:
       levels: [500, 1000]
       domain: [-5, 5, 40, 45]
       resolution: 0.5
+      attempts_max_hours: 24
+      attempts_step_hours: 6
       proxies:
         http: ''
         https: ''

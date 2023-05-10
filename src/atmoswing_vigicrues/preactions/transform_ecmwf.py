@@ -41,6 +41,8 @@ class TransformEcmwfData(PreAction):
         self.output_dir = options.get('transform_ecmwf_output_dir')
         asv.check_dir_exists(self.output_dir, True)
 
+        self._set_attempts_attributes(options)
+
         if options.has('ecmwf_variables'):
             self.variables = options.get('ecmwf_variables')
         else:

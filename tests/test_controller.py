@@ -55,7 +55,7 @@ def test_controller_can_instantiate_actions():
                 config_file=DIR_PATH + '/files/config_gfs_download.yaml'))
         fct = getattr(importlib.import_module('atmoswing_vigicrues'), 'DownloadGfsData')
         action = options.config['pre_actions'][0]
-        fct(action['with'])
+        fct('Download GFS data', action['with'])
 
 
 def test_run_atmoswing_now():

@@ -38,6 +38,10 @@ class DownloadGfsData(PreAction):
             L'adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port
         * proxy_user : str
             L'utilisateur et le mot de passe pour le proxy. Format : username:password
+        * attempts_max_hours : int
+            Décalage temporel autorisé pour rechercher d'anciens fichiers
+        * attempts_step_hours : int
+            Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     """
 
     def __init__(self, name, options):
@@ -45,6 +49,8 @@ class DownloadGfsData(PreAction):
         self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
+
+        self._set_attempts_attributes(options)
 
         if 'lead_time_max' in options:
             self.lead_time_max = options['lead_time_max']

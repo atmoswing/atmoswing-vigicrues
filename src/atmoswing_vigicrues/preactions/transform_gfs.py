@@ -41,6 +41,8 @@ class TransformGfsData(PreAction):
         self.output_dir = options.get('transform_gfs_output_dir')
         asv.check_dir_exists(self.output_dir, True)
 
+        self._set_attempts_attributes(options)
+
         if options.has('gfs_variables'):
             self.variables = options.get('gfs_variables')
         else:

@@ -40,7 +40,7 @@ def count_files_recursively(options):
 
 
 def test_export_bdapbp_reports_if_files_not_found(options, metadata):
-    export = asv.ExportBdApBp(options)
+    export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(['/wrong/path'], metadata)
     export.run()
     assert count_files_recursively(options) == 1
@@ -57,7 +57,7 @@ def forecast_files():
 
 
 def test_export_bdapbp_runs(options, forecast_files, metadata):
-    export = asv.ExportBdApBp(options)
+    export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(forecast_files, metadata)
     export.run()
     assert count_files_recursively(options) == 3
@@ -79,7 +79,7 @@ def test_export_bdapbp_with_no_limit(options, forecast_files, metadata):
     forecast_files.sort()
     forecast_files = [forecast_files[0]]
     options['number_analogs'] = -1
-    export = asv.ExportBdApBp(options)
+    export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(forecast_files, metadata)
     export.run()
     assert count_files_recursively(options) == 1
@@ -99,7 +99,7 @@ def test_export_bdapbp_with_all_stations(options, forecast_files, metadata):
     forecast_files.sort()
     forecast_files = [forecast_files[0]]
     options['only_relevant_stations'] = False
-    export = asv.ExportBdApBp(options)
+    export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(forecast_files, metadata)
     export.run()
     assert count_files_recursively(options) == 1
