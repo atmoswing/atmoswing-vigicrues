@@ -56,6 +56,10 @@ class ExportPrv(PostAction):
         -------
         Vrai (True) en cas de succès, faux (False) autrement.
         """
+        if not self._file_paths:
+            print("Aucun fichier à traiter")
+            return False
+
         for file in self._file_paths:
             nc_file = asv.Dataset(file, 'r', format='NETCDF4')
             station_ids = self._extract_station_ids(nc_file)
