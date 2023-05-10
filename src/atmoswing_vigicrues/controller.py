@@ -154,7 +154,7 @@ class Controller:
                 self._back_in_time(attempts_step_hours)
         else:
             print("  -> Échec de l'exécution")
-            raise asv.Error(f"Nombre maximum de tentatives atteint pour la pré-action.")
+            raise asv.Error("Nombre maximum de tentatives atteint pour la pré-action.")
 
     def _run_atmoswing(self):
         """
@@ -189,7 +189,7 @@ class Controller:
             cmd.append(options['atmoswing_path'])
 
         if 'batch_file' not in options or not options['batch_file']:
-            raise asv.Error(f"Option 'batch_file' non fournie.")
+            raise asv.Error("Option 'batch_file' non fournie.")
         cmd.append("-f")
         cmd.append(options['batch_file'])
 
@@ -198,12 +198,12 @@ class Controller:
                 cmd.append(f"--forecast-date={now_str}")
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
-                    raise asv.Error(f"Option 'target_nb_days' non fournie.")
+                    raise asv.Error("Option 'target_nb_days' non fournie.")
                 nb_days = options['target_nb_days']
                 cmd.append(f"--forecast-past={nb_days}")
             elif options['target'] == 'date':
                 if 'target_date' not in options or not options['target_date']:
-                    raise asv.Error(f"Option 'target_date' non fournie.")
+                    raise asv.Error("Option 'target_date' non fournie.")
                 date = options['target_date']
                 cmd.append(f"--forecast-date={date}")
         else:

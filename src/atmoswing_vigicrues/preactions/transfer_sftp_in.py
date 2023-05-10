@@ -3,7 +3,8 @@ import fnmatch
 from pathlib import Path
 import tarfile
 
-import paramiko, socks
+import paramiko
+import socks
 
 import atmoswing_vigicrues as asv
 

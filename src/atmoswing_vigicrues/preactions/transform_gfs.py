@@ -1,5 +1,4 @@
 import atmoswing_vigicrues as asv
-from datetime import datetime
 #if asv.has_eccodes and asv.has_netcdf:
 #    from atmoswing_toolbox.datasets import generic, grib_dataset
 

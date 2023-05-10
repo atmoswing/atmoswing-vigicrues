@@ -1,6 +1,7 @@
 import os
 
-import paramiko, socks
+import paramiko
+import socks
 
 import atmoswing_vigicrues as asv
 

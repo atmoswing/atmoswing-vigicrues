@@ -335,4 +335,3 @@ class ExportBdApBp(PostAction):
         output_dir = self._get_output_path(self._get_metadata('forecast_date'))
         file_path = output_dir / file_name
         return file_path
-

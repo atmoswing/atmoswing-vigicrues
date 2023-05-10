@@ -83,7 +83,8 @@ class ExportPrv(PostAction):
                     # File name
                     file_path = self._build_file_path(file, station_id)
 
-                    with open(file_path, 'w', encoding="utf-8", newline='\r\n') as outfile:
+                    with open(file_path, 'w', encoding="utf-8", newline='\r\n') \
+                            as outfile:
                         outfile.write(full_content)
 
             nc_file.close()
