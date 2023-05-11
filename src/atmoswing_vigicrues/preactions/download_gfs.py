@@ -187,7 +187,7 @@ class DownloadGfsData(PreAction):
                         print(f"  -> {r.text}")
                         return False
 
-        print(f"  -> Nombre de fichiers téléchargés : {files_count}")
+        print(f"  -> Nombre de fichiers téléchargés : {files_count}.")
 
         return True
 

@@ -172,12 +172,13 @@ class Controller:
             ret = subprocess.run(cmd, capture_output=True, check=True)
 
             if ret.returncode != 0:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
+                raise asv.Error(f"Erreur de AtmoSwing Forecaster.")
             else:
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
         except Exception as e:
-            print("  -> Échec de l'exécution")
-            print(f"Exception lors de l'exécution d'AtmoSwing Forecaster: {e}")
+            print("  -> Échec de l'exécution.")
+            raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
