@@ -33,6 +33,7 @@ class Controller:
         self.options = asv.Options(cli_options)
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
+        self.existing_files = []
         self.pre_actions = []
         self.post_actions = []
         self.disseminations = []
@@ -62,6 +63,7 @@ class Controller:
 
         try:
             self._run_pre_actions()
+            self.existing_files = self._list_atmoswing_output_files()
             self._run_atmoswing()
             self._run_post_actions()
             self._run_disseminations()
@@ -224,7 +226,13 @@ class Controller:
         if not self.post_actions or len(self.post_actions) == 0:
             return
 
-        files = self._list_atmoswing_output_files()
+        files = self._get_files_for_post_actions()
+        if len(files) == 0:
+            print("  -> Aucun nouveau fichier à traiter en post-action.")
+            return
+
+        print(f"  -> {len(files)} nouveaux fichier à traiter en post-action.")
+
         for action in self.post_actions:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
@@ -265,6 +273,11 @@ class Controller:
     def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']
         return self._list_files(output_dir, '.nc', '%Y-%m-%d_%H')
+
+    def _get_files_for_post_actions(self):
+        files = self._list_atmoswing_output_files()
+        files = [x for x in files if x not in self.existing_files]
+        return files
 
     def _list_files(self, local_dir, ext, pattern='%Y-%m-%d_%H'):
         local_dir = asv.utils.build_date_dir_structure(local_dir, self.date)
