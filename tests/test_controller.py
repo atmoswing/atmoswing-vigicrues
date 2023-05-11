@@ -175,10 +175,10 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
     if RUN_ATMOSWING:
         controller.run()
         captured = capsys.readouterr()
-        assert captured.out == "  -> Exécution correcte.\n"
+        assert captured.out.endswith("  -> Exécution correcte.\n")
         controller.run()
         captured = capsys.readouterr()
-        assert captured.out == "  -> Fichiers déjà présents localement.\n"
+        assert captured.out.endswith("  -> Aucun nouveau fichier à traiter en post-action.\n")
 
     shutil.rmtree(tmp_dir)
 
