@@ -25,6 +25,8 @@ class TransferSftpIn(PreAction):
             Répertoire cible pour l'enregistrement des fichiers.
         * prefix : str
             Prefix des fichiers à importer.
+        * variables : list (optionnel)
+            Liste des variables météorologiques à importer.
         * hostname : str
             Adresse du serveur distant.
         * port : int
@@ -60,6 +62,11 @@ class TransferSftpIn(PreAction):
         self.remote_dir = options['remote_dir']
 
         self._set_attempts_attributes(options)
+
+        if 'variables' in options and len(options['variables']) > 0:
+            self.variables = options['variables']
+        else:
+            self.variables = None
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
@@ -104,7 +111,15 @@ class TransferSftpIn(PreAction):
             local_path = Path(self._get_local_path(date))
             forecast_date = date.strftime("%Y%m%d")
             for remote_file in sftp.listdir('.'):
-                if fnmatch.fnmatch(remote_file, f'{self.prefix}*_{forecast_date}*.*'):
+                pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
+                if self.variables is not None:
+                    for variable in self.variables:
+                        pattern = f'{self.prefix.lower()}_{variable.lower()}' \
+                                  f'_{forecast_date}*.*'
+                        if fnmatch.fnmatch(remote_file.lower(), pattern):
+                            break
+
+                if fnmatch.fnmatch(remote_file.lower(), pattern):
                     local_file = local_path / remote_file
                     if local_file.exists():
                         continue
