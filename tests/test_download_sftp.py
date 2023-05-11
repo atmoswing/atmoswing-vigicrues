@@ -63,3 +63,15 @@ def test_download_cep_with_variables_succeeds(options_with_variables):
         assert action.run(date)
         assert count_files_recursively(options_with_variables) == 4
     shutil.rmtree(options_with_variables['local_dir'])
+
+
+def test_do_not_download_if_exists(options_with_variables, capsys):
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_with_variables)
+    date = datetime(2023, 4, 13, 12)
+    if RUN_SFTP:
+        assert action.run(date)
+        assert count_files_recursively(options_with_variables) == 4
+        assert action.run(date)
+        captured = capsys.readouterr()
+        assert captured.out == "  -> Fichiers déjà présents localement.\n"
+    shutil.rmtree(options_with_variables['local_dir'])

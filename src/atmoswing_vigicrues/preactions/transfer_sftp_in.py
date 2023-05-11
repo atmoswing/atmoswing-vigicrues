@@ -89,6 +89,13 @@ class TransferSftpIn(PreAction):
             Date de la prévision.
         """
         try:
+
+            # Check if files already in the local folder (only with defined variables)
+            if self.variables is not None:
+                if self._files_already_present(date):
+                    print("  -> Fichiers déjà présents localement.")
+                    return True
+
             # Create a transport object for the SFTP connection
             transport = paramiko.Transport((self.hostname, self.port))
 
@@ -169,6 +176,24 @@ class TransferSftpIn(PreAction):
         local_path = asv.build_date_dir_structure(self.local_dir, date)
         local_path.mkdir(parents=True, exist_ok=True)
         return local_path
+
+    def _files_already_present(self, date):
+        local_path = Path(self._get_local_path(date))
+        forecast_datetime = date.strftime("%Y%m%d%H")
+
+        for variable in self.variables:
+            pattern = f'{self.prefix.lower()}_{variable.lower()}' \
+                      f'_{forecast_datetime}*.*'
+            local_files = local_path.glob(pattern)
+            file_found = False
+            for local_file in local_files:
+                if fnmatch.fnmatch(str(local_file.name).lower(), pattern):
+                    file_found = True
+                    break
+            if not file_found:
+                return False
+
+        return True
 
     @staticmethod
     def _unpack_if_needed(local_file, local_path):
