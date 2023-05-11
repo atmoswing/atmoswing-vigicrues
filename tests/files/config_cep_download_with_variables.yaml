@@ -1,0 +1,17 @@
+# Exemple de fichier de configuration
+
+pre_actions:
+  - name: Transfer SFTP CEP
+    uses: TransferSftpIn
+    active: True
+    with:
+      local_dir: '/tmp'
+      prefix: 'CEP'
+      variables: ['r', 'tcwv']
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: 'upload'
+      proxy_host: ''
+      proxy_port: 1080
