@@ -1,7 +1,6 @@
 import os
 
 import paramiko
-import socks
 
 import atmoswing_vigicrues as asv
 
@@ -48,7 +47,7 @@ class TransferSftpOut(Dissemination):
         self.local_dir = options['local_dir']
         self.extension = options['extension']
         self.hostname = options['hostname']
-        self.port = options['port']
+        self.port = int(options['port'])
         self.username = options['username']
         self.password = options['password']
         self.remote_dir = options['remote_dir']
@@ -56,7 +55,7 @@ class TransferSftpOut(Dissemination):
         if 'proxy_host' in options:
             self.proxy_host = options['proxy_host']
             if 'proxy_port' in options:
-                self.proxy_port = options['proxy_port']
+                self.proxy_port = int(options['proxy_port'])
             else:
                 self.proxy_port = 1080
         else:
@@ -82,20 +81,21 @@ class TransferSftpOut(Dissemination):
             return False
 
         try:
-            if self.proxy_host:
-                sock = socks.socksocket()
-                sock.set_proxy(
-                    proxy_type=socks.SOCKS5,
-                    addr=self.proxy_host,
-                    port=self.proxy_port
-                )
-                sock.connect((self.hostname, self.port))
-                transport = paramiko.Transport(sock)
-            else:
-                transport = paramiko.Transport((self.hostname, self.port))
+            # Create a transport object for the SFTP connection
+            transport = paramiko.Transport((self.hostname, self.port))
 
-            transport.connect(None, self.username, self.password)
-            sftp = paramiko.SFTPClient.from_transport(transport)
+            if self.proxy_host:
+                transport.start_client()
+                transport.open_channel('direct-tcpip',
+                                       (self.hostname, self.port),
+                                       (self.proxy_host, self.proxy_port))
+
+            # Authenticate with the SFTP server
+            transport.connect(username=self.username, password=self.password)
+
+            # Create an SFTP client object
+            sftp = transport.open_sftp_client()
+
             self._chdir_or_mkdir(self.remote_dir, sftp)
             self._chdir_or_mkdir(date.strftime('%Y'), sftp)
             self._chdir_or_mkdir(date.strftime('%m'), sftp)
@@ -106,10 +106,9 @@ class TransferSftpOut(Dissemination):
                 asv.check_file_exists(file)
                 sftp.put(file, filename)
 
-            if sftp:
-                sftp.close()
-            if transport:
-                transport.close()
+            # Close the SFTP client and transport objects
+            sftp.close()
+            transport.close()
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
