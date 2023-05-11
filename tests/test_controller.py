@@ -95,7 +95,7 @@ def test_run_atmoswing_now(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_now.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -106,7 +106,7 @@ def test_run_atmoswing_date(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_date.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -117,7 +117,7 @@ def test_run_atmoswing_past(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_past.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -128,7 +128,7 @@ def test_run_atmoswing_now_full_pipeline(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -149,7 +149,7 @@ def test_catches_atmoswing_when_failing(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=tmp_dir + '/batch_file_fail.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -160,7 +160,7 @@ def test_flux_stops_when_preprocess_failing(tmp_dir):
         config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
         batch_file=tmp_dir + '/batch_file_fail.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_preaction(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
@@ -171,7 +171,7 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = get_controller_with_fixed_paths(options, tmp_dir)
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
         captured = capsys.readouterr()
@@ -183,10 +183,23 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
     shutil.rmtree(tmp_dir)
 
 
-def get_controller_with_fixed_paths(options, tmp_dir):
+def get_controller_with_fixed_paths_full(options, tmp_dir):
     controller = asv.Controller(options)
     controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
     controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
     controller.post_actions[0].output_dir = tmp_dir + '/bdapbp'
     controller.post_actions[1].output_dir = tmp_dir + '/prv'
+    return controller
+
+
+def get_controller_with_fixed_paths_preaction(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    return controller
+
+
+def get_controller_with_fixed_paths_simple(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
     return controller
