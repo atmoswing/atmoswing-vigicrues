@@ -185,7 +185,7 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
 
 def get_controller_with_fixed_paths(options, tmp_dir):
     controller = asv.Controller(options)
-    controller.pre_actions[0].output_dir = DIR_PATH + '/__tmp_gfs__'
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
     controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
     controller.post_actions[0].output_dir = tmp_dir + '/bdapbp'
     controller.post_actions[1].output_dir = tmp_dir + '/prv'
