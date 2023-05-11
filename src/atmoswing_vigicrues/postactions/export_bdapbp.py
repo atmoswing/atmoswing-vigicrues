@@ -91,7 +91,7 @@ class ExportBdApBp(PostAction):
             else:
                 try:
                     nc_file = asv.Dataset(file, 'r', format='NETCDF4')
-                except:
+                except Exception:
                     self.status = 110
                     self.message = "Fichier netcdf corrompu."
 
@@ -99,7 +99,7 @@ class ExportBdApBp(PostAction):
                 metadata = self._create_metadata_block(nc_file)
                 data = self._create_data_block(nc_file)
                 statistics = self._create_statistics_block(nc_file)
-            except:
+            except Exception:
                 metadata = None
                 data = None
                 statistics = None

@@ -17,7 +17,8 @@ else:
 
 from .controller import Controller
 from .disseminations.transfer_sftp_out import TransferSftpOut
-from .exceptions import (ConfigError, Error, FilePathError, OptionError, PathError)
+from .exceptions import (ConfigError, Error, FilePathError, OptionError,
+                         PathError)
 from .options import Options
 from .postactions.export_bdapbp import ExportBdApBp
 from .postactions.export_prv import ExportPrv

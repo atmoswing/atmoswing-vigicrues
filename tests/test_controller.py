@@ -49,7 +49,7 @@ def test_controller_can_identify_non_existing_actions():
 
 def test_controller_can_instantiate_actions():
     assert hasattr(importlib.import_module('atmoswing_vigicrues'), 'DownloadGfsData')
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory():
         options = asv.Options(
             types.SimpleNamespace(
                 config_file=DIR_PATH + '/files/config_gfs_download.yaml'))

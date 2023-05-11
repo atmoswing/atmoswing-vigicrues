@@ -21,3 +21,8 @@ def test_check_file_exists_succeeds():
 
 def test_build_cumulative_frequency():
     f = asv.utils.build_cumulative_frequency(100)
+    assert len(f) == 100
+    assert f[0] > 0
+    assert f[0] < 1/100
+    assert f[99] < 1
+    assert f[99] > 99/100
