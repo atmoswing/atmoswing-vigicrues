@@ -1,10 +1,13 @@
 import datetime
+import re
 
 import requests
 
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+CLEAN_HTML = re.compile('<.*?>')
 
 
 class DownloadGfsData(PreAction):
@@ -184,7 +187,8 @@ class DownloadGfsData(PreAction):
                         open(file_path, 'wb').write(r.content)
                         files_count += 1
                     else:
-                        print(f"  -> {r.text}")
+                        clean_text = re.sub(CLEAN_HTML, '', r.text)
+                        print(f"  -> {clean_text}")
                         return False
 
         print(f"  -> Nombre de fichiers téléchargés : {files_count}.")
