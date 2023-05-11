@@ -1,7 +1,8 @@
-import json
 import datetime
-import numpy as np
+import json
 from pathlib import Path
+
+import numpy as np
 
 import atmoswing_vigicrues as asv
 
@@ -14,6 +15,8 @@ class ExportBdApBp(PostAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -28,11 +31,12 @@ class ExportBdApBp(PostAction):
             Ajouter une indentation aux fichiers produits.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
 
-        self.name = "Export BdApBp"
+        self.type_name = "Export BdApBp"
+        self.name = name
         self.status = 100
         self.message = ""
 
@@ -58,7 +62,7 @@ class ExportBdApBp(PostAction):
 
         super().__init__()
 
-    def run(self):
+    def run(self) -> bool:
         """
         Exécution de la post-action.
 
@@ -67,7 +71,15 @@ class ExportBdApBp(PostAction):
         * 100 : Absence du fichier netcdf.
         * 110 : Fichier netcdf corrompu.
         * 200 : Erreur lors du traitement fichier netcdf.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
+        if not self._file_paths:
+            print("Aucun fichier à traiter")
+            return False
+
         for file in self._file_paths:
             file = Path(file)
             self._reset_status()
@@ -79,7 +91,7 @@ class ExportBdApBp(PostAction):
             else:
                 try:
                     nc_file = asv.Dataset(file, 'r', format='NETCDF4')
-                except:
+                except Exception:
                     self.status = 110
                     self.message = "Fichier netcdf corrompu."
 
@@ -87,7 +99,7 @@ class ExportBdApBp(PostAction):
                 metadata = self._create_metadata_block(nc_file)
                 data = self._create_data_block(nc_file)
                 statistics = self._create_statistics_block(nc_file)
-            except:
+            except Exception:
                 metadata = None
                 data = None
                 statistics = None
@@ -122,6 +134,8 @@ class ExportBdApBp(PostAction):
 
             if nc_file:
                 nc_file.close()
+
+        return True
 
     def _create_metadata_block(self, nc_file):
         block = {
@@ -322,4 +336,3 @@ class ExportBdApBp(PostAction):
         output_dir = self._get_output_path(self._get_metadata('forecast_date'))
         file_path = output_dir / file_name
         return file_path
-

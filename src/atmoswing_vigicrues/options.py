@@ -91,7 +91,7 @@ class Options:
 
     def _load_config(self):
         asv.check_file_exists(self.cli_options.config_file)
-        with open(self.cli_options.config_file) as f:
+        with open(self.cli_options.config_file, mode='rb') as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
     def _override_options(self):

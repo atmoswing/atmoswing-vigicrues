@@ -1,6 +1,3 @@
-import atmoswing_vigicrues as asv
-
-
 class PostAction:
     """
     Classe de base pour les opérations de traitement des résultats d'AtmoSwing.
@@ -25,7 +22,7 @@ class PostAction:
         self._file_paths = file_paths
         self._metadata = metadata
 
-    def run(self):
+    def run(self) -> bool:
         raise NotImplementedError
 
     def _get_metadata(self, key):

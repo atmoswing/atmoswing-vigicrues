@@ -20,6 +20,8 @@ pre_actions:
       levels: [300, 400, 500, 600, 700, 850, 925, 1000]
       domain: [-20, 30, 25, 65]
       resolution: 0.5
+      attempts_max_hours: 24
+      attempts_step_hours: 6
       proxies:
         http: ''
         https: ''
@@ -54,7 +56,7 @@ post_actions:
 
 disseminations:
   - name: Transfer SFTP
-    uses: TransferSftp
+    uses: TransferSftpOut
     with:
       hostname: '127.0.0.1'
       username: 'username'

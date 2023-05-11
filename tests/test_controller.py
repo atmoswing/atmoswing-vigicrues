@@ -49,13 +49,13 @@ def test_controller_can_identify_non_existing_actions():
 
 def test_controller_can_instantiate_actions():
     assert hasattr(importlib.import_module('atmoswing_vigicrues'), 'DownloadGfsData')
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory():
         options = asv.Options(
             types.SimpleNamespace(
                 config_file=DIR_PATH + '/files/config_gfs_download.yaml'))
         fct = getattr(importlib.import_module('atmoswing_vigicrues'), 'DownloadGfsData')
         action = options.config['pre_actions'][0]
-        fct(action['with'])
+        fct('Download GFS data', action['with'])
 
 
 def test_run_atmoswing_now():
@@ -92,6 +92,36 @@ def test_run_atmoswing_now_full_pipeline():
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()
+
+
+def test_special_characters_in_config_file():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_with_special_characters.yaml',
+        batch_file=DIR_PATH + '/files/batch_file.xml'
+    )
+    controller = asv.Controller(options)
+    decoded_password = controller.options.config['pre_actions'][0]['with']['password']
+    assert decoded_password == '@#°§&£¢$*[]{}()+'
+
+
+def test_catches_atmoswing_when_failing():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
+        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+    )
+    controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()
+
+
+def test_flux_stops_when_preprocess_failing():
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
+        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:

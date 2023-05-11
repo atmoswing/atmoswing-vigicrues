@@ -17,7 +17,7 @@ class Dissemination:
         """
         self._file_paths = file_paths
 
-    def run(self, date):
+    def run(self, date) -> bool:
         """
         Exécution de la diffusion.
 

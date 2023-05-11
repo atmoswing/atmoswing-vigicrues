@@ -44,7 +44,7 @@ def forecast_files():
 
 
 def test_export_prv_runs(options, forecast_files, metadata):
-    export = asv.ExportPrv(options)
+    export = asv.ExportPrv('Export PRV', options)
     export.feed(forecast_files, metadata)
     export.run()
     assert count_files_recursively(options) == 3
@@ -53,7 +53,7 @@ def test_export_prv_runs(options, forecast_files, metadata):
 
 def test_export_prv_runs_separate_files(options, forecast_files, metadata):
     options['combine_stations_in_one_file'] = False
-    export = asv.ExportPrv(options)
+    export = asv.ExportPrv('Export PRV', options)
     export.feed(forecast_files, metadata)
     export.run()
     assert count_files_recursively(options) == 21
@@ -65,7 +65,7 @@ def test_export_prv_runs_multi_time_steps(options):
     metadata = {
         "forecast_date": "2022-12-16 00:00:00",
     }
-    export = asv.ExportPrv(options)
+    export = asv.ExportPrv('Export PRV', options)
     export.feed(files, metadata)
     export.run()
     assert count_files_recursively(options) == 4

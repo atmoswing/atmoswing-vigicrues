@@ -1,6 +1,7 @@
 import datetime
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 import atmoswing_vigicrues as asv
 
@@ -13,6 +14,8 @@ class ExportPrv(PostAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -25,11 +28,12 @@ class ExportPrv(PostAction):
             Combinaison des différentes stations (entités) dans un seul fichier.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
 
-        self.name = "Export PRV"
+        self.type_name = "Export PRV"
+        self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
 
@@ -45,10 +49,18 @@ class ExportPrv(PostAction):
 
         super().__init__()
 
-    def run(self):
+    def run(self) -> bool:
         """
         Exécution de la post-action.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
+        if not self._file_paths:
+            print("Aucun fichier à traiter")
+            return False
+
         for file in self._file_paths:
             nc_file = asv.Dataset(file, 'r', format='NETCDF4')
             station_ids = self._extract_station_ids(nc_file)
@@ -72,10 +84,13 @@ class ExportPrv(PostAction):
                     # File name
                     file_path = self._build_file_path(file, station_id)
 
-                    with open(file_path, 'w', encoding="utf-8", newline='\r\n') as outfile:
+                    with open(file_path, 'w', encoding="utf-8", newline='\r\n') \
+                            as outfile:
                         outfile.write(full_content)
 
             nc_file.close()
+
+        return True
 
     def _create_header_comments(self, nc_file):
         list_frequencies = [str(int(100 * i)) for i in self.frequencies]

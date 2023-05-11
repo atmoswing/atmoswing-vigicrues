@@ -1,6 +1,7 @@
 import os
 
-import paramiko, socks
+import paramiko
+import socks
 
 import atmoswing_vigicrues as asv
 
@@ -13,6 +14,8 @@ class TransferSftpOut(Dissemination):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -36,11 +39,12 @@ class TransferSftpOut(Dissemination):
             Chemin sur le serveur distant où enregistrer les fichiers.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         """
         Initialisation de l'instance TransferSftp
         """
-        self.name = "Transfert SFTP"
+        self.type_name = "Transfert SFTP"
+        self.name = name
         self.local_dir = options['local_dir']
         self.extension = options['extension']
         self.hostname = options['hostname']
@@ -60,7 +64,7 @@ class TransferSftpOut(Dissemination):
 
         super().__init__()
 
-    def run(self, date):
+    def run(self, date) -> bool:
         """
         Exécution de la diffusion par SFTP.
 
@@ -68,7 +72,15 @@ class TransferSftpOut(Dissemination):
         ----------
         date : datetime
             Date de la prévision.
+
+        Returns
+        -------
+        Vrai (True) en cas de succès, faux (False) autrement.
         """
+        if not self._file_paths:
+            print("Aucun fichier à traiter")
+            return False
+
         try:
             if self.proxy_host:
                 sock = socks.socksocket()
@@ -101,25 +113,35 @@ class TransferSftpOut(Dissemination):
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
+            return False
         except paramiko.ssh_exception.BadAuthenticationType as e:
             print(f"SFTP BadAuthenticationType {e}")
+            return False
         except paramiko.ssh_exception.AuthenticationException as e:
             print(f"SFTP AuthenticationException {e}")
+            return False
         except paramiko.ssh_exception.ChannelException as e:
             print(f"SFTP ChannelException {e}")
+            return False
         except paramiko.ssh_exception.ProxyCommandFailure as e:
             print(f"SFTP ProxyCommandFailure {e}")
+            return False
         except paramiko.ssh_exception.SSHException as e:
             print(f"SFTP SSHException {e}")
+            return False
         except FileNotFoundError as e:
             print(f"SFTP FileNotFoundError {e}")
+            return False
         except Exception as e:
             print(f"La diffusion SFTP a échoué ({e}).")
+            return False
+
+        return True
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):
         try:
             sftp.chdir(dir_path)
-        except IOError:
+        except OSError:
             sftp.mkdir(dir_path)
             sftp.chdir(dir_path)

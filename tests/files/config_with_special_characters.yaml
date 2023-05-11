@@ -1,0 +1,29 @@
+# Exemple de fichier de configuration
+
+atmoswing:
+  name: Forecast now
+  with:
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    batch_file: 'files/batch_file.xml'
+    target: 'now'
+    proxy: ''
+    proxy_user: ''
+
+pre_actions:
+  - name: Transfer SFTP ARP
+    uses: TransferSftpIn
+    active: True
+    with:
+      local_dir: '/app/mount/predictors/realtime/ARP'
+      prefix: 'ARPEGE'
+      hostname: 'some.ftp.server'
+      port: 22
+      username: ''
+      password: '@#°§&£¢$*[]{}()+'
+      remote_dir: '/path'
+      proxy_host: ''
+      proxy_port:
+
+post_actions:
+
+disseminations:

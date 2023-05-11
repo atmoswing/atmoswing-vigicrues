@@ -11,7 +11,7 @@ atmoswing:
     proxy_user: ''
 
 pre_actions:
-  - name: Download GFS data
+  - name: Download GFS data (Z)
     uses: DownloadGfsData
     active: True
     with:
@@ -44,7 +44,7 @@ post_actions:
 
 disseminations:
   - name: Transfer SFTP netcdf
-    uses: TransferSftp
+    uses: TransferSftpOut
     active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
@@ -58,7 +58,7 @@ disseminations:
       remote_dir: 'upload/netcdf'
 
   - name: Transfer SFTP prv
-    uses: TransferSftp
+    uses: TransferSftpOut
     active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
@@ -72,7 +72,7 @@ disseminations:
       remote_dir: 'upload/json'
 
   - name: Transfer SFTP prv
-    uses: TransferSftp
+    uses: TransferSftpOut
     active: True
     with:
       local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'

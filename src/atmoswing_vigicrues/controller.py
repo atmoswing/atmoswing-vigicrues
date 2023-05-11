@@ -17,11 +17,6 @@ class Controller:
         lignes de commandes et les options du fichier de configuration.
     verbose : bool
         Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
-    max_attempts : int
-        Nombre de tentatives de téléchargement en adaptant l'heure d'échéance
-        (soustrayant 6 h). Valeur par défaut : 8
-    time_increment : int
-        Pas de temps (h) auquel émettre la prévision (p. ex. toutes les 6h)
     date : datetime
         Date de la prévision.
     """
@@ -36,8 +31,6 @@ class Controller:
             Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
-        self.verbose = True
-        self.max_attempts = 8
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
         self.pre_actions = []
@@ -93,11 +86,11 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la pre-action '{name}'")
+                print(f"Chargement de la pre-action '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.pre_actions.append(fct(action['with']))
+                self.pre_actions.append(fct(name, action['with']))
 
     def _register_post_actions(self):
         """
@@ -109,11 +102,11 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la post-action '{name}'")
+                print(f"Chargement de la post-action '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.post_actions.append(fct(action['with']))
+                self.post_actions.append(fct(name, action['with']))
 
     def _register_disseminations(self):
         """
@@ -125,32 +118,43 @@ class Controller:
                     continue
                 name = action['name']
                 module = action['uses']
-                self._display_message(f"Chargement de la disseminations '{name}'")
+                print(f"Chargement de la disseminations '{name}'")
                 if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
                     raise asv.Error(f"L'action {module} est inconnue.")
                 fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.disseminations.append(fct(action['with']))
+                self.disseminations.append(fct(name, action['with']))
 
     def _run_pre_actions(self):
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
         """
-        if not self.pre_actions:
+        if not self.pre_actions or len(self.pre_actions) == 0:
             return
 
-        attempts = 0
-        while attempts < self.max_attempts:
+        attempts_max_hours = 7 * 24
+        attempts_step_hours = 6
+        for action in self.pre_actions:
+            attempts_max_hours = min(attempts_max_hours, action.attempts_max_hours)
+            attempts_step_hours = max(attempts_step_hours, action.attempts_step_hours)
+
+        attempts_hours = 0
+        while attempts_hours < attempts_max_hours:
             success = True
             for action in self.pre_actions:
-                self._display_message(f"Exécution de : '{action.name}'")
+                print(f"Exécution de : '{action.type_name}' [{action.name}]")
                 if not action.run(self.date):
-                    attempts += 1
+                    attempts_hours += attempts_step_hours
                     success = False
                     break
             if success:
+                print("  -> Exécution correcte")
                 break
             else:
-                self._back_in_time()
+                print("  -> Recul de l'heure de la prévision")
+                self._back_in_time(attempts_step_hours)
+        else:
+            print("  -> Échec de l'exécution")
+            raise asv.Error("Nombre maximum de tentatives atteint pour la pré-action.")
 
     def _run_atmoswing(self):
         """
@@ -160,23 +164,23 @@ class Controller:
         name = run['name']
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
-        self._display_message(f"Exécution de : '{name}'")
+        print(f"Exécution de : '{name}'")
+        print(f"Prévision pour la date : {self.date.strftime('%Y-%m-%d %H')}")
         print("Commande: " + ' '.join(cmd))
 
         try:
             ret = subprocess.run(cmd, capture_output=True, check=True)
 
             if ret.returncode != 0:
-                print("L'exécution d'AtmoSwing Forecaster a échoué.")
-                raise asv.Error("L'exécution d'AtmoSwing Forecaster a échoué.")
+                print("  -> Échec de l'exécution")
             else:
-                print("AtmoSwing Forecaster a été exécuté avec succès.")
+                print("  -> Exécution correcte")
         except Exception as e:
+            print("  -> Échec de l'exécution")
             print(f"Exception lors de l'exécution d'AtmoSwing Forecaster: {e}")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
-        proxy = ''
         cmd = []
 
         if 'atmoswing_path' not in options or not options['atmoswing_path']:
@@ -185,7 +189,7 @@ class Controller:
             cmd.append(options['atmoswing_path'])
 
         if 'batch_file' not in options or not options['batch_file']:
-            raise asv.Error(f"Option 'batch_file' non fournie.")
+            raise asv.Error("Option 'batch_file' non fournie.")
         cmd.append("-f")
         cmd.append(options['batch_file'])
 
@@ -194,12 +198,12 @@ class Controller:
                 cmd.append(f"--forecast-date={now_str}")
             elif options['target'] == 'past':
                 if 'target_nb_days' not in options or not options['target_nb_days']:
-                    raise asv.Error(f"Option 'target_nb_days' non fournie.")
+                    raise asv.Error("Option 'target_nb_days' non fournie.")
                 nb_days = options['target_nb_days']
                 cmd.append(f"--forecast-past={nb_days}")
             elif options['target'] == 'date':
                 if 'target_date' not in options or not options['target_date']:
-                    raise asv.Error(f"Option 'target_date' non fournie.")
+                    raise asv.Error("Option 'target_date' non fournie.")
                 date = options['target_date']
                 cmd.append(f"--forecast-date={date}")
         else:
@@ -216,33 +220,35 @@ class Controller:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
         """
-        if not self.post_actions:
+        if not self.post_actions or len(self.post_actions) == 0:
             return
 
         files = self._list_atmoswing_output_files()
         for action in self.post_actions:
-            self._display_message(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
-            action.run()
+            if action.run():
+                print("  -> Exécution correcte")
+            else:
+                print("  -> Échec de l'exécution")
 
     def _run_disseminations(self):
         """
         Exécute les opérations de diffusion.
         """
-        if not self.disseminations:
+        if not self.disseminations or len(self.disseminations) == 0:
             return
 
         for action in self.disseminations:
-            self._display_message(f"Exécution de : '{action.name}'")
+            print(f"Exécution de : '{action.type_name}' [{action.name}]")
             local_dir = action.local_dir
             extension = action.extension
             files = self._list_files(local_dir, extension)
             action.feed(files)
-            action.run(self.date)
-
-    def _display_message(self, message):
-        if self.verbose:
-            print(message)
+            if action.run(self.date):
+                print("  -> Exécution correcte")
+            else:
+                print("  -> Échec de l'exécution")
 
     def _fix_date(self):
         date = self.date
@@ -252,8 +258,8 @@ class Controller:
         hour = self.time_increment * (hour // self.time_increment)
         self.date = datetime.datetime(date.year, date.month, date.day, hour)
 
-    def _back_in_time(self):
-        self.date = self.date - datetime.timedelta(hours=self.time_increment)
+    def _back_in_time(self, time_increment):
+        self.date = self.date - datetime.timedelta(hours=time_increment)
 
     def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']

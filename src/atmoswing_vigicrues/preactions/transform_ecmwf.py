@@ -1,10 +1,13 @@
-import atmoswing_vigicrues as asv
 from datetime import datetime
+
+import atmoswing_vigicrues as asv
+
+from .preaction import PreAction
+
 #if asv.has_eccodes and asv.has_netcdf:
 #    from atmoswing_toolbox.datasets import generic, grib_dataset
 
 
-from .preaction import PreAction
 
 
 class TransformEcmwfData(PreAction):
@@ -12,12 +15,14 @@ class TransformEcmwfData(PreAction):
     Transforme les prévisions émises par l'ECMWF en fichier netcdf.
     """
 
-    def __init__(self, options):
+    def __init__(self, name, options):
         """
         Initialisation de l'instance TransformEcmwfData
 
         Parameters
         ----------
+        name: str
+            Le nom de l'action
         options
             L'instance contenant les options de l'action. Les champs possibles sont:
             * transform_ecmwf_input_dir: str
@@ -33,10 +38,13 @@ class TransformEcmwfData(PreAction):
         if not asv.has_eccodes:
             raise ImportError("Le paquet eccodes est requis pour cette action.")
 
-        self.name = "Transformation données ECMWF"
+        self.type_name = "Transformation données ECMWF"
+        self.name = name
         self.input_dir = options.get('transform_ecmwf_input_dir')
         self.output_dir = options.get('transform_ecmwf_output_dir')
         asv.check_dir_exists(self.output_dir, True)
+
+        self._set_attempts_attributes(options)
 
         if options.has('ecmwf_variables'):
             self.variables = options.get('ecmwf_variables')
@@ -78,7 +86,7 @@ class TransformEcmwfData(PreAction):
         forecast_date, forecast_hour = self._format_forecast_date(date)
 
         for variable in self.variables:
-            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS_Forecast.' \
+            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
                                 f'{variable.lower()}.*.grib2'
 
             input_files = sorted(input_dir.glob(file_name_pattern))

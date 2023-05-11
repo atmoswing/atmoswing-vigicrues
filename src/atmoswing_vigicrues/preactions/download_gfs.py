@@ -1,6 +1,8 @@
-import atmoswing_vigicrues as asv
 import datetime
+
 import requests
+
+import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
 
@@ -11,6 +13,8 @@ class DownloadGfsData(PreAction):
 
     Parameters
     ----------
+    name: str
+        Le nom de l'action
     options: objet
         L'instance contenant les options de l'action. Les champs possibles sont:
 
@@ -36,12 +40,19 @@ class DownloadGfsData(PreAction):
             L'adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port
         * proxy_user : str
             L'utilisateur et le mot de passe pour le proxy. Format : username:password
+        * attempts_max_hours : int
+            Décalage temporel autorisé pour rechercher d'anciens fichiers
+        * attempts_step_hours : int
+            Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     """
 
-    def __init__(self, options):
-        self.name = "Téléchargement GFS"
+    def __init__(self, name, options):
+        self.type_name = "Téléchargement GFS"
+        self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
+
+        self._set_attempts_attributes(options)
 
         if 'lead_time_max' in options:
             self.lead_time_max = options['lead_time_max']
@@ -146,7 +157,7 @@ class DownloadGfsData(PreAction):
                           f"{subregion}&dir=%2Fgfs.{forecast_date}%2F" \
                           f"{forecast_hour}%2Fatmos"
 
-                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS_Forecast.' \
+                    file_name = f'{forecast_date}{forecast_hour}.NWS_GFS.' \
                                 f'{variable.lower()}.{lead_time_str}.grib2'
 
                     local_path = self._get_local_path(date_ref)
@@ -187,7 +198,7 @@ class DownloadGfsData(PreAction):
         levels = []
         for level in self.levels:
             if isinstance(level, str) and level == 'surface':
-                levels.append(f'lev_surface=on&')
+                levels.append('lev_surface=on&')
             if isinstance(level, str) and level == 'entire_atmosphere':
                 levels.append('lev_entire_atmosphere_%5C%28considered'
                               '_as_a_single_layer%5C%29=on&')
