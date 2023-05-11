@@ -9,10 +9,10 @@ def main() -> int:
         description="Traite les prévisions et les exportations d'AtmoSwing pour "
                     "le réseau Vigicrues.")
     parser.add_argument(
-        '--config-file', type=str, required=False,
+        '-c', '--config-file', type=str, required=False,
         help="Fichier de configuration du présent module.")
     parser.add_argument(
-        '--date', type=str, required=False,
+        '-d', '--date', type=str, required=False,
         help="Date pour laquelle émettre une prévision (YYYYMMDDHH).")
 
     args = parser.parse_args()
