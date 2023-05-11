@@ -23,7 +23,7 @@ class Dissemination:
 
         Parameters
         ----------
-        date : datetime
+        date : datetime.datetime
             Date de la prévision.
         """
         raise NotImplementedError

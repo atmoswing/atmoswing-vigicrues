@@ -57,7 +57,7 @@ class TransformGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -72,7 +72,7 @@ class TransformGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns

@@ -111,7 +111,7 @@ class DownloadGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -126,7 +126,7 @@ class DownloadGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns

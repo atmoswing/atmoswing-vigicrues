@@ -78,7 +78,7 @@ class TransferSftpIn(PreAction):
 
         Parameters
         ----------
-        date : datetime
+        date : datetime.datetime
             Date de la prévision.
         """
         try:

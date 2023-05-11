@@ -17,7 +17,7 @@ class Controller:
         lignes de commandes et les options du fichier de configuration.
     verbose : bool
         Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
-    date : datetime
+    date : datetime.datetime
         Date de la prévision.
     """
 
@@ -46,7 +46,7 @@ class Controller:
 
         Parameters
         ----------
-        date : datetime
+        date : datetime.datetime
             La date de la prévision (par défaut, la date actuelle est utilisée).
 
         Returns
