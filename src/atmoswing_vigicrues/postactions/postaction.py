@@ -1,4 +1,3 @@
-
 class PostAction:
     """
     Classe de base pour les opérations de traitement des résultats d'AtmoSwing.

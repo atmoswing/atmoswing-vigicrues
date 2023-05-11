@@ -1,7 +1,8 @@
-import json
 import datetime
-import numpy as np
+import json
 from pathlib import Path
+
+import numpy as np
 
 import atmoswing_vigicrues as asv
 

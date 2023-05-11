@@ -7,9 +7,10 @@ import os
 import sys
 from pathlib import Path
 
+from unittest.mock import Mock as MagicMock
+
 # -- Mock modules -------------------------------------------------------------
 
-from mock import Mock as MagicMock
 
 
 class Mock(MagicMock):

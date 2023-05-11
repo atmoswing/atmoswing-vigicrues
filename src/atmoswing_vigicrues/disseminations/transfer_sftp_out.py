@@ -142,6 +142,6 @@ class TransferSftpOut(Dissemination):
     def _chdir_or_mkdir(dir_path, sftp):
         try:
             sftp.chdir(dir_path)
-        except IOError:
+        except OSError:
             sftp.mkdir(dir_path)
             sftp.chdir(dir_path)

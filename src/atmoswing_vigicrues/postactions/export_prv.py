@@ -1,6 +1,7 @@
 import datetime
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 import atmoswing_vigicrues as asv
 
