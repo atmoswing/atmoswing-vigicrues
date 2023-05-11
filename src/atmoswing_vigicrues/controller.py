@@ -147,14 +147,14 @@ class Controller:
                     success = False
                     break
             if success:
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
                 break
             else:
-                print("  -> Recul de l'heure de la prévision")
+                print("  -> Recul de l'heure de la prévision.")
                 self._back_in_time(attempts_step_hours)
         else:
-            print("  -> Échec de l'exécution")
-            raise asv.Error("Nombre maximum de tentatives atteint pour la pré-action.")
+            print("  -> Échec de l'exécution.")
+            print("  -> Nombre maximum de tentatives atteint pour la pré-action.")
 
     def _run_atmoswing(self):
         """
@@ -228,9 +228,9 @@ class Controller:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
             if action.run():
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
 
     def _run_disseminations(self):
         """
@@ -246,9 +246,9 @@ class Controller:
             files = self._list_files(local_dir, extension)
             action.feed(files)
             if action.run(self.date):
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
 
     def _fix_date(self):
         date = self.date

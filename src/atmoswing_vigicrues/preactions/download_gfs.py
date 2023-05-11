@@ -184,7 +184,6 @@ class DownloadGfsData(PreAction):
                         open(file_path, 'wb').write(r.content)
                         files_count += 1
                     else:
-                        print(f"  -> {r.status_code}")
                         print(f"  -> {r.text}")
                         return False
 
