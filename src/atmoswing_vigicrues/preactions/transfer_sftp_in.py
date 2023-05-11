@@ -61,9 +61,9 @@ class TransferSftpIn(PreAction):
 
         self._set_attempts_attributes(options)
 
-        if 'proxy_host' in options:
+        if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
-            if 'proxy_port' in options:
+            if 'proxy_port' in options and len(options['proxy_port']) > 0:
                 self.proxy_port = int(options['proxy_port'])
             else:
                 self.proxy_port = 1080
