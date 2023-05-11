@@ -72,6 +72,7 @@ def test_export_bdapbp_runs(options, forecast_files, metadata):
         with open(file_path) as f:
             data = json.load(f)
             assert data['status'] == 0
+            assert data['report']['only_relevant_stations'] == True
     shutil.rmtree(options['output_dir'])
 
 
