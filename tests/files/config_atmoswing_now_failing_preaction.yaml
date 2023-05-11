@@ -3,9 +3,9 @@
 atmoswing:
   name: Forecast now
   with:
-    atmoswing_path: 'D:\Development\atmoswing\cmake-build-release\bin\atmoswing-forecaster.exe'
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
     batch_file: 'files/batch_file.xml'
-    output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
+    output_dir: '__tmp_dir__\output'
     target: 'now'
     proxy: ''
     proxy_user: ''
@@ -15,7 +15,7 @@ pre_actions:
     uses: TransferSftpIn
     active: True
     with:
-      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\cep'
+      local_dir: '__tmp_dir__\cep'
       prefix: 'CEP'
       hostname: 'some.sftp.address'
       port: 22

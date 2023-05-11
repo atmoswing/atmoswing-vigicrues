@@ -3,9 +3,9 @@
 atmoswing:
   name: Forecast now
   with:
-    atmoswing_path: 'D:\Development\atmoswing\cmake-build-release\bin\atmoswing-forecaster.exe'
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
     batch_file: 'files/batch_file.xml'
-    output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
+    output_dir: '__tmp_dir__\output'
     target: 'now'
     proxy: ''
     proxy_user: ''
@@ -15,7 +15,7 @@ pre_actions:
     uses: DownloadGfsData
     active: True
     with:
-      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\gfs'
+      output_dir: '__tmp_dir__\gfs'
       lead_time_max: 168
       variables: ['hgt']
       levels: [500, 1000]
@@ -31,7 +31,7 @@ post_actions:
     uses: ExportBdApBp
     active: True
     with:
-      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
+      output_dir: '__tmp_dir__\bdapbp'
       number_analogs: 10
       only_relevant_stations: True
 
@@ -39,7 +39,7 @@ post_actions:
     uses: ExportPrv
     enable: True
     with:
-      output_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
+      output_dir: '__tmp_dir__\prv'
       frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
 
 disseminations:
@@ -47,7 +47,7 @@ disseminations:
     uses: TransferSftpOut
     active: True
     with:
-      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output'
+      local_dir: '__tmp_dir__\output'
       extension: '.nc'
       hostname: '127.0.0.1'
       port: 4422
@@ -61,7 +61,7 @@ disseminations:
     uses: TransferSftpOut
     active: True
     with:
-      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\bdapbp'
+      local_dir: '__tmp_dir__\bdapbp'
       extension: '.json'
       hostname: '127.0.0.1'
       port: 4422
@@ -75,7 +75,7 @@ disseminations:
     uses: TransferSftpOut
     active: True
     with:
-      local_dir: 'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\prv'
+      local_dir: '__tmp_dir__\prv'
       extension: '.csv'
       hostname: '127.0.0.1'
       port: 4422

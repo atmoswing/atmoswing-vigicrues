@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<atmoswing version="1.0" target="forecaster">
+  <description>
+    <method_id>PC-AZ2</method_id>
+    <method_id_display>Circulation classique</method_id_display>
+    <specific_tag>Cretes_sud_est</specific_tag>
+    <specific_tag_display>Crêtes du sud-est</specific_tag_display>
+    <description>Analogie classique de la circulation atmopshérique (2 niveaux)</description>
+  </description>
+  <time_properties>
+    <archive_period>
+      <start_year>1961</start_year>
+      <end_year>2008</end_year>
+    </archive_period>
+    <lead_time>
+      <lead_time_days>0,1,2,3,4,5</lead_time_days>
+    </lead_time>
+    <time_step>24</time_step>
+    <time_array_analogs>
+      <time_array>days_interval</time_array>
+      <interval_days>60</interval_days>
+      <exclude_days>60</exclude_days>
+    </time_array_analogs>
+  </time_properties>
+  <analog_dates>
+    <analogs_number>35,35,45,65,125,235</analogs_number>
+    <predictor>
+      <realtime_dataset_id>NWS_GFS_Local</realtime_dataset_id>
+      <realtime_data_id>hgt</realtime_data_id>
+      <archive_dataset_id>Custom_Unil_NR1</archive_dataset_id>
+      <archive_data_id>hgt</archive_data_id>
+      <level>500</level>
+      <time>24</time>
+      <spatial_window>
+        <x_min>5</x_min>
+        <x_points_nb>6</x_points_nb>
+        <x_step>2.5</x_step>
+        <y_min>40</y_min>
+        <y_points_nb>5</y_points_nb>
+        <y_step>2.5</y_step>
+      </spatial_window>
+      <criteria>S1</criteria>
+      <weight>0.5</weight>
+    </predictor>
+    <predictor>
+      <realtime_dataset_id>NWS_GFS_Local</realtime_dataset_id>
+      <realtime_data_id>hgt</realtime_data_id>
+      <archive_dataset_id>Custom_Unil_NR1</archive_dataset_id>
+      <archive_data_id>hgt</archive_data_id>
+      <level>1000</level>
+      <time>12</time>
+      <spatial_window>
+        <x_min>5</x_min>
+        <x_points_nb>6</x_points_nb>
+        <x_step>2.5</x_step>
+        <y_min>40</y_min>
+        <y_points_nb>5</y_points_nb>
+        <y_step>2.5</y_step>
+      </spatial_window>
+      <criteria>S1</criteria>
+      <weight>0.5</weight>
+    </predictor>
+  </analog_dates>
+  <analog_values>
+    <predictand>
+      <database>Precipitation-Daily-Station-MeteoSwiss-Rhone.nc</database>
+      <station_ids>24,26,61,60,59,58</station_ids>
+    </predictand>
+  </analog_values>
+</atmoswing>
