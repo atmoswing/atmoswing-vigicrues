@@ -1,0 +1,22 @@
+Need to get the image atmoz/sftp
+Source: https://github.com/atmoz/sftp
+
+Exemple:
+
+docker run `
+   --mount type=bind,source=D:\Development\atmoswing-vigicrues\tests\files\sftp-fake-files,target=/home/foo/some/dir `
+   -p 4422:22 -d atmoz/sftp foo:pass:1001
+
+
+Connection FileZilla:
+- host: sftp://127.0.0.1
+- user: foo
+- pwd: pass
+- port: 4422
+
+Connection module atmoswing-vigicrues:
+- hostname: '127.0.0.1'
+- port: 4422
+- username: 'foo'
+- password: 'pass'
+- remote_dir: 'some/dir'

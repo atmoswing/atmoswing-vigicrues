@@ -12,6 +12,6 @@ pre_actions:
       port: 4422
       username: 'foo'
       password: 'pass'
-      remote_dir: 'upload'
+      remote_dir: 'some/dir'
       proxy_host: ''
       proxy_port: 1080

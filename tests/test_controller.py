@@ -8,6 +8,8 @@ import pytest
 import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+
+# Needs a running version of AtmoSwing Forecaster installed
 RUN_ATMOSWING = False
 
 
