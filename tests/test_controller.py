@@ -2,6 +2,8 @@ import importlib
 import os
 import tempfile
 import types
+import shutil
+import xml.etree.ElementTree as ET
 
 import pytest
 
@@ -11,6 +13,34 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Needs a running version of AtmoSwing Forecaster installed
 RUN_ATMOSWING = False
+DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
+
+
+@pytest.fixture
+def tmp_dir():
+    tmp_dir = tempfile.TemporaryDirectory().name
+    os.mkdir(tmp_dir)
+    os.mkdir(tmp_dir + '/gfs')
+    os.mkdir(tmp_dir + '/output')
+    batch_file = DIR_PATH + '/files/batch_file.xml'
+
+    # Open the XML file
+    tree = ET.parse(batch_file)
+    root = tree.getroot()
+
+    # Replace the "__tmp_path__" string with the temp dir in all text elements
+    for elem in root.iter():
+        if elem.text and "__tmp_dir__" in elem.text:
+            elem.text = elem.text.replace("__tmp_dir__", tmp_dir)
+        if elem.text and "__files_dir__" in elem.text:
+            elem.text = elem.text.replace("__files_dir__", DIR_PATH + '/files')
+        if elem.text and "__data_dir__" in elem.text:
+            elem.text = elem.text.replace("__data_dir__", DATA_PATH)
+
+    # Save the updated XML to a new file
+    tree.write(tmp_dir + "/batch_file.xml")
+
+    return tmp_dir
 
 
 def test_controller_instance_fails_if_config_is_none():
@@ -60,44 +90,48 @@ def test_controller_can_instantiate_actions():
         fct('Download GFS data', action['with'])
 
 
-def test_run_atmoswing_now():
+def test_run_atmoswing_now(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_date():
+def test_run_atmoswing_date(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_date.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_past():
+def test_run_atmoswing_past(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_past.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_now_full_pipeline():
+def test_run_atmoswing_now_full_pipeline(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
 def test_special_characters_in_config_file():
@@ -110,21 +144,26 @@ def test_special_characters_in_config_file():
     assert decoded_password == '@#°§&£¢$*[]{}()+'
 
 
-def test_catches_atmoswing_when_failing():
+def test_catches_atmoswing_when_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
-        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+        batch_file=tmp_dir + '/batch_file_fail.xml'
     )
     controller = asv.Controller(options)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_flux_stops_when_preprocess_failing():
+def test_flux_stops_when_preprocess_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
-        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+        batch_file=tmp_dir + '/batch_file_fail.xml'
     )
     controller = asv.Controller(options)
+    if RUN_ATMOSWING:
+        controller.run()
+    shutil.rmtree(tmp_dir)
+
     if RUN_ATMOSWING:
         controller.run()
