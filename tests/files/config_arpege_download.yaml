@@ -1,0 +1,16 @@
+# Exemple de fichier de configuration
+
+pre_actions:
+  - name: Transfer SFTP ARPEGE
+    uses: TransferSftpIn
+    active: True
+    with:
+      local_dir: '/tmp'
+      prefix: 'ARPEGE'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
+      remote_dir: 'some/dir'
+      proxy_host: ''
+      proxy_port: 1080

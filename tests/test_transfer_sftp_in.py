@@ -42,6 +42,20 @@ def options_with_variables():
     return action_options
 
 
+@pytest.fixture
+def options_arpege():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        options_full = asv.Options(
+            types.SimpleNamespace(
+                config_file=DIR_PATH + '/files/config_arpege_download.yaml'
+            ))
+
+        action_options = options_full.config['pre_actions'][0]['with']
+        action_options['local_dir'] = tmp_dir
+
+    return action_options
+
+
 def count_files_recursively(options):
     nb_files = sum([len(files) for r, d, files in os.walk(options['local_dir'])])
     return nb_files
@@ -75,3 +89,12 @@ def test_do_not_download_if_exists(options_with_variables, capsys):
         captured = capsys.readouterr()
         assert captured.out == "  -> Fichiers déjà présents localement.\n"
         shutil.rmtree(options_with_variables['local_dir'])
+
+
+def test_download_arpege_succeeds(options_arpege):
+    action = asv.TransferSftpIn('Get ARPEGE data over SFTP', options_arpege)
+    date = datetime(2023, 4, 17, 00)
+    if RUN_SFTP:
+        assert action.run(date)
+        assert count_files_recursively(options_arpege) == 3
+        shutil.rmtree(options_arpege['local_dir'])
