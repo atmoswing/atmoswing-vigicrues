@@ -15,6 +15,9 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 RUN_ATMOSWING = False
 DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
 
+# Needs a running docker container (see files/sftp-docker-instructions.txt)
+RUN_SFTP = True
+
 
 @pytest.fixture
 def tmp_dir():
@@ -39,6 +42,28 @@ def tmp_dir():
     tree.write(tmp_dir + "/batch_file.xml")
 
     return tmp_dir
+
+
+def get_controller_with_fixed_paths_full(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    controller.post_actions[0].output_dir = tmp_dir + '/bdapbp'
+    controller.post_actions[1].output_dir = tmp_dir + '/prv'
+    return controller
+
+
+def get_controller_with_fixed_paths_preaction(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    return controller
+
+
+def get_controller_with_fixed_paths_simple(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    return controller
 
 
 def test_controller_instance_fails_if_config_is_none():
@@ -132,6 +157,18 @@ def test_run_atmoswing_now_full_pipeline(tmp_dir):
     shutil.rmtree(tmp_dir)
 
 
+def test_run_atmoswing_now_full_pipeline_with_dissemination(tmp_dir):
+    config_file_name = 'config_atmoswing_now_full_with_dissemination.yaml'
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/' + config_file_name,
+        batch_file=tmp_dir + '/batch_file.xml'
+    )
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
+    if RUN_ATMOSWING and RUN_SFTP:
+        controller.run()
+    shutil.rmtree(tmp_dir)
+
+
 def test_special_characters_in_config_file():
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_with_special_characters.yaml',
@@ -178,25 +215,3 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
                                      "en post-action.\n")
 
     shutil.rmtree(tmp_dir)
-
-
-def get_controller_with_fixed_paths_full(options, tmp_dir):
-    controller = asv.Controller(options)
-    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
-    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
-    controller.post_actions[0].output_dir = tmp_dir + '/bdapbp'
-    controller.post_actions[1].output_dir = tmp_dir + '/prv'
-    return controller
-
-
-def get_controller_with_fixed_paths_preaction(options, tmp_dir):
-    controller = asv.Controller(options)
-    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
-    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
-    return controller
-
-
-def get_controller_with_fixed_paths_simple(options, tmp_dir):
-    controller = asv.Controller(options)
-    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
-    return controller
