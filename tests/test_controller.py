@@ -12,7 +12,7 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Needs a running version of AtmoSwing Forecaster installed
-RUN_ATMOSWING = True
+RUN_ATMOSWING = False
 DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
 
 
@@ -20,8 +20,6 @@ DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
 def tmp_dir():
     tmp_dir = tempfile.TemporaryDirectory().name
     os.mkdir(tmp_dir)
-    os.mkdir(tmp_dir + '/gfs')
-    os.mkdir(tmp_dir + '/output')
     batch_file = DIR_PATH + '/files/batch_file.xml'
 
     # Open the XML file
