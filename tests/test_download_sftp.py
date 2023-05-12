@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import types
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 

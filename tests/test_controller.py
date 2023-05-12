@@ -1,8 +1,8 @@
 import importlib
 import os
+import shutil
 import tempfile
 import types
-import shutil
 import xml.etree.ElementTree as ET
 
 import pytest
@@ -176,7 +176,8 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
         assert captured.out.endswith("  -> Exécution correcte.\n")
         controller.run()
         captured = capsys.readouterr()
-        assert captured.out.endswith("  -> Aucun nouveau fichier à traiter en post-action.\n")
+        assert captured.out.endswith("  -> Aucun nouveau fichier à traiter "
+                                     "en post-action.\n")
 
     shutil.rmtree(tmp_dir)
 

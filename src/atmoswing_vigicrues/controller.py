@@ -175,7 +175,7 @@ class Controller:
 
             if ret.returncode != 0:
                 print("  -> Échec de l'exécution.")
-                raise asv.Error(f"Erreur de AtmoSwing Forecaster.")
+                raise asv.Error("Erreur de AtmoSwing Forecaster.")
             else:
                 print("  -> Exécution correcte.")
         except Exception as e:

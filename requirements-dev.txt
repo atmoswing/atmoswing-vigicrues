@@ -1,6 +1,5 @@
-pre-commit
-pytest
 black
 flake8
-pytest-pep8
+pre-commit
+pytest
 pytest-cov

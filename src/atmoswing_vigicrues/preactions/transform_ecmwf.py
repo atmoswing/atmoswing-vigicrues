@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction

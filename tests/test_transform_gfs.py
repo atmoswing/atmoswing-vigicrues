@@ -15,6 +15,7 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 def has_required_packages() -> bool:
     return asv.has_netcdf and asv.has_eccodes
 
+
 @pytest.fixture
 def options():
     with tempfile.TemporaryDirectory() as tmp_dir:
