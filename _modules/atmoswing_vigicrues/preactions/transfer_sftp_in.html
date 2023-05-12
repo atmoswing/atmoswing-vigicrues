@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>atmoswing_vigicrues.preactions.transfer_sftp_in &mdash; AtmoSwing Vigicrues 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            AtmoSwing Vigicrues
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/module.html">Composants</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AtmoSwing Vigicrues</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">atmoswing_vigicrues.preactions.transfer_sftp_in</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for atmoswing_vigicrues.preactions.transfer_sftp_in</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">fnmatch</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">paramiko</span>
+
+<span class="kn">import</span> <span class="nn">atmoswing_vigicrues</span> <span class="k">as</span> <span class="nn">asv</span>
+
+<span class="kn">from</span> <span class="nn">.preaction</span> <span class="kn">import</span> <span class="n">PreAction</span>
+
+
+<div class="viewcode-block" id="TransferSftpIn"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransferSftpIn">[docs]</a><span class="k">class</span> <span class="nc">TransferSftpIn</span><span class="p">(</span><span class="n">PreAction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Récupération des prévisions des modèles météo par SFTP.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Le nom de l&#39;action</span>
+<span class="sd">    options: objet</span>
+<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+
+<span class="sd">        * local_dir : str</span>
+<span class="sd">            Répertoire cible pour l&#39;enregistrement des fichiers.</span>
+<span class="sd">        * prefix : str</span>
+<span class="sd">            Prefix des fichiers à importer.</span>
+<span class="sd">        * variables : list (optionnel)</span>
+<span class="sd">            Liste des variables météorologiques à importer.</span>
+<span class="sd">        * hostname : str</span>
+<span class="sd">            Adresse du serveur distant.</span>
+<span class="sd">        * port : int</span>
+<span class="sd">            Port du serveur distant.</span>
+<span class="sd">        * username : str</span>
+<span class="sd">            Utilisateur ayant un accès au serveur.</span>
+<span class="sd">        * password : str</span>
+<span class="sd">            Mot de passe de l&#39;utilisateur sur le serveur.</span>
+<span class="sd">        * proxy_host : str</span>
+<span class="sd">            Adresse du proxy, si nécessaire.</span>
+<span class="sd">        * proxy_port : int</span>
+<span class="sd">            Port du proxy si nécessaire (par défaut: 1080).</span>
+<span class="sd">        * remote_dir : str</span>
+<span class="sd">            Chemin sur le serveur distant où se trouvent les fichiers.</span>
+<span class="sd">        * attempts_max_hours : int</span>
+<span class="sd">            Décalage temporel autorisé pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">        * attempts_step_hours : int</span>
+<span class="sd">            Pas de temps auquel décrémenter la date pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation de l&#39;instance TransferSftp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type_name</span> <span class="o">=</span> <span class="s2">&quot;Transfert SFTP&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;local_dir&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prefix&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;hostname&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;remote_dir&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_attempts_attributes</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;variables&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="s1">&#39;proxy_host&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;proxy_port&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="mi">1080</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TransferSftpIn.run"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransferSftpIn.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exécution de la récupération par SFTP.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        date : datetime.datetime</span>
+<span class="sd">            Date de la prévision.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="c1"># Check if files already in the local folder (only with defined variables)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_already_present</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Fichiers déjà présents localement.&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="c1"># Create a transport object for the SFTP connection</span>
+            <span class="n">transport</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">Transport</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">:</span>
+                <span class="n">transport</span><span class="o">.</span><span class="n">start_client</span><span class="p">()</span>
+                <span class="n">transport</span><span class="o">.</span><span class="n">open_channel</span><span class="p">(</span><span class="s1">&#39;direct-tcpip&#39;</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span>
+                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">))</span>
+
+            <span class="c1"># Authenticate with the SFTP server</span>
+            <span class="n">transport</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
+
+            <span class="c1"># Create an SFTP client object</span>
+            <span class="n">sftp</span> <span class="o">=</span> <span class="n">transport</span><span class="o">.</span><span class="n">open_sftp_client</span><span class="p">()</span>
+
+            <span class="c1"># Change the directory to the desired remote directory</span>
+            <span class="n">sftp</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span><span class="p">)</span>
+
+            <span class="c1"># Download files</span>
+            <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_local_path</span><span class="p">(</span><span class="n">date</span><span class="p">))</span>
+            <span class="n">forecast_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">remote_file</span> <span class="ow">in</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">*_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span> \
+                                  <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
+                        <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
+                            <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
+                    <span class="n">local_file</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="n">remote_file</span>
+                    <span class="k">if</span> <span class="n">local_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                        <span class="k">continue</span>
+                    <span class="n">sftp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">remote_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_file</span><span class="p">),</span> <span class="n">prefetch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_unpack_if_needed</span><span class="p">(</span><span class="n">local_file</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+
+            <span class="c1"># Close the SFTP client and transport objects</span>
+            <span class="n">sftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">transport</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">PasswordRequiredException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP PasswordRequiredException </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">BadAuthenticationType</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP BadAuthenticationType </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">AuthenticationException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP AuthenticationException </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">ChannelException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP ChannelException </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">ProxyCommandFailure</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP ProxyCommandFailure </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">SSHException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP SSHException </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SFTP FileNotFoundError </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Le rapatriement des données par SFTP a échoué (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_chdir_or_mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">sftp</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sftp</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="n">sftp</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+            <span class="n">sftp</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_local_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">local_path</span>
+
+    <span class="k">def</span> <span class="nf">_files_already_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_local_path</span><span class="p">(</span><span class="n">date</span><span class="p">))</span>
+        <span class="n">forecast_datetime</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span> \
+                      <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">forecast_datetime</span><span class="si">}</span><span class="s1">*.*&#39;</span>
+            <span class="n">local_files</span> <span class="o">=</span> <span class="n">local_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+            <span class="n">file_found</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">local_file</span> <span class="ow">in</span> <span class="n">local_files</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">local_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
+                    <span class="n">file_found</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_found</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_unpack_if_needed</span><span class="p">(</span><span class="n">local_file</span><span class="p">,</span> <span class="n">local_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">local_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;.tgz&#39;</span><span class="p">,</span> <span class="s1">&#39;.xz&#39;</span><span class="p">,</span> <span class="s1">&#39;.txz&#39;</span><span class="p">,</span> <span class="s1">&#39;.bz2&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;.tbz&#39;</span><span class="p">,</span> <span class="s1">&#39;.tbz2&#39;</span><span class="p">,</span> <span class="s1">&#39;.tb2&#39;</span><span class="p">]:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">local_file</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isreg</span><span class="p">():</span>
+                    <span class="n">member</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Pascal Horton.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
