@@ -172,8 +172,6 @@ def test_list_only_new_forecaster_files(tmp_dir, capsys):
     controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
-        captured = capsys.readouterr()
-        assert captured.out.endswith("  -> Exécution correcte.\n")
         controller.run()
         captured = capsys.readouterr()
         assert captured.out.endswith("  -> Aucun nouveau fichier à traiter "

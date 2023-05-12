@@ -163,6 +163,10 @@ class Controller:
         Exécution d'AtmoSwing.
         """
         run = self.options.get('atmoswing')
+        if 'active' in run and run['active'] is False:
+            print("  -> Prévision par AtmoSwing Forecaster désactivée.")
+            return True
+
         name = run['name']
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
