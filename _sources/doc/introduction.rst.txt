@@ -29,7 +29,7 @@ Utilisation
 -----------
 
 Le paquet est constitué de plusieurs modules qui peuvent être activés et configurés dans un fichier de configuration. Plusieurs flux de prévision peuvent être configurés sur un serveur / PC par la création de différents fichiers de configuration. Il n’y a pas de paramètres codés en dur dans le code. L’exécution d’un flux de prévision est effectuée par la commande :
-python -m atmoswing_vigicrues --config-file="chemin/vers/fichier/config.yaml"
+``python -m atmoswing_vigicrues --config-file="chemin/vers/fichier/config.yaml``
 Le fichier de configuration définit :
 
 * Les propriétés de la prévision par AtmoSwing
