@@ -22,7 +22,7 @@ class TransformGfsData(PreAction):
         * date_format : str
             Format pour l'écriture des dates cibles. Défaut: "%d-%m-%Y"
         * variables : list
-            Les variables météorologiques àconvertir.
+            Les variables météorologiques à convertir.
     """
 
     def __init__(self, name, options):
