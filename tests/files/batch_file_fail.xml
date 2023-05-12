@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <atmoswing version="1.0" target="forecaster">
-  <forecasts_output_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output</forecasts_output_directory>
-  <exports_output_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\output</exports_output_directory>
-  <parameters_files_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing</parameters_files_directory>
-  <predictors_archive_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\NR1</predictors_archive_directory>
-  <predictors_realtime_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing\_tmp\gfs</predictors_realtime_directory>
-  <predictand_db_directory>D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing</predictand_db_directory>
+  <forecasts_output_directory>__tmp_dir__\output</forecasts_output_directory>
+  <exports_output_directory>__tmp_dir__\output</exports_output_directory>
+  <parameters_files_directory>__files_dir__</parameters_files_directory>
+  <predictors_archive_directory>__data_dir__</predictors_archive_directory>
+  <predictors_realtime_directory>__data_cache__</predictors_realtime_directory>
+  <predictand_db_directory>__data_dir__</predictand_db_directory>
   <export_synthetic_xml>0</export_synthetic_xml>
   <forecasts>
     <filename>4Zo_CEP_01_Vilaine.xml</filename>

@@ -1,55 +1,45 @@
-from datetime import datetime
-
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
 
-#if asv.has_eccodes and asv.has_netcdf:
-#    from atmoswing_toolbox.datasets import generic, grib_dataset
-
-
+if asv.has_eccodes and asv.has_netcdf:
+    from atmoswing_toolbox.datasets import generic_dataset, grib_dataset
 
 
 class TransformEcmwfData(PreAction):
     """
-    Transforme les prévisions émises par l'ECMWF en fichier netcdf.
+    Transforme les prévisions émises par le CEP en fichier netcdf.
+
+    Parameters
+    ----------
+    name: str
+        Le nom de l'action
+    options: objet
+        L'instance contenant les options de l'action. Les champs possibles sont:
+
+        * output_dir : str
+            Chemin cible pour l'enregistrement des fichiers.
+        * date_format : str
+            Format pour l'écriture des dates cibles. Défaut: "%d-%m-%Y"
+        * variables : list
+            Les variables météorologiques à convertir.
     """
 
     def __init__(self, name, options):
-        """
-        Initialisation de l'instance TransformEcmwfData
-
-        Parameters
-        ----------
-        name: str
-            Le nom de l'action
-        options
-            L'instance contenant les options de l'action. Les champs possibles sont:
-            * transform_ecmwf_input_dir: str
-                Répertoire contenant les fichiers originaux (grib2).
-            * transform_ecmwf_output_dir: str
-                Répertoire cible pour l'enregistrement des fichiers.
-            * ecmwf_variables: list
-                Variables à télécharger.
-                Valeur par défaut: ['hgt']
-        """
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
         if not asv.has_eccodes:
             raise ImportError("Le paquet eccodes est requis pour cette action.")
 
-        self.type_name = "Transformation données ECMWF"
+        self.type_name = "Transformation données GFS"
         self.name = name
-        self.input_dir = options.get('transform_ecmwf_input_dir')
-        self.output_dir = options.get('transform_ecmwf_output_dir')
+        self.input_dir = options['input_dir']
+        self.output_dir = options['output_dir']
+        self.variables = options['variables']
+
         asv.check_dir_exists(self.output_dir, True)
 
         self._set_attempts_attributes(options)
-
-        if options.has('ecmwf_variables'):
-            self.variables = options.get('ecmwf_variables')
-        else:
-            self.variables = ['z']
 
         super().__init__()
 
@@ -59,7 +49,7 @@ class TransformEcmwfData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -74,7 +64,7 @@ class TransformEcmwfData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -88,20 +78,26 @@ class TransformEcmwfData(PreAction):
         for variable in self.variables:
             file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
                                 f'{variable.lower()}.*.grib2'
+            new_file_name = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
+                            f'{variable.lower()}.nc'
 
             input_files = sorted(input_dir.glob(file_name_pattern))
 
             if len(input_files) == 0:
                 return False
 
-            #data = grib_dataset.Grib(directory=input_dir,
-            #                         file_pattern=file_name_pattern)
-            #data.load()
+            data = grib_dataset.GribDataset(
+                directory=input_dir,
+                file_pattern=file_name_pattern)
+            data.load()
 
-            #new_file = generic.Generic(directory=self.output_dir,
-            #                           var_name=variable,
-            #                           ref_data=data)
-            #new_file.generate(format=generic.NETCDF_4)
+            new_file = generic_dataset.GenericDataset(
+                directory=self.output_dir,
+                var_name=variable,
+                ref_data=data)
+            new_file.generate(
+                format=generic_dataset.NETCDF_4,
+                file_name=new_file_name)
 
         return True
 

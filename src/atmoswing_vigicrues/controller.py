@@ -17,7 +17,7 @@ class Controller:
         lignes de commandes et les options du fichier de configuration.
     verbose : bool
         Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
-    date : datetime
+    date : datetime.datetime
         Date de la prévision.
     """
 
@@ -33,6 +33,7 @@ class Controller:
         self.options = asv.Options(cli_options)
         self.time_increment = 6
         self.date = datetime.datetime.utcnow()
+        self.existing_files = []
         self.pre_actions = []
         self.post_actions = []
         self.disseminations = []
@@ -46,7 +47,7 @@ class Controller:
 
         Parameters
         ----------
-        date : datetime
+        date : datetime.datetime
             La date de la prévision (par défaut, la date actuelle est utilisée).
 
         Returns
@@ -62,6 +63,7 @@ class Controller:
 
         try:
             self._run_pre_actions()
+            self.existing_files = self._list_atmoswing_output_files()
             self._run_atmoswing()
             self._run_post_actions()
             self._run_disseminations()
@@ -147,20 +149,24 @@ class Controller:
                     success = False
                     break
             if success:
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
                 break
             else:
-                print("  -> Recul de l'heure de la prévision")
+                print("  -> Recul de l'heure de la prévision.")
                 self._back_in_time(attempts_step_hours)
         else:
-            print("  -> Échec de l'exécution")
-            raise asv.Error("Nombre maximum de tentatives atteint pour la pré-action.")
+            print("  -> Échec de l'exécution.")
+            print("  -> Nombre maximum de tentatives atteint pour la pré-action.")
 
     def _run_atmoswing(self):
         """
         Exécution d'AtmoSwing.
         """
         run = self.options.get('atmoswing')
+        if 'active' in run and run['active'] is False:
+            print("  -> Prévision par AtmoSwing Forecaster désactivée.")
+            return True
+
         name = run['name']
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
@@ -172,12 +178,13 @@ class Controller:
             ret = subprocess.run(cmd, capture_output=True, check=True)
 
             if ret.returncode != 0:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
+                raise asv.Error("Erreur de AtmoSwing Forecaster.")
             else:
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
         except Exception as e:
-            print("  -> Échec de l'exécution")
-            print(f"Exception lors de l'exécution d'AtmoSwing Forecaster: {e}")
+            print("  -> Échec de l'exécution.")
+            raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
@@ -223,14 +230,20 @@ class Controller:
         if not self.post_actions or len(self.post_actions) == 0:
             return
 
-        files = self._list_atmoswing_output_files()
+        files = self._get_files_for_post_actions()
+        if len(files) == 0:
+            print("  -> Aucun nouveau fichier à traiter en post-action.")
+            return
+
+        print(f"  -> {len(files)} nouveaux fichier à traiter en post-action.")
+
         for action in self.post_actions:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
             if action.run():
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
 
     def _run_disseminations(self):
         """
@@ -246,9 +259,9 @@ class Controller:
             files = self._list_files(local_dir, extension)
             action.feed(files)
             if action.run(self.date):
-                print("  -> Exécution correcte")
+                print("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution")
+                print("  -> Échec de l'exécution.")
 
     def _fix_date(self):
         date = self.date
@@ -264,6 +277,11 @@ class Controller:
     def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']
         return self._list_files(output_dir, '.nc', '%Y-%m-%d_%H')
+
+    def _get_files_for_post_actions(self):
+        files = self._list_atmoswing_output_files()
+        files = [x for x in files if x not in self.existing_files]
+        return files
 
     def _list_files(self, local_dir, ext, pattern='%Y-%m-%d_%H'):
         local_dir = asv.utils.build_date_dir_structure(local_dir, self.date)

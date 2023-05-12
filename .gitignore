@@ -130,3 +130,5 @@ dmypy.json
 
 # Custom
 .idea/
+*/__data_cache__
+*/__tmp_dir__

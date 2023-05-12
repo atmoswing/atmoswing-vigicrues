@@ -3,13 +3,11 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
 import sys
 from pathlib import Path
 from unittest.mock import Mock as MagicMock
 
 # -- Mock modules -------------------------------------------------------------
-
 
 
 class Mock(MagicMock):
@@ -60,7 +58,6 @@ autosummary_generate = True
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
 
 
 # -- Options for HTML output -------------------------------------------------

@@ -77,7 +77,7 @@ class ExportBdApBp(PostAction):
         Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("Aucun fichier à traiter")
+            print("  -> Aucun fichier à traiter")
             return False
 
         for file in self._file_paths:
@@ -116,7 +116,8 @@ class ExportBdApBp(PostAction):
                     'file': file.name,
                     'date': self._get_now_formatted(),
                     'message': self.message,
-                    'exported_analogs': exported_analogs
+                    'exported_analogs': exported_analogs,
+                    'only_relevant_stations': self.only_relevant_stations
                 },
                 'metadata': metadata,
                 'data': data,

@@ -1,6 +1,32 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.0 - 12 Mai 2023
+
+### Résolu
+
+*   Mise à jour de l'utilisation de Paramiko.
+*   Correction de variables GFS manquantes.
+*   Correction de problèmes de style de code.
+
+### Ajouts
+
+*   Ajout de la version courte des arguments.
+*   Ajout de l'option only_relevant_stations dans le fichier json généré.
+*   Ajout de l'option de formatage de la date pour l'export PRV.
+*   Option pour spécifier les variables du rapatriement SFTP.
+*   Option pour sauter l'action AtmoSwing Forecaster.
+*   Ajout de tests
+
+### Changements
+
+*   Le flux de prévision continue même si les pré-actions ont échoué.
+*   La prévision s'arrête si le AtmoSwing Forecaster échoue.
+*   Si des fichiers sont déjà présents, la connexion SFTP n'est pas créée.
+*   Les post-actions ne sont effectuées que si de nouveaux fichiers sont disponibles.
+*   Mise à jour des actions transformant les fichiers grib.
+
+
 ## v1.0.4 - 10 Mai 2023
 
 ### Ajouts

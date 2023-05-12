@@ -21,6 +21,8 @@ class ExportPrv(PostAction):
 
         * output_dir : str
             Chemin cible pour l'enregistrement des fichiers.
+        * date_format : str
+            Format pour l'écriture des dates cibles. Défaut: "%d-%m-%Y"
         * frequencies : list
             Les fréquences à extraire.
             Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
@@ -36,6 +38,11 @@ class ExportPrv(PostAction):
         self.name = name
         self.output_dir = options['output_dir']
         asv.check_dir_exists(self.output_dir, True)
+
+        if 'date_format' in options:
+            self.date_format = options['date_format']
+        else:
+            self.date_format = "%d-%m-%Y"
 
         if 'frequencies' in options:
             self.frequencies = options['frequencies']
@@ -58,7 +65,7 @@ class ExportPrv(PostAction):
         Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("Aucun fichier à traiter")
+            print("  -> Aucun fichier à traiter")
             return False
 
         for file in self._file_paths:
@@ -202,11 +209,10 @@ class ExportPrv(PostAction):
             ids += f"{nc_file.method_id}.{nc_file.specific_tag}.{int(100 * freq):03d};"
         return ids
 
-    @staticmethod
-    def _get_time_format(target_dates):
+    def _get_time_format(self, target_dates):
         time_step = target_dates[1] - target_dates[0]
         show_hour = time_step < 24 * 3600
-        time_format_target = "%Y-%m-%d"
+        time_format_target = self.date_format
         if show_hour:
-            time_format_target = "%Y-%m-%d %H:%M"
+            time_format_target = self.date_format + " %H:%M"
         return time_format_target

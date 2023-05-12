@@ -4,7 +4,6 @@ import tarfile
 from pathlib import Path
 
 import paramiko
-import socks
 
 import atmoswing_vigicrues as asv
 
@@ -26,6 +25,8 @@ class TransferSftpIn(PreAction):
             Répertoire cible pour l'enregistrement des fichiers.
         * prefix : str
             Prefix des fichiers à importer.
+        * variables : list (optionnel)
+            Liste des variables météorologiques à importer.
         * hostname : str
             Adresse du serveur distant.
         * port : int
@@ -55,17 +56,22 @@ class TransferSftpIn(PreAction):
         self.local_dir = options['local_dir']
         self.prefix = options['prefix']
         self.hostname = options['hostname']
-        self.port = options['port']
+        self.port = int(options['port'])
         self.username = options['username']
         self.password = options['password']
         self.remote_dir = options['remote_dir']
 
         self._set_attempts_attributes(options)
 
-        if 'proxy_host' in options:
+        if 'variables' in options and len(options['variables']) > 0:
+            self.variables = options['variables']
+        else:
+            self.variables = None
+
+        if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
-            if 'proxy_port' in options:
-                self.proxy_port = options['proxy_port']
+            if 'proxy_port' in options and len(options['proxy_port']) > 0:
+                self.proxy_port = int(options['proxy_port'])
             else:
                 self.proxy_port = 1080
         else:
@@ -79,41 +85,57 @@ class TransferSftpIn(PreAction):
 
         Parameters
         ----------
-        date : datetime
+        date : datetime.datetime
             Date de la prévision.
         """
         try:
-            if self.proxy_host:
-                sock = socks.socksocket()
-                sock.set_proxy(
-                    proxy_type=socks.SOCKS5,
-                    addr=self.proxy_host,
-                    port=self.proxy_port
-                )
-                sock.connect((self.hostname, self.port))
-                transport = paramiko.Transport(sock)
-            else:
-                transport = paramiko.Transport((self.hostname, self.port))
 
-            transport.connect(None, self.username, self.password)
-            sftp = paramiko.SFTPClient.from_transport(transport)
+            # Check if files already in the local folder (only with defined variables)
+            if self.variables is not None:
+                if self._files_already_present(date):
+                    print("  -> Fichiers déjà présents localement.")
+                    return True
+
+            # Create a transport object for the SFTP connection
+            transport = paramiko.Transport((self.hostname, self.port))
+
+            if self.proxy_host:
+                transport.start_client()
+                transport.open_channel('direct-tcpip',
+                                       (self.hostname, self.port),
+                                       (self.proxy_host, self.proxy_port))
+
+            # Authenticate with the SFTP server
+            transport.connect(username=self.username, password=self.password)
+
+            # Create an SFTP client object
+            sftp = transport.open_sftp_client()
+
+            # Change the directory to the desired remote directory
             sftp.chdir(self.remote_dir)
 
+            # Download files
             local_path = Path(self._get_local_path(date))
             forecast_date = date.strftime("%Y%m%d")
-
             for remote_file in sftp.listdir('.'):
-                if fnmatch.fnmatch(remote_file, f'{self.prefix}*_{forecast_date}*.*'):
+                pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
+                if self.variables is not None:
+                    for variable in self.variables:
+                        pattern = f'{self.prefix.lower()}_{variable.lower()}' \
+                                  f'_{forecast_date}*.*'
+                        if fnmatch.fnmatch(remote_file.lower(), pattern):
+                            break
+
+                if fnmatch.fnmatch(remote_file.lower(), pattern):
                     local_file = local_path / remote_file
                     if local_file.exists():
                         continue
-                    sftp.get(remote_file, str(local_file))
+                    sftp.get(remote_file, str(local_file), prefetch=False)
                     self._unpack_if_needed(local_file, local_path)
 
-            if sftp:
-                sftp.close()
-            if transport:
-                transport.close()
+            # Close the SFTP client and transport objects
+            sftp.close()
+            transport.close()
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
@@ -154,6 +176,24 @@ class TransferSftpIn(PreAction):
         local_path = asv.build_date_dir_structure(self.local_dir, date)
         local_path.mkdir(parents=True, exist_ok=True)
         return local_path
+
+    def _files_already_present(self, date):
+        local_path = Path(self._get_local_path(date))
+        forecast_datetime = date.strftime("%Y%m%d%H")
+
+        for variable in self.variables:
+            pattern = f'{self.prefix.lower()}_{variable.lower()}' \
+                      f'_{forecast_datetime}*.*'
+            local_files = local_path.glob(pattern)
+            file_found = False
+            for local_file in local_files:
+                if fnmatch.fnmatch(str(local_file.name).lower(), pattern):
+                    file_found = True
+                    break
+            if not file_found:
+                return False
+
+        return True
 
     @staticmethod
     def _unpack_if_needed(local_file, local_path):

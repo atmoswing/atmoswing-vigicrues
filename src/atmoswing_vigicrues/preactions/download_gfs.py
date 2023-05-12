@@ -1,10 +1,13 @@
 import datetime
+import re
 
 import requests
 
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+CLEAN_HTML = re.compile('<.*?>')
 
 
 class DownloadGfsData(PreAction):
@@ -111,7 +114,7 @@ class DownloadGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -126,7 +129,7 @@ class DownloadGfsData(PreAction):
 
         Parameters
         ----------
-        date: datetime
+        date: datetime.datetime
             Date d'émission de la prévision.
 
         Returns
@@ -140,6 +143,7 @@ class DownloadGfsData(PreAction):
         if resol == '0p50':
             sub_product = 'pgrb2full'
 
+        files_count = 0
         for time_step_back in range(0, self.time_step_back):
             date_ref = date - datetime.timedelta(
                 hours=self.time_increment * time_step_back
@@ -172,20 +176,22 @@ class DownloadGfsData(PreAction):
                         else:
                             r = requests.get(url)
                     except requests.exceptions.RequestException as e:
-                        print(e)
-                        print("Le téléchargement de GFS a échoué.")
+                        print(f"  -> {e}")
+                        print("  -> Le téléchargement de GFS a échoué.")
                         return False
                     except Exception:
-                        print("Le téléchargement de GFS a échoué.")
+                        print("  -> Le téléchargement de GFS a échoué.")
                         return False
 
                     if r.status_code == 200:
                         open(file_path, 'wb').write(r.content)
-                        break
+                        files_count += 1
                     else:
-                        # print(r.status_code)
-                        # print(r.text)
+                        clean_text = re.sub(CLEAN_HTML, '', r.text)
+                        print(f"  -> {clean_text}")
                         return False
+
+        print(f"  -> Nombre de fichiers téléchargés : {files_count}.")
 
         return True
 

@@ -1,14 +1,69 @@
 import importlib
 import os
+import shutil
 import tempfile
 import types
+import xml.etree.ElementTree as ET
 
 import pytest
 
 import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+
+# Needs a running version of AtmoSwing Forecaster installed
 RUN_ATMOSWING = False
+DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
+
+# Needs a running docker container (see files/sftp-docker-instructions.txt)
+RUN_SFTP = False
+
+
+@pytest.fixture
+def tmp_dir():
+    tmp_dir = tempfile.TemporaryDirectory().name
+    os.mkdir(tmp_dir)
+    batch_file = DIR_PATH + '/files/batch_file.xml'
+
+    # Open the XML file
+    tree = ET.parse(batch_file)
+    root = tree.getroot()
+
+    # Replace the "__tmp_path__" string with the temp dir in all text elements
+    for elem in root.iter():
+        if elem.text and "__tmp_dir__" in elem.text:
+            elem.text = elem.text.replace("__tmp_dir__", tmp_dir)
+        if elem.text and "__files_dir__" in elem.text:
+            elem.text = elem.text.replace("__files_dir__", DIR_PATH + '/files')
+        if elem.text and "__data_dir__" in elem.text:
+            elem.text = elem.text.replace("__data_dir__", DATA_PATH)
+
+    # Save the updated XML to a new file
+    tree.write(tmp_dir + "/batch_file.xml")
+
+    return tmp_dir
+
+
+def get_controller_with_fixed_paths_full(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    controller.post_actions[0].output_dir = tmp_dir + '/bdapbp'
+    controller.post_actions[1].output_dir = tmp_dir + '/prv'
+    return controller
+
+
+def get_controller_with_fixed_paths_preaction(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.pre_actions[0].output_dir = DIR_PATH + '/__data_cache__'
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    return controller
+
+
+def get_controller_with_fixed_paths_simple(options, tmp_dir):
+    controller = asv.Controller(options)
+    controller.options.config['atmoswing']['with']['output_dir'] = tmp_dir + '/output'
+    return controller
 
 
 def test_controller_instance_fails_if_config_is_none():
@@ -58,44 +113,60 @@ def test_controller_can_instantiate_actions():
         fct('Download GFS data', action['with'])
 
 
-def test_run_atmoswing_now():
+def test_run_atmoswing_now(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_date():
+def test_run_atmoswing_date(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_date.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_past():
+def test_run_atmoswing_past(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_past.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_run_atmoswing_now_full_pipeline():
+def test_run_atmoswing_now_full_pipeline(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
-        batch_file=DIR_PATH + '/files/batch_file.xml'
+        batch_file=tmp_dir + '/batch_file.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
+
+
+def test_run_atmoswing_now_full_pipeline_with_dissemination(tmp_dir):
+    config_file_name = 'config_atmoswing_now_full_with_dissemination.yaml'
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/' + config_file_name,
+        batch_file=tmp_dir + '/batch_file.xml'
+    )
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
+    if RUN_ATMOSWING and RUN_SFTP:
+        controller.run()
+    shutil.rmtree(tmp_dir)
 
 
 def test_special_characters_in_config_file():
@@ -108,21 +179,39 @@ def test_special_characters_in_config_file():
     assert decoded_password == '@#°§&£¢$*[]{}()+'
 
 
-def test_catches_atmoswing_when_failing():
+def test_catches_atmoswing_when_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
-        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+        batch_file=tmp_dir + '/batch_file_fail.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
 
 
-def test_flux_stops_when_preprocess_failing():
+def test_flux_stops_when_preprocess_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
-        batch_file=DIR_PATH + '/files/batch_file_fail.xml'
+        batch_file=tmp_dir + '/batch_file_fail.xml'
     )
-    controller = asv.Controller(options)
+    controller = get_controller_with_fixed_paths_preaction(options, tmp_dir)
     if RUN_ATMOSWING:
         controller.run()
+    shutil.rmtree(tmp_dir)
+
+
+def test_list_only_new_forecaster_files(tmp_dir, capsys):
+    options = types.SimpleNamespace(
+        config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
+        batch_file=tmp_dir + '/batch_file.xml'
+    )
+    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
+    if RUN_ATMOSWING:
+        controller.run()
+        controller.run()
+        captured = capsys.readouterr()
+        assert captured.out.endswith("  -> Aucun nouveau fichier à traiter "
+                                     "en post-action.\n")
+
+    shutil.rmtree(tmp_dir)

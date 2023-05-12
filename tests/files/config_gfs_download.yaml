@@ -1,12 +1,23 @@
 # Exemple de fichier de configuration
 
+atmoswing:
+  name: Forecast now
+  active: False
+  with:
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    batch_file: 'files/batch_file.xml'
+    output_dir: '__tmp_dir__\output'
+    target: 'now'
+    proxy: ''
+    proxy_user: ''
+
 pre_actions:
   - name: Download GFS data (Z)
     uses: DownloadGfsData
     with:
-      output_dir: '/tmp/gfs'
+      output_dir: 'tests/__data_cache__'
       lead_time_max: 12
-      variables: ['hgt']
+      variables: ['hgt', 'rh']
       levels: [500, 1000]
       domain: [-5, 5, 40, 45]
       resolution: 0.5

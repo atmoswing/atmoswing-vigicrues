@@ -2,6 +2,7 @@
 
 atmoswing:
   name: Forecast now
+  active: False
   with:
     atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
     batch_file: 'files/batch_file.xml'
@@ -10,17 +11,17 @@ atmoswing:
     proxy: ''
     proxy_user: ''
 
-pre_actions:
-  - name: Transfer SFTP CEP
-    uses: TransferSftpIn
+disseminations:
+  - name: Transfer SFTP netcdf
+    uses: TransferSftpOut
     active: True
     with:
-      local_dir: '__tmp_dir__\cep'
-      prefix: 'CEP'
-      hostname: 'some.sftp.address'
-      port: 22
-      username: ''
-      password: ''
-      remote_dir: '/some/directory'
+      local_dir: '/tmp'
+      extension: '.nc'
+      hostname: '127.0.0.1'
+      port: 4422
+      username: 'foo'
+      password: 'pass'
       proxy_host: ''
-      proxy_port: 1080
+      proxy_port: ''
+      remote_dir: 'some/dir'
