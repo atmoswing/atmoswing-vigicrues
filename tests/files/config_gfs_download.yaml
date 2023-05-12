@@ -15,7 +15,7 @@ pre_actions:
   - name: Download GFS data (Z)
     uses: DownloadGfsData
     with:
-      output_dir: '__data_cache__'
+      output_dir: 'tests/__data_cache__'
       lead_time_max: 12
       variables: ['hgt', 'rh']
       levels: [500, 1000]

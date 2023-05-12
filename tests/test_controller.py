@@ -16,7 +16,7 @@ RUN_ATMOSWING = False
 DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
 
 # Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = True
+RUN_SFTP = False
 
 
 @pytest.fixture
