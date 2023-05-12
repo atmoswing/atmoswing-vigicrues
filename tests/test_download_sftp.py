@@ -53,7 +53,7 @@ def test_download_cep_no_variables_succeeds(options_no_variables):
     if RUN_SFTP:
         assert action.run(date)
         assert count_files_recursively(options_no_variables) == 6
-    shutil.rmtree(options_no_variables['local_dir'])
+        shutil.rmtree(options_no_variables['local_dir'])
 
 
 def test_download_cep_with_variables_succeeds(options_with_variables):
@@ -62,7 +62,7 @@ def test_download_cep_with_variables_succeeds(options_with_variables):
     if RUN_SFTP:
         assert action.run(date)
         assert count_files_recursively(options_with_variables) == 4
-    shutil.rmtree(options_with_variables['local_dir'])
+        shutil.rmtree(options_with_variables['local_dir'])
 
 
 def test_do_not_download_if_exists(options_with_variables, capsys):
@@ -74,4 +74,4 @@ def test_do_not_download_if_exists(options_with_variables, capsys):
         assert action.run(date)
         captured = capsys.readouterr()
         assert captured.out == "  -> Fichiers déjà présents localement.\n"
-    shutil.rmtree(options_with_variables['local_dir'])
+        shutil.rmtree(options_with_variables['local_dir'])
