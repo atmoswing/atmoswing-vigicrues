@@ -4,10 +4,8 @@ import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
 
-#if asv.has_eccodes and asv.has_netcdf:
-#    from atmoswing_toolbox.datasets import generic, grib_dataset
-
-
+if asv.has_eccodes and asv.has_netcdf:
+    from atmoswing_toolbox.datasets import generic_dataset, grib_dataset
 
 
 class TransformEcmwfData(PreAction):
@@ -94,14 +92,16 @@ class TransformEcmwfData(PreAction):
             if len(input_files) == 0:
                 return False
 
-            #data = grib_dataset.Grib(directory=input_dir,
-            #                         file_pattern=file_name_pattern)
-            #data.load()
+            data = grib_dataset.GribDataset(
+                directory=input_dir,
+                file_pattern=file_name_pattern)
+            data.load()
 
-            #new_file = generic.Generic(directory=self.output_dir,
-            #                           var_name=variable,
-            #                           ref_data=data)
-            #new_file.generate(format=generic.NETCDF_4)
+            new_file = generic_dataset.GenericDataset(
+                directory=self.output_dir,
+                var_name=variable,
+                ref_data=data)
+            new_file.generate(format=generic_dataset.NETCDF_4)
 
         return True
 
