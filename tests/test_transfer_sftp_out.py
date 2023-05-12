@@ -10,7 +10,7 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = True
+RUN_SFTP = False
 
 
 @pytest.fixture
