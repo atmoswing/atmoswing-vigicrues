@@ -15,6 +15,12 @@ Controller
 Pre-actions
 -----------
 
+.. autoclass:: TransferSftpIn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 .. autoclass:: DownloadGfsData
    :members:
    :undoc-members:
@@ -22,6 +28,12 @@ Pre-actions
 
 
 .. autoclass:: TransformGfsData
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. autoclass:: TransformEcmwfData
    :members:
    :undoc-members:
    :show-inheritance:
@@ -44,7 +56,7 @@ Post-actions
 Disseminations
 --------------
 
-.. autoclass:: TransferSftp
+.. autoclass:: TransferSftpOut
    :members:
    :undoc-members:
    :show-inheritance:

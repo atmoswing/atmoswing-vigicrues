@@ -17,7 +17,7 @@ class Mock(MagicMock):
 
 
 MOCK_MODULES = ['numpy', 'matplotlib', 'matplotlib.pyplot', 'pandas', 'netCDF4',
-                'pytest', 'pysftp', 'atmoswing_toolbox',
+                'pytest', 'pysftp', 'atmoswing_toolbox', 'paramiko',
                 'atmoswing_toolbox.files.parse.predictors'
                 ]
 
@@ -33,7 +33,8 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 BASE_PATH = Path(__file__).parent.parent.absolute()
 sys.path.insert(0, str(BASE_PATH))
-sys.path.insert(0, str(BASE_PATH / "atmoswing_vigicrues"))
+sys.path.insert(0, str(BASE_PATH / "src"))
+sys.path.insert(0, str(BASE_PATH / "src" / "atmoswing_vigicrues"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
