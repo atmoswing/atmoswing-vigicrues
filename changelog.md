@@ -10,7 +10,7 @@
 
 ### Changements
 
-*   Exécute toujours les post-actions et contrôle si les fichiers cibles existent avant 
+*   Exécute toujours les post-actions et contrôle si les fichiers cibles existent avant
     de les écraser
 
 

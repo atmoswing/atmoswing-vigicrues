@@ -37,4 +37,3 @@ def test_upload_nc_succeeds(options, forecast_files):
     date = datetime(2022, 12, 16, 00)
     if RUN_SFTP:
         assert action.run(date)
-
