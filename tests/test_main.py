@@ -1,4 +1,5 @@
 import os
+
 import atmoswing_vigicrues.__main__ as main_module
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))

@@ -199,19 +199,3 @@ def test_flux_stops_when_preprocess_failing(tmp_dir):
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
-
-
-def test_list_only_new_forecaster_files(tmp_dir, capsys):
-    options = types.SimpleNamespace(
-        config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
-        batch_file=tmp_dir + '/batch_file.xml'
-    )
-    controller = get_controller_with_fixed_paths_full(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
-        controller.run()
-        captured = capsys.readouterr()
-        assert captured.out.endswith("  -> Aucun nouveau fichier à traiter "
-                                     "en post-action.\n")
-
-    shutil.rmtree(tmp_dir)

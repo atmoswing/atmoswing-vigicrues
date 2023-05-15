@@ -1,6 +1,19 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.1 - 15 Mai 2023
+
+### Ajouts
+
+*   Ajout du nombre de fichiers récupérés par SFTP.
+*   Ajout de l'affichage du contenu du journal du Forecaster en cas d'erreur.
+
+### Changements
+
+*   Exécute toujours les post-actions et contrôle si les fichiers cibles existent avant
+    de les écraser
+
+
 ## v1.1.0 - 12 Mai 2023
 
 ### Résolu

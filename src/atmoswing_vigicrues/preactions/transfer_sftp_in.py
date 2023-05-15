@@ -117,6 +117,7 @@ class TransferSftpIn(PreAction):
             # Download files
             local_path = Path(self._get_local_path(date))
             forecast_date = date.strftime("%Y%m%d")
+            files_count = 0
             for remote_file in sftp.listdir('.'):
                 pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
                 if self.variables is not None:
@@ -132,10 +133,13 @@ class TransferSftpIn(PreAction):
                         continue
                     sftp.get(remote_file, str(local_file), prefetch=False)
                     self._unpack_if_needed(local_file, local_path)
+                    files_count += 1
 
             # Close the SFTP client and transport objects
             sftp.close()
             transport.close()
+
+            print(f"  -> Nombre de fichiers récupérés : {files_count}.")
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")

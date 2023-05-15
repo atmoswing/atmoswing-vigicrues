@@ -80,8 +80,15 @@ class ExportBdApBp(PostAction):
             print("  -> Aucun fichier à traiter")
             return False
 
+        files_count = 0
         for file in self._file_paths:
             file = Path(file)
+
+            # Nom du fichier
+            file_path = self._build_file_path(file)
+            if file_path.exists():
+                continue
+
             self._reset_status()
             nc_file = None
 
@@ -124,9 +131,6 @@ class ExportBdApBp(PostAction):
                 'statistics': statistics,
             }
 
-            # Nom du fichier
-            file_path = self._build_file_path(file)
-
             with open(file_path, "w", encoding="utf-8", newline='\r\n') as outfile:
                 if self.use_indentation:
                     json.dump(data, outfile, indent=4, ensure_ascii=False)
@@ -135,6 +139,10 @@ class ExportBdApBp(PostAction):
 
             if nc_file:
                 nc_file.close()
+
+            files_count += 1
+
+        print(f"  -> Nombre de fichiers exportés : {files_count}.")
 
         return True
 

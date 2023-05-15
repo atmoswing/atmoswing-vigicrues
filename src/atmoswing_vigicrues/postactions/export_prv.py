@@ -68,34 +68,41 @@ class ExportPrv(PostAction):
             print("  -> Aucun fichier à traiter")
             return False
 
+        files_count = 0
         for file in self._file_paths:
             nc_file = asv.Dataset(file, 'r', format='NETCDF4')
             station_ids = self._extract_station_ids(nc_file)
             header_comments = self._create_header_comments(nc_file)
             if self.combine_stations_in_one_file:
+                file_path = self._build_file_path(file)
+                if file_path.exists():
+                    continue
+
                 header_data = self._create_header_data(nc_file, station_ids)
                 content = self._create_content(nc_file, station_ids)
                 full_content = f"{header_comments}{header_data}{content}"
-
-                # File name
-                file_path = self._build_file_path(file)
 
                 with open(file_path, 'w', encoding="utf-8", newline='\r\n') as outfile:
                     outfile.write(full_content)
             else:
                 for station_id in station_ids:
+                    file_path = self._build_file_path(file, station_id)
+                    if file_path.exists():
+                        continue
+
                     header_data = self._create_header_data(nc_file, station_id)
                     content = self._create_content(nc_file, station_id)
                     full_content = f"{header_comments}{header_data}{content}"
-
-                    # File name
-                    file_path = self._build_file_path(file, station_id)
 
                     with open(file_path, 'w', encoding="utf-8", newline='\r\n') \
                             as outfile:
                         outfile.write(full_content)
 
             nc_file.close()
+
+            files_count += 1
+
+        print(f"  -> Nombre de fichiers exportés : {files_count}.")
 
         return True
 

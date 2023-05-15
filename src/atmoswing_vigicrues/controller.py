@@ -2,6 +2,8 @@ import datetime
 import glob
 import importlib
 import subprocess
+import tempfile
+from pathlib import Path
 
 import atmoswing_vigicrues as asv
 
@@ -175,15 +177,17 @@ class Controller:
         print("Commande: " + ' '.join(cmd))
 
         try:
-            ret = subprocess.run(cmd, capture_output=True, check=True)
+            ret = subprocess.run(cmd, capture_output=True)
 
             if ret.returncode != 0:
                 print("  -> Échec de l'exécution.")
+                self._parse_log_file()
                 raise asv.Error("Erreur de AtmoSwing Forecaster.")
             else:
                 print("  -> Exécution correcte.")
         except Exception as e:
             print("  -> Échec de l'exécution.")
+            self._parse_log_file()
             raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}")
 
     def _build_atmoswing_cmd(self, options):
@@ -230,12 +234,10 @@ class Controller:
         if not self.post_actions or len(self.post_actions) == 0:
             return
 
-        files = self._get_files_for_post_actions()
+        files = self._list_atmoswing_output_files()
         if len(files) == 0:
             print("  -> Aucun nouveau fichier à traiter en post-action.")
             return
-
-        print(f"  -> {len(files)} nouveaux fichier à traiter en post-action.")
 
         for action in self.post_actions:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
@@ -288,3 +290,14 @@ class Controller:
         pattern = f"{str(local_dir)}/{self.date.strftime(pattern)}{f'.*{ext}'}"
         files = glob.glob(pattern)
         return files
+
+    @staticmethod
+    def _parse_log_file():
+        tmp_dir = Path(tempfile.gettempdir())
+        log_file = tmp_dir / "AtmoSwingForecaster.log"
+        if not log_file.exists():
+            print(f"  -> Le journal des logs n'a pas été trouvé ({str(log_file)}).")
+        with open(str(log_file)) as file:
+            for item in file:
+                content = item.replace("\r\n", "").replace("\n", "")
+                print(f"     | {content}")
