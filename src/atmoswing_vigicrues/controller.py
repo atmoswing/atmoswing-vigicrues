@@ -234,12 +234,10 @@ class Controller:
         if not self.post_actions or len(self.post_actions) == 0:
             return
 
-        files = self._get_files_for_post_actions()
+        files = self._list_atmoswing_output_files()
         if len(files) == 0:
             print("  -> Aucun nouveau fichier à traiter en post-action.")
             return
-
-        print(f"  -> {len(files)} nouveaux fichier à traiter en post-action.")
 
         for action in self.post_actions:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
