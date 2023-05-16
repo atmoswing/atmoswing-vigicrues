@@ -116,29 +116,20 @@ class TransferSftpIn(PreAction):
 
             # Download files
             local_path = Path(self._get_local_path(date))
-            forecast_date = date.strftime("%Y%m%d")
-            files_count = 0
-            for remote_file in sftp.listdir('.'):
-                pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
-                if self.variables is not None:
-                    for variable in self.variables:
-                        pattern = f'{self.prefix.lower()}_{variable.lower()}' \
-                                  f'_{forecast_date}*.*'
-                        if fnmatch.fnmatch(remote_file.lower(), pattern):
-                            break
+            forecast_datetime = date.strftime("%Y%m%d%H")
+            files_count_dt = self._get_files(sftp, forecast_datetime, local_path)
+            if files_count_dt == 0:
+                print(f"  -> Pas de fichier disponible pour {forecast_datetime}.")
+                return False
 
-                if fnmatch.fnmatch(remote_file.lower(), pattern):
-                    local_file = local_path / remote_file
-                    if local_file.exists():
-                        continue
-                    sftp.get(remote_file, str(local_file), prefetch=False)
-                    self._unpack_if_needed(local_file, local_path)
-                    files_count += 1
+            forecast_date = date.strftime("%Y%m%d")
+            files_count_d = self._get_files(sftp, forecast_date, local_path)
 
             # Close the SFTP client and transport objects
             sftp.close()
             transport.close()
 
+            files_count = files_count_dt + files_count_d
             print(f"  -> Nombre de fichiers récupérés : {files_count}.")
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
@@ -167,6 +158,27 @@ class TransferSftpIn(PreAction):
             return False
 
         return True
+
+    def _get_files(self, sftp, forecast_date, local_path):
+        files_count = 0
+        for remote_file in sftp.listdir('.'):
+            pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
+            if self.variables is not None:
+                for variable in self.variables:
+                    pattern = f'{self.prefix.lower()}_{variable.lower()}' \
+                              f'_{forecast_date}*.*'
+                    if fnmatch.fnmatch(remote_file.lower(), pattern):
+                        break
+
+            if fnmatch.fnmatch(remote_file.lower(), pattern):
+                local_file = local_path / remote_file
+                if local_file.exists():
+                    continue
+                sftp.get(remote_file, str(local_file), prefetch=False)
+                self._unpack_if_needed(local_file, local_path)
+                files_count += 1
+
+        return files_count
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):
