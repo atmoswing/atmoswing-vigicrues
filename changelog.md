@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.2 - 16 Mai 2023
+
+### Corrections
+
+*   Retour négatif si des fichiers ne sont pas disponibles pour l'heure donnée sur le serveur SFTP.
+
+
 ## v1.1.1 - 15 Mai 2023
 
 ### Ajouts
@@ -15,12 +22,6 @@
 
 
 ## v1.1.0 - 12 Mai 2023
-
-### Résolu
-
-*   Mise à jour de l'utilisation de Paramiko.
-*   Correction de variables GFS manquantes.
-*   Correction de problèmes de style de code.
 
 ### Ajouts
 
@@ -38,6 +39,12 @@
 *   Si des fichiers sont déjà présents, la connexion SFTP n'est pas créée.
 *   Les post-actions ne sont effectuées que si de nouveaux fichiers sont disponibles.
 *   Mise à jour des actions transformant les fichiers grib.
+
+### Corrections
+
+*   Mise à jour de l'utilisation de Paramiko.
+*   Correction de variables GFS manquantes.
+*   Correction de problèmes de style de code.
 
 
 ## v1.0.4 - 10 Mai 2023
@@ -63,21 +70,21 @@
 
 ## v1.0.2 - 05 Mai 2023
 
-### Résolu
+### Corrections
 
 *   Support de caractères spéciaux dans les fichiers de config (p.ex. mots de passe).
 
 
 ## v1.0.1 - 18 Avr 2023
 
-### Résolu
-
-*   Correction du nom des fichiers GFS téléchargés.
-*   Ajout d'un retour positif après téléchargement des données par SFTP.
-
 ### Ajouts
 
 *   Ajout de tags aux conteneurs Dockers.
+
+### Corrections
+
+*   Correction du nom des fichiers GFS téléchargés.
+*   Ajout d'un retour positif après téléchargement des données par SFTP.
 
 
 ## v1.0.0 - 17 Avr 2023
