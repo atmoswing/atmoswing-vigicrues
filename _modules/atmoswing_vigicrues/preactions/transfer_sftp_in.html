@@ -186,29 +186,20 @@
 
             <span class="c1"># Download files</span>
             <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_local_path</span><span class="p">(</span><span class="n">date</span><span class="p">))</span>
-            <span class="n">forecast_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">files_count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">remote_file</span> <span class="ow">in</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
-                <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">*_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-                        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span> \
-                                  <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
-                        <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
-                            <span class="k">break</span>
+            <span class="n">forecast_datetime</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H&quot;</span><span class="p">)</span>
+            <span class="n">files_count_dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">(</span><span class="n">sftp</span><span class="p">,</span> <span class="n">forecast_datetime</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">files_count_dt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  -&gt; Pas de fichier disponible pour </span><span class="si">{</span><span class="n">forecast_datetime</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
 
-                <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
-                    <span class="n">local_file</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="n">remote_file</span>
-                    <span class="k">if</span> <span class="n">local_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                        <span class="k">continue</span>
-                    <span class="n">sftp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">remote_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_file</span><span class="p">),</span> <span class="n">prefetch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_unpack_if_needed</span><span class="p">(</span><span class="n">local_file</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
-                    <span class="n">files_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">forecast_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">files_count_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">(</span><span class="n">sftp</span><span class="p">,</span> <span class="n">forecast_date</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
 
             <span class="c1"># Close the SFTP client and transport objects</span>
             <span class="n">sftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">transport</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
+            <span class="n">files_count</span> <span class="o">=</span> <span class="n">files_count_dt</span> <span class="o">+</span> <span class="n">files_count_d</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  -&gt; Nombre de fichiers récupérés : </span><span class="si">{</span><span class="n">files_count</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">ssh_exception</span><span class="o">.</span><span class="n">PasswordRequiredException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -237,6 +228,27 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sftp</span><span class="p">,</span> <span class="n">forecast_date</span><span class="p">,</span> <span class="n">local_path</span><span class="p">):</span>
+        <span class="n">files_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">remote_file</span> <span class="ow">in</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">*_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span> \
+                              <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">forecast_date</span><span class="si">}</span><span class="s1">*.*&#39;</span>
+                    <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
+                        <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">remote_file</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pattern</span><span class="p">):</span>
+                <span class="n">local_file</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="n">remote_file</span>
+                <span class="k">if</span> <span class="n">local_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="n">sftp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">remote_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_file</span><span class="p">),</span> <span class="n">prefetch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unpack_if_needed</span><span class="p">(</span><span class="n">local_file</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+                <span class="n">files_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">files_count</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_chdir_or_mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">sftp</span><span class="p">):</span>
