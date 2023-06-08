@@ -1,6 +1,17 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.4 - 08 Juin 2023
+
+### Changements
+
+*   Ajout de messages sur les téléchargements GFS.
+
+### Corrections
+
+*   Correction de problèmes avec le rapatriement SFTP.
+
+
 ## v1.1.3 - 20 Mai 2023
 
 ### Changements
