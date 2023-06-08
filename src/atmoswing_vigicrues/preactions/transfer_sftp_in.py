@@ -117,20 +117,21 @@ class TransferSftpIn(PreAction):
             # Download files
             local_path = Path(self._get_local_path(date))
             forecast_datetime = date.strftime("%Y%m%d%H")
-            files_count_dt = self._get_files(sftp, forecast_datetime, local_path)
-            if files_count_dt == 0:
+            f_exist_dt, f_new_dt = self._get_files(sftp, forecast_datetime, local_path)
+
+            if f_exist_dt + f_new_dt == 0:
                 print(f"  -> Pas de fichier disponible pour {forecast_datetime}.")
                 return False
 
             forecast_date = date.strftime("%Y%m%d")
-            files_count_d = self._get_files(sftp, forecast_date, local_path)
+            f_exist_d, f_new_d = self._get_files(sftp, forecast_date, local_path)
 
             # Close the SFTP client and transport objects
             sftp.close()
             transport.close()
 
-            files_count = files_count_dt + files_count_d
-            print(f"  -> Nombre de fichiers récupérés : {files_count}.")
+            print(f"  -> Nombre de fichiers existants : {f_exist_d - f_new_dt}.")
+            print(f"  -> Nombre de fichiers récupérés : {f_new_dt + f_new_d}.")
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
@@ -160,7 +161,8 @@ class TransferSftpIn(PreAction):
         return True
 
     def _get_files(self, sftp, forecast_date, local_path):
-        files_count = 0
+        files_count_existing = 0
+        files_count_new = 0
         for remote_file in sftp.listdir('.'):
             pattern = f'{self.prefix.lower()}*_{forecast_date}*.*'
             if self.variables is not None:
@@ -173,12 +175,13 @@ class TransferSftpIn(PreAction):
             if fnmatch.fnmatch(remote_file.lower(), pattern):
                 local_file = local_path / remote_file
                 if local_file.exists():
+                    files_count_existing += 1
                     continue
                 sftp.get(remote_file, str(local_file), prefetch=False)
                 self._unpack_if_needed(local_file, local_path)
-                files_count += 1
+                files_count_new += 1
 
-        return files_count
+        return files_count_existing, files_count_new
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):
