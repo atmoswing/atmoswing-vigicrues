@@ -148,12 +148,15 @@ class DownloadGfsData(PreAction):
             date_ref = date - datetime.timedelta(
                 hours=self.time_increment * time_step_back
             )
+
+            date_msg = date_ref.strftime('%d/%m/%Y %Hh')
+            print(f"  -> Téléchargement des prévisions du : {date_msg}.")
+            forecast_date, forecast_hour = self._format_forecast_date(date_ref)
+
             for lead_time in range(0, self.lead_time_max + 1, 6):
                 lead_time_str = f'{lead_time:03d}'
 
                 for variable in self.variables:
-
-                    forecast_date, forecast_hour = self._format_forecast_date(date_ref)
 
                     url = f"https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_{resol}." \
                           f"pl?file=gfs.t{forecast_hour}z.{sub_product}.{resol}." \
