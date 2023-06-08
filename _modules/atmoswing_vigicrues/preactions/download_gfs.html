@@ -10,6 +10,8 @@
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/sphinx_highlight.js"></script>
@@ -218,12 +220,15 @@
             <span class="n">date_ref</span> <span class="o">=</span> <span class="n">date</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span>
                 <span class="n">hours</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">*</span> <span class="n">time_step_back</span>
             <span class="p">)</span>
+
+            <span class="n">date_msg</span> <span class="o">=</span> <span class="n">date_ref</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">/%m/%Y %Hh&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  -&gt; Téléchargement des prévisions du : </span><span class="si">{</span><span class="n">date_msg</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">forecast_date</span><span class="p">,</span> <span class="n">forecast_hour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_forecast_date</span><span class="p">(</span><span class="n">date_ref</span><span class="p">)</span>
+
             <span class="k">for</span> <span class="n">lead_time</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lead_time_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
                 <span class="n">lead_time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">lead_time</span><span class="si">:</span><span class="s1">03d</span><span class="si">}</span><span class="s1">&#39;</span>
 
                 <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-
-                    <span class="n">forecast_date</span><span class="p">,</span> <span class="n">forecast_hour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_forecast_date</span><span class="p">(</span><span class="n">date_ref</span><span class="p">)</span>
 
                     <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_</span><span class="si">{</span><span class="n">resol</span><span class="si">}</span><span class="s2">.&quot;</span> \
                           <span class="sa">f</span><span class="s2">&quot;pl?file=gfs.t</span><span class="si">{</span><span class="n">forecast_hour</span><span class="si">}</span><span class="s2">z.</span><span class="si">{</span><span class="n">sub_product</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">resol</span><span class="si">}</span><span class="s2">.&quot;</span> \
