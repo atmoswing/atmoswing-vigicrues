@@ -78,7 +78,7 @@ class ExportBdApBp(PostAction):
         """
         if not self._file_paths:
             print("  -> Aucun fichier à traiter")
-            return False
+            return True
 
         files_count = 0
         for file in self._file_paths:
@@ -299,7 +299,10 @@ class ExportBdApBp(PostAction):
 
     @staticmethod
     def _get_time_format(target_dates):
-        time_step = target_dates[1] - target_dates[0]
+        assert len(target_dates) > 1
+        time_step = target_dates[1].astype(datetime.datetime) - \
+                    target_dates[0].astype(datetime.datetime)
+        time_step = time_step.total_seconds()
         show_hour = time_step < 24 * 3600
         time_format_target = "%Y%m%d"
         time_format_analogs = "%Y-%m-%d"
