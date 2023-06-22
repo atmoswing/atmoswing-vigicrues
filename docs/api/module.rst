@@ -15,23 +15,32 @@ Controller
 Pre-actions
 -----------
 
+Transfert SFTP
+~~~~~~~~~~~~~~
+
 .. autoclass:: TransferSftpIn
    :members:
    :undoc-members:
    :show-inheritance:
 
+Téléchargement GFS
+~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: DownloadGfsData
    :members:
    :undoc-members:
    :show-inheritance:
 
+Transformation données GFS
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: TransformGfsData
    :members:
    :undoc-members:
    :show-inheritance:
 
+Transformation données CEP
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: TransformEcmwfData
    :members:
@@ -42,10 +51,16 @@ Pre-actions
 Post-actions
 ------------
 
+Export BdApBp
+~~~~~~~~~~~~~
+
 .. autoclass:: ExportBdApBp
    :members:
    :undoc-members:
    :show-inheritance:
+
+Export PRV
+~~~~~~~~~~
 
 .. autoclass:: ExportPrv
    :members:
@@ -53,8 +68,11 @@ Post-actions
    :show-inheritance:
 
 
-Disseminations
---------------
+Dissemination
+-------------
+
+Transfert SFTP
+~~~~~~~~~~~~~~
 
 .. autoclass:: TransferSftpOut
    :members:
