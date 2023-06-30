@@ -12,6 +12,12 @@ class Controller:
     """
     Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues.
 
+    Parameters
+    ----------
+    cli_options : retour de la fonction parse_args() de la classe
+                  argparse.ArgumentParser
+        Options passées en lignes de commandes à la fonction main()
+
     Attributes
     ----------
     options : instance de la classe Options
@@ -36,11 +42,6 @@ class Controller:
     def __init__(self, cli_options):
         """
         Initialisation de l'instance Controller
-
-        Parameters
-        ----------
-        cli_options : object
-            Options passées en lignes de commandes à la fonction main()
         """
         self.options = asv.Options(cli_options)
         self.time_increment = 6

@@ -1,11 +1,17 @@
 class PostAction:
     """
     Classe de base pour les opérations de traitement des résultats d'AtmoSwing.
+
+    Attributes
+    ----------
+    _file_paths : list
+        Chemins des fichiers de prévision émis par AtmoSwing.
+    _metadata : dict
+        Méta-données issues de la prévision.
     """
 
     def __init__(self):
         self._file_paths = []
-        self._file_contents = []
         self._metadata = None
 
     def feed(self, file_paths, metadata):

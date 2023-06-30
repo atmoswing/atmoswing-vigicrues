@@ -9,7 +9,8 @@ class Options:
     dans le fichier config.
 
     ----------
-    cli_options : object
+    cli_options : retour de la fonction parse_args() de la classe
+                  argparse.ArgumentParser
         Options de la prévision généralement passées sous la forme d'arguments lors de
         l'utilisation en lignes de commandes.
     config : dict
@@ -22,7 +23,8 @@ class Options:
 
         Parameters
         ----------
-        cli_options : object
+        cli_options : retour de la fonction parse_args() de la classe
+                      argparse.ArgumentParser
             Options passées en lignes de commandes à la fonction main()
         """
         self.cli_options = cli_options
