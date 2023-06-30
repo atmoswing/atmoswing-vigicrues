@@ -15,6 +15,9 @@ Controller
 Pre-actions
 -----------
 
+.. inheritance-diagram:: PreAction
+   :parts: 2
+
 Classe de base des pré-actions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
