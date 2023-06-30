@@ -84,6 +84,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues.</span>
 
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cli_options : retour de la fonction parse_args() de la classe</span>
+<span class="sd">                  argparse.ArgumentParser</span>
+<span class="sd">        Options passées en lignes de commandes à la fonction main()</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    options : instance de la classe Options</span>
@@ -108,11 +114,6 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation de l&#39;instance Controller</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        cli_options : object</span>
-<span class="sd">            Options passées en lignes de commandes à la fonction main()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">cli_options</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="mi">6</span>
