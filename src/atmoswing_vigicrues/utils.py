@@ -7,7 +7,24 @@ import atmoswing_vigicrues as asv
 
 
 def file_exists(path):
-    """ Contrôle du chemin vers un fichier. """
+    """
+    Contrôle du chemin vers un fichier.
+
+    Parameters
+    ----------
+    path: str or Path
+        Le chemin vers le fichier.
+
+    Returns
+    -------
+    bool
+        Vrai (True) si le fichier existe, faux (False) sinon.
+
+    Examples
+    --------
+    >>> file_exists(R'C:\\Users\\username\\Documents\\file.txt')
+    True
+    """
     if type(path) == str:
         path = Path(path)
     if not path.exists():
@@ -18,7 +35,25 @@ def file_exists(path):
 
 
 def check_file_exists(path):
-    """ Contrôle du chemin vers un fichier. """
+    """
+    Contrôle du chemin vers un fichier et lève une exception si le fichier n'existe pas.
+
+    Parameters
+    ----------
+    path: str or Path
+        Le chemin vers le fichier.
+
+    Raises
+    ------
+    asv.FilePathError
+        Si le chemin n'existe pas.
+    asv.Error
+        Si le chemin n'est pas un fichier.
+
+    Examples
+    --------
+    >>> check_file_exists(R'C:\\Users\\username\\Documents\\file.txt')
+    """
     if type(path) == str:
         path = Path(path)
     if not path.exists():
@@ -28,6 +63,26 @@ def check_file_exists(path):
 
 
 def check_dir_exists(path, create=False):
+    """
+    Contrôle du chemin vers un répertoire et lève une exception si le répertoire
+    n'existe pas.
+
+    Parameters
+    ----------
+    path: str or Path
+        Le chemin vers le répertoire.
+    create: bool
+        Création du répertoire si celui-ci n'existe pas.
+
+    Raises
+    ------
+    asv.Error
+        Si le chemin n'existe pas.
+
+    Examples
+    --------
+    >>> check_dir_exists(R'C:\\Users\\username\\Documents\\dir')
+    """
     path_output = Path(path)
     if not path_output.exists():
         if create:
@@ -37,6 +92,26 @@ def check_dir_exists(path, create=False):
 
 
 def build_date_dir_structure(base, date):
+    """
+    Construit la structure de répertoires pour une date donnée.
+
+    Parameters
+    ----------
+    base: str or Path
+        Le répertoire de base.
+    date: str or datetime.datetime
+        La date à utiliser.
+
+    Returns
+    -------
+    Path
+        Le répertoire de base avec la structure de répertoires pour la date.
+
+    Examples
+    --------
+    >>> build_date_dir_structure(R'D:\\Documents\\dir', '2020-01-01 00:00:00')
+    Path('D:\\Documents\\dir\\2020\\01\\01')
+    """
     if isinstance(date, str):
         date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     base = Path(base)
@@ -48,8 +123,27 @@ def build_date_dir_structure(base, date):
 
 def jd_to_date(jd):
     """
-    Transform julian date numbers to year, month and day (array-based).
-    From https://gist.github.com/jiffyclub/1294443
+    Transforme un nombre de jour julien en date (année, mois, jour).
+    De https://gist.github.com/jiffyclub/1294443
+
+    Parameters
+    ----------
+    jd: float
+        Le nombre de jour julien.
+
+    Returns
+    -------
+    year: int
+        L'année.
+    month: int
+        Le mois.
+    day: int
+        Le jour.
+
+    Examples
+    --------
+    >>> jd_to_date(2460096.5)
+    (2023, 6, 1)
     """
     jd = jd + 0.5
 
@@ -85,7 +179,26 @@ def jd_to_date(jd):
 
 
 def days_to_hours_mins(days):
-    """Transform a number of days to hours and minutes"""
+    """
+    Transforme un nombre de jours en heures et minutes.
+
+    Parameters
+    ----------
+    days: float
+        Le nombre de jours.
+
+    Returns
+    -------
+    hour: int
+        L'heure.
+    minute: int
+        La minute.
+
+    Examples
+    --------
+    >>> days_to_hours_mins(0.5)
+    (12, 0)
+    """
     hours = days * 24.
     hours, hour = np.modf(hours)
 
@@ -96,7 +209,25 @@ def days_to_hours_mins(days):
 
 
 def mjd_to_datetime(mjd):
-    """Transform modified julian dates to datetime instances (array-based)."""
+    """
+    Transforme un tableau de nombre de jour julien modifié (MJD) en date
+    (année, mois, jour, heure, minute).
+
+    Parameters
+    ----------
+    mjd: ndarray
+        Le tableau de nombre de jour julien modifié (MJD).
+
+    Returns
+    -------
+    date: ndarray
+        Le tableau de date.
+
+    Examples
+    --------
+    >>> mjd_to_datetime(np.array([59215.5, 59216.5]))
+    array(['2021-01-01T12:00:00', '2021-01-02T12:00:00'], dtype='datetime64[s]')
+    """
     jd = mjd + 2400000.5
     year, month, day = jd_to_date(jd)
 
@@ -115,6 +246,23 @@ def mjd_to_datetime(mjd):
 
 
 def build_cumulative_frequency(size):
+    """
+    Construit une distribution de fréquence cumulée.
+
+    Parameters
+    ----------
+    size: int
+        La taille de la distribution.
+
+    Returns
+    -------
+    f: ndarray
+        La distribution de fréquence cumulée.
+
+    Examples
+    --------
+    >>> build_cumulative_frequency(10)
+    """
     # Parameters for the estimated distribution from Gringorten (a=0.44, b=0.12).
     # Choice based on [Cunnane, C., 1978, Unbiased plotting positions—A review:
     # Journal of Hydrology, v. 37, p. 205–222.]
