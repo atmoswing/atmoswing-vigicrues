@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx.ext.inheritance_diagram',
 ]
 
 autosummary_generate = True
