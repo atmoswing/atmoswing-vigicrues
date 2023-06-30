@@ -15,6 +15,14 @@ Controller
 Pre-actions
 -----------
 
+Classe de base des pré-actions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: PreAction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Transfert SFTP
 ~~~~~~~~~~~~~~
 
@@ -51,6 +59,14 @@ Transformation données CEP
 Post-actions
 ------------
 
+Classe de base des post-actions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: PostAction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Export BdApBp
 ~~~~~~~~~~~~~
 
@@ -70,6 +86,14 @@ Export PRV
 
 Dissemination
 -------------
+
+Classe de base des disséminations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: Dissemination
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Transfert SFTP
 ~~~~~~~~~~~~~~
