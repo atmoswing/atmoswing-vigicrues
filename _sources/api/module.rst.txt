@@ -15,6 +15,15 @@ Controller
 Pre-actions
 -----------
 
+v1
+~~
+
+.. inheritance-diagram:: PreAction
+   :parts: 1
+
+v2
+~~
+
 .. inheritance-diagram:: PreAction
    :parts: 2
 
