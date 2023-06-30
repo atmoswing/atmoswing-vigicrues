@@ -144,7 +144,8 @@ class DownloadGfsData(PreAction):
 
         Returns
         -------
-        Vrai (True) en cas de succès, faux (False) autrement.
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
         return self.download(date)
 
@@ -159,7 +160,8 @@ class DownloadGfsData(PreAction):
 
         Returns
         -------
-        Vrai (True) en cas de succès, faux (False) autrement.
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
         subregion = self._build_subregion_request()
         levels = self._build_levels_request()

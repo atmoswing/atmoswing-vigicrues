@@ -16,12 +16,15 @@ else:
     has_eccodes = True
 
 from .controller import Controller
+from .disseminations.dissemination import Dissemination
 from .disseminations.transfer_sftp_out import TransferSftpOut
 from .exceptions import (ConfigError, Error, FilePathError, OptionError,
                          PathError)
 from .options import Options
+from .postactions.postaction import PostAction
 from .postactions.export_bdapbp import ExportBdApBp
 from .postactions.export_prv import ExportPrv
+from .preactions.preaction import PreAction
 from .preactions.download_gfs import DownloadGfsData
 from .preactions.transfer_sftp_in import TransferSftpIn
 from .preactions.transform_ecmwf import TransformEcmwfData
@@ -33,4 +36,5 @@ __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'Controller', 'Options', 'ExportBdApBp', 'ExportPrv', 'TransferSftpOut',
            'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData', 'file_exists',
            'check_file_exists', 'check_dir_exists', 'build_date_dir_structure',
-           'Dataset', 'eccodes', 'TransferSftpIn')
+           'Dataset', 'eccodes', 'TransferSftpIn', 'PreAction', 'PostAction',
+           'Dissemination')

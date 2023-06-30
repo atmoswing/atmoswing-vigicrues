@@ -30,5 +30,10 @@ class Dissemination:
         ----------
         date : datetime.datetime
             Date de la prévision.
+
+        Returns
+        -------
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
         raise NotImplementedError

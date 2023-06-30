@@ -29,6 +29,14 @@ class PostAction:
         self._metadata = metadata
 
     def run(self) -> bool:
+        """
+        Exécution du traitement.
+
+        Returns
+        -------
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
+        """
         raise NotImplementedError
 
     def _get_metadata(self, key):

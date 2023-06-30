@@ -60,6 +60,7 @@ class Options:
 
         Returns
         -------
+        bool
             Vrai (True) si l'option existe, faux (False) sinon.
         """
         if key in self.config and self.config[key]:
@@ -77,6 +78,7 @@ class Options:
 
         Returns
         -------
+        str|int|float
             La valeur de l'option.
         """
         if self.has(key):
