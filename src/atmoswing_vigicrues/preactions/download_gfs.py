@@ -18,8 +18,8 @@ class DownloadGfsData(PreAction):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * output_dir : str
             Répertoire cible pour l'enregistrement des fichiers.
@@ -33,7 +33,7 @@ class DownloadGfsData(PreAction):
             Niveaux de pression à télécharger.
             Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]
         * domain : list
-            Domaine à télécharger.
+            Domaine à télécharger (coordonnées géographiques).
             Valeur par défaut: [-20, 30, 25, 65]
         * resolution : float
             Résolution spatiale des données.
@@ -47,6 +47,31 @@ class DownloadGfsData(PreAction):
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
             Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action
+    name : str
+        Le nom de l'action
+    output_dir : str
+        Répertoire cible pour l'enregistrement des fichiers.
+    lead_time_max : int
+        Échéance maximale de la prévision en heures.
+    variables : list
+        Variables à télécharger.
+    levels : list
+        Niveaux de pression à télécharger.
+    domain : list
+        Domaine à télécharger (coordonnées géographiques).
+    resolution : float
+        Résolution spatiale des données.
+    proxies : list
+        Les informations de connexion au proxy.
+    time_increment : int
+        Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
+    time_step_back : int
+        Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
     """
 
     def __init__(self, name, options):

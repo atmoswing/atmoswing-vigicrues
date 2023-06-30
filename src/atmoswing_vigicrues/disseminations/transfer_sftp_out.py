@@ -15,8 +15,8 @@ class TransferSftpOut(Dissemination):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * local_dir : str
             Répertoire local contenant les fichiers à exporter.
@@ -36,6 +36,31 @@ class TransferSftpOut(Dissemination):
             Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action.
+    name : str
+        Le nom de l'action.
+    local_dir : str
+        Répertoire local contenant les fichiers à exporter.
+    extension : str
+        Extension des fichiers à exporter.
+    hostname : str
+        Adresse du serveur pour la diffusion des résultats.
+    port : int
+        Port du serveur distant.
+    username : str
+        Utilisateur ayant un accès au serveur.
+    password : str
+        Mot de passe de l'utilisateur sur le serveur.
+    proxy_host : str
+        Adresse du proxy, si nécessaire.
+    proxy_port : int
+        Port du proxy si nécessaire (par défaut: 1080).
+    remote_dir : str
+        Chemin sur le serveur distant où enregistrer les fichiers.
     """
 
     def __init__(self, name, options):

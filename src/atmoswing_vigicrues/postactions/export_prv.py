@@ -16,8 +16,8 @@ class ExportPrv(PostAction):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * output_dir : str
             Chemin cible pour l'enregistrement des fichiers.
@@ -28,6 +28,22 @@ class ExportPrv(PostAction):
             Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
         * combine_stations_in_one_file : bool
             Combinaison des différentes stations (entités) dans un seul fichier.
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action.
+    name : str
+        Le nom de l'action.
+    output_dir : str
+        Chemin cible pour l'enregistrement des fichiers.
+    date_format : str
+        Format pour l'écriture des dates cibles. Défaut: "%d-%m-%Y"
+    frequencies : list
+        Les fréquences à extraire.
+        Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+    combine_stations_in_one_file : bool
+        Combinaison des différentes stations (entités) dans un seul fichier.
     """
 
     def __init__(self, name, options):

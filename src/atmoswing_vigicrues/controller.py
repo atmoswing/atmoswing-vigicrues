@@ -14,13 +14,23 @@ class Controller:
 
     Attributes
     ----------
-    options : object
+    options : instance de la classe Options
         Options de la prévision combinant les arguments passés lors de l'utilisation en
         lignes de commandes et les options du fichier de configuration.
-    verbose : bool
-        Affichage verbose des messages d'erreurs (pas beaucoup utilisé)
+    time_increment : int
+        Incrément de temps en heures pour l'émission de la prévision
+        (par défaut 6 heures).
     date : datetime.datetime
         Date de la prévision.
+    existing_files : list
+        Liste des fichiers de prévision d'AtmoSwing Forecaster déjà existants pour
+        l'échéance en cours.
+    pre_actions : list
+        Liste des actions préalables à la prévision.
+    post_actions : list
+        Liste des actions postérieures à la prévision.
+    disseminations : list
+        Liste des actions de dissémination.
     """
 
     def __init__(self, cli_options):

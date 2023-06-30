@@ -18,8 +18,8 @@ class TransferSftpIn(PreAction):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * local_dir : str
             Répertoire cible pour l'enregistrement des fichiers.
@@ -45,6 +45,33 @@ class TransferSftpIn(PreAction):
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
             Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action
+    name : str
+        Le nom de l'action
+    local_dir : str
+        Répertoire cible pour l'enregistrement des fichiers.
+    prefix : str
+        Prefix des fichiers à importer.
+    hostname : str
+        Adresse du serveur distant.
+    port : int
+        Port du serveur distant.
+    username : str
+        Utilisateur ayant un accès au serveur.
+    password : str
+        Mot de passe de l'utilisateur sur le serveur.
+    remote_dir : str
+        Chemin sur le serveur distant où se trouvent les fichiers.
+    variables : list
+        Liste des variables météorologiques à importer.
+    proxy_host : str
+        Adresse du proxy, si nécessaire.
+    proxy_port : int
+        Port du proxy si nécessaire (par défaut: 1080).
     """
 
     def __init__(self, name, options):
