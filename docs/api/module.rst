@@ -18,13 +18,13 @@ Pre-actions
 v1
 ~~
 
-.. inheritance-diagram:: PreAction
+.. inheritance-diagram:: preaction
    :parts: 1
 
 v2
 ~~
 
-.. inheritance-diagram:: PreAction
+.. inheritance-diagram:: preaction
    :parts: 2
 
 Classe de base des pré-actions
