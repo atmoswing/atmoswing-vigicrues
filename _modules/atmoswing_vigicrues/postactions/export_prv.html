@@ -88,8 +88,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
 <span class="sd">        Le nom de l&#39;action</span>
-<span class="sd">    options: objet</span>
-<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+<span class="sd">    options: dict</span>
+<span class="sd">        Un dictionnaire contenant les options de l&#39;action. Les champs possibles sont:</span>
 
 <span class="sd">        * output_dir : str</span>
 <span class="sd">            Chemin cible pour l&#39;enregistrement des fichiers.</span>
@@ -100,6 +100,22 @@
 <span class="sd">            Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</span>
 <span class="sd">        * combine_stations_in_one_file : bool</span>
 <span class="sd">            Combinaison des différentes stations (entités) dans un seul fichier.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de l&#39;action.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l&#39;action.</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Chemin cible pour l&#39;enregistrement des fichiers.</span>
+<span class="sd">    date_format : str</span>
+<span class="sd">        Format pour l&#39;écriture des dates cibles. Défaut: &quot;%d-%m-%Y&quot;</span>
+<span class="sd">    frequencies : list</span>
+<span class="sd">        Les fréquences à extraire.</span>
+<span class="sd">        Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</span>
+<span class="sd">    combine_stations_in_one_file : bool</span>
+<span class="sd">        Combinaison des différentes stations (entités) dans un seul fichier.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>

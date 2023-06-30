@@ -90,8 +90,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
 <span class="sd">        Le nom de l&#39;action</span>
-<span class="sd">    options: objet</span>
-<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+<span class="sd">    options: dict</span>
+<span class="sd">        Un dictionnaire contenant les options de l&#39;action. Les champs possibles sont:</span>
 
 <span class="sd">        * output_dir : str</span>
 <span class="sd">            Répertoire cible pour l&#39;enregistrement des fichiers.</span>
@@ -105,7 +105,7 @@
 <span class="sd">            Niveaux de pression à télécharger.</span>
 <span class="sd">            Valeur par défaut: [300, 400, 500, 600, 700, 850, 925, 1000]</span>
 <span class="sd">        * domain : list</span>
-<span class="sd">            Domaine à télécharger.</span>
+<span class="sd">            Domaine à télécharger (coordonnées géographiques).</span>
 <span class="sd">            Valeur par défaut: [-20, 30, 25, 65]</span>
 <span class="sd">        * resolution : float</span>
 <span class="sd">            Résolution spatiale des données.</span>
@@ -119,6 +119,31 @@
 <span class="sd">            Décalage temporel autorisé pour rechercher d&#39;anciens fichiers</span>
 <span class="sd">        * attempts_step_hours : int</span>
 <span class="sd">            Pas de temps auquel décrémenter la date pour rechercher d&#39;anciens fichiers</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de l&#39;action</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l&#39;action</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Répertoire cible pour l&#39;enregistrement des fichiers.</span>
+<span class="sd">    lead_time_max : int</span>
+<span class="sd">        Échéance maximale de la prévision en heures.</span>
+<span class="sd">    variables : list</span>
+<span class="sd">        Variables à télécharger.</span>
+<span class="sd">    levels : list</span>
+<span class="sd">        Niveaux de pression à télécharger.</span>
+<span class="sd">    domain : list</span>
+<span class="sd">        Domaine à télécharger (coordonnées géographiques).</span>
+<span class="sd">    resolution : float</span>
+<span class="sd">        Résolution spatiale des données.</span>
+<span class="sd">    proxies : list</span>
+<span class="sd">        Les informations de connexion au proxy.</span>
+<span class="sd">    time_increment : int</span>
+<span class="sd">        Pas de temps auquel décrémenter la date pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">    time_step_back : int</span>
+<span class="sd">        Nombre de pas de temps autorisé pour rechercher d&#39;anciens fichiers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>

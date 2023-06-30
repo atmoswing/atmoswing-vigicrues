@@ -86,13 +86,23 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    options : object</span>
+<span class="sd">    options : instance de la classe Options</span>
 <span class="sd">        Options de la prévision combinant les arguments passés lors de l&#39;utilisation en</span>
 <span class="sd">        lignes de commandes et les options du fichier de configuration.</span>
-<span class="sd">    verbose : bool</span>
-<span class="sd">        Affichage verbose des messages d&#39;erreurs (pas beaucoup utilisé)</span>
+<span class="sd">    time_increment : int</span>
+<span class="sd">        Incrément de temps en heures pour l&#39;émission de la prévision</span>
+<span class="sd">        (par défaut 6 heures).</span>
 <span class="sd">    date : datetime.datetime</span>
 <span class="sd">        Date de la prévision.</span>
+<span class="sd">    existing_files : list</span>
+<span class="sd">        Liste des fichiers de prévision d&#39;AtmoSwing Forecaster déjà existants pour</span>
+<span class="sd">        l&#39;échéance en cours.</span>
+<span class="sd">    pre_actions : list</span>
+<span class="sd">        Liste des actions préalables à la prévision.</span>
+<span class="sd">    post_actions : list</span>
+<span class="sd">        Liste des actions postérieures à la prévision.</span>
+<span class="sd">    disseminations : list</span>
+<span class="sd">        Liste des actions de dissémination.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_options</span><span class="p">):</span>

@@ -89,8 +89,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
 <span class="sd">        Le nom de l&#39;action</span>
-<span class="sd">    options: objet</span>
-<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+<span class="sd">    options: dict</span>
+<span class="sd">        Un dictionnaire contenant les options de l&#39;action. Les champs possibles sont:</span>
 
 <span class="sd">        * output_dir : str</span>
 <span class="sd">            Chemin cible pour l&#39;enregistrement des fichiers.</span>
@@ -101,6 +101,26 @@
 <span class="sd">            Exporter uniquement les stations pour lesquelles la méthode a été calibrée.</span>
 <span class="sd">        * use_indentation : bool</span>
 <span class="sd">            Ajouter une indentation aux fichiers produits.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de post-action.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l&#39;action.</span>
+<span class="sd">    status : int</span>
+<span class="sd">        Le statut de l&#39;action.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Un éventuel message d&#39;erreur de l&#39;action.</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Chemin cible pour l&#39;enregistrement des fichiers.</span>
+<span class="sd">    number_analogs : int</span>
+<span class="sd">        Nombre d&#39;analogues maximal à conserver (valeurs les plus élevées).</span>
+<span class="sd">        -1 pour toutes les analogues.</span>
+<span class="sd">    only_relevant_stations : bool</span>
+<span class="sd">        Exporter uniquement les stations pour lesquelles la méthode a été calibrée.</span>
+<span class="sd">    use_indentation : bool</span>
+<span class="sd">        Ajouter une indentation aux fichiers produits.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>

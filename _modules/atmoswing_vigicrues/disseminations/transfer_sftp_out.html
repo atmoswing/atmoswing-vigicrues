@@ -87,8 +87,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
 <span class="sd">        Le nom de l&#39;action</span>
-<span class="sd">    options: objet</span>
-<span class="sd">        L&#39;instance contenant les options de l&#39;action. Les champs possibles sont:</span>
+<span class="sd">    options: dict</span>
+<span class="sd">        Un dictionnaire contenant les options de l&#39;action. Les champs possibles sont:</span>
 
 <span class="sd">        * local_dir : str</span>
 <span class="sd">            Répertoire local contenant les fichiers à exporter.</span>
@@ -108,6 +108,31 @@
 <span class="sd">            Port du proxy si nécessaire (par défaut: 1080).</span>
 <span class="sd">        * remote_dir : str</span>
 <span class="sd">            Chemin sur le serveur distant où enregistrer les fichiers.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de l&#39;action.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l&#39;action.</span>
+<span class="sd">    local_dir : str</span>
+<span class="sd">        Répertoire local contenant les fichiers à exporter.</span>
+<span class="sd">    extension : str</span>
+<span class="sd">        Extension des fichiers à exporter.</span>
+<span class="sd">    hostname : str</span>
+<span class="sd">        Adresse du serveur pour la diffusion des résultats.</span>
+<span class="sd">    port : int</span>
+<span class="sd">        Port du serveur distant.</span>
+<span class="sd">    username : str</span>
+<span class="sd">        Utilisateur ayant un accès au serveur.</span>
+<span class="sd">    password : str</span>
+<span class="sd">        Mot de passe de l&#39;utilisateur sur le serveur.</span>
+<span class="sd">    proxy_host : str</span>
+<span class="sd">        Adresse du proxy, si nécessaire.</span>
+<span class="sd">    proxy_port : int</span>
+<span class="sd">        Port du proxy si nécessaire (par défaut: 1080).</span>
+<span class="sd">    remote_dir : str</span>
+<span class="sd">        Chemin sur le serveur distant où enregistrer les fichiers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
