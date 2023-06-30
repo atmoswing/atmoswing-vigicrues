@@ -15,42 +15,9 @@ Controller
 Pre-actions
 -----------
 
-v1
-~~
-
-.. inheritance-diagram:: preactions
-   :parts: 1
-
-v2
-~~
-
-.. inheritance-diagram:: preactions
-   :parts: 2
-
-v1
-~~
-
-.. inheritance-diagram:: atmoswing_vigicrues.preactions
-   :parts: 1
-
-v2
-~~
-
-.. inheritance-diagram:: atmoswing_vigicrues.preactions
-   :parts: 2
-
-
-v1
-~~
-
 .. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData
    :parts: 1
 
-v2
-~~
-
-.. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData
-   :parts: 2
 
 Classe de base des pré-actions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,6 +63,9 @@ Transformation données CEP
 Post-actions
 ------------
 
+.. inheritance-diagram:: PostAction ExportBdApBp ExportPrv
+   :parts: 1
+
 Classe de base des post-actions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -123,6 +93,9 @@ Export PRV
 
 Dissemination
 -------------
+
+.. inheritance-diagram:: Dissemination TransferSftpOut
+   :parts: 1
 
 Classe de base des disséminations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,7 +1,0 @@
-<map id="inheritance78b29e2773" name="inheritance78b29e2773">
-<area shape="rect" id="node1" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="225,5,460,31"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="5,80,155,105"/>
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="235,55,451,80"/>
-<area shape="rect" id="node4" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP en fichier netcdf." alt="" coords="203,104,483,129"/>
-<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="225,153,460,179"/>
-</map>

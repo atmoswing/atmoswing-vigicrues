@@ -1,0 +1,5 @@
+<map id="inheritanced33a11fe45" name="inheritanced33a11fe45">
+<area shape="rect" id="node1" href="#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="144,5,259,31"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="5,31,96,56"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="159,55,244,80"/>
+</map>
