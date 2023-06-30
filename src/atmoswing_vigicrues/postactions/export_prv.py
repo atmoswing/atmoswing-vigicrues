@@ -78,7 +78,8 @@ class ExportPrv(PostAction):
 
         Returns
         -------
-        Vrai (True) en cas de succès, faux (False) autrement.
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
             print("  -> Aucun fichier à traiter")

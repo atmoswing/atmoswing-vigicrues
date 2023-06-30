@@ -7,7 +7,19 @@ class PreAction:
         pass
 
     def run(self, date) -> bool:
-        """ Exécution de la pre-action. """
+        """
+        Exécution de la pre-action.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            Date de la prévision.
+
+        Returns
+        -------
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
+        """
         raise NotImplementedError
 
     def _set_attempts_attributes(self, options):

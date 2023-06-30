@@ -42,7 +42,7 @@ sys.path.insert(0, str(BASE_PATH / "src" / "atmoswing_vigicrues"))
 project = 'AtmoSwing Vigicrues'
 copyright = '2023, Terranum'
 author = 'Pascal Horton'
-release = '0.1.0'
+release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

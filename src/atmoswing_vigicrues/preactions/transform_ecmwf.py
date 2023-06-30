@@ -67,7 +67,8 @@ class TransformEcmwfData(PreAction):
 
         Returns
         -------
-        Vrai (True) en cas de succès, faux (False) autrement.
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
         return self.transform(date)
 
@@ -82,7 +83,8 @@ class TransformEcmwfData(PreAction):
 
         Returns
         -------
-        Vrai (True) en cas de succès, faux (False) autrement.
+        bool
+            Vrai (True) en cas de succès, faux (False) autrement.
         """
 
         input_dir = self._get_input_dir(date)
