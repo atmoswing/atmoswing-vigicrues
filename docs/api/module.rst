@@ -18,13 +18,38 @@ Pre-actions
 v1
 ~~
 
-.. inheritance-diagram:: preaction
+.. inheritance-diagram:: preactions
    :parts: 1
 
 v2
 ~~
 
-.. inheritance-diagram:: preaction
+.. inheritance-diagram:: preactions
+   :parts: 2
+
+v1
+~~
+
+.. inheritance-diagram:: atmoswing_vigicrues.preactions
+   :parts: 1
+
+v2
+~~
+
+.. inheritance-diagram:: atmoswing_vigicrues.preactions
+   :parts: 2
+
+
+v1
+~~
+
+.. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData
+   :parts: 1
+
+v2
+~~
+
+.. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData
    :parts: 2
 
 Classe de base des pré-actions
