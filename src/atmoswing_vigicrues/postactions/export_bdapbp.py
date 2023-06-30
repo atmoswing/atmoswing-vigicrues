@@ -17,8 +17,8 @@ class ExportBdApBp(PostAction):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * output_dir : str
             Chemin cible pour l'enregistrement des fichiers.
@@ -29,6 +29,26 @@ class ExportBdApBp(PostAction):
             Exporter uniquement les stations pour lesquelles la méthode a été calibrée.
         * use_indentation : bool
             Ajouter une indentation aux fichiers produits.
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de post-action.
+    name : str
+        Le nom de l'action.
+    status : int
+        Le statut de l'action.
+    message : str
+        Un éventuel message d'erreur de l'action.
+    output_dir : str
+        Chemin cible pour l'enregistrement des fichiers.
+    number_analogs : int
+        Nombre d'analogues maximal à conserver (valeurs les plus élevées).
+        -1 pour toutes les analogues.
+    only_relevant_stations : bool
+        Exporter uniquement les stations pour lesquelles la méthode a été calibrée.
+    use_indentation : bool
+        Ajouter une indentation aux fichiers produits.
     """
 
     def __init__(self, name, options):

@@ -14,8 +14,8 @@ class TransformGfsData(PreAction):
     ----------
     name: str
         Le nom de l'action
-    options: objet
-        L'instance contenant les options de l'action. Les champs possibles sont:
+    options: dict
+        Un dictionnaire contenant les options de l'action. Les champs possibles sont:
 
         * output_dir : str
             Chemin cible pour l'enregistrement des fichiers.
@@ -23,6 +23,19 @@ class TransformGfsData(PreAction):
             Format pour l'écriture des dates cibles. Défaut: "%d-%m-%Y"
         * variables : list
             Les variables météorologiques à convertir.
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action.
+    name : str
+        Le nom de l'action.
+    input_dir : str
+        Le chemin vers le répertoire contenant les fichiers à traiter.
+    output_dir : str
+        Le chemin vers le répertoire où seront enregistrés les fichiers.
+    variables : list
+        Les variables météorologiques à convertir.
     """
 
     def __init__(self, name, options):

@@ -1,6 +1,11 @@
 class Dissemination:
     """
     Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.
+
+    Attributes
+    ----------
+    _file_paths : list
+        Chemins des fichiers à diffuser.
     """
 
     def __init__(self):
