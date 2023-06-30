@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Composants &mdash; AtmoSwing Vigicrues 0.1.0 documentation</title>
+  <title>Composants &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -60,7 +60,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#pre-actions">Pre-actions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-pre-actions">Classe de base des pré-actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-pre-actions">Classe de base des pré-actions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.PreAction"><code class="docutils literal notranslate"><span class="pre">PreAction</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#transfert-sftp">Transfert SFTP</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.TransferSftpIn"><code class="docutils literal notranslate"><span class="pre">TransferSftpIn</span></code></a></li>
 </ul>
@@ -80,7 +83,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#post-actions">Post-actions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-post-actions">Classe de base des post-actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-post-actions">Classe de base des post-actions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.PostAction"><code class="docutils literal notranslate"><span class="pre">PostAction</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#export-bdapbp">Export BdApBp</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.ExportBdApBp"><code class="docutils literal notranslate"><span class="pre">ExportBdApBp</span></code></a></li>
 </ul>
@@ -92,7 +98,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#dissemination">Dissemination</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-disseminations">Classe de base des disséminations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classe-de-base-des-disseminations">Classe de base des disséminations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Dissemination"><code class="docutils literal notranslate"><span class="pre">Dissemination</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Transfert SFTP</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.TransferSftpOut"><code class="docutils literal notranslate"><span class="pre">TransferSftpOut</span></code></a></li>
 </ul>
@@ -246,13 +255,37 @@ l’échéance en cours.</p>
 <h2>Pre-actions<a class="headerlink" href="#pre-actions" title="Permalink to this heading"></a></h2>
 <section id="classe-de-base-des-pre-actions">
 <h3>Classe de base des pré-actions<a class="headerlink" href="#classe-de-base-des-pre-actions" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PreAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe de base pour les opérations nécessaires avant l’exécution des prévisions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction.run" title="Permalink to this definition"></a></dt>
+<dd><p>Exécution de la pre-action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="transfert-sftp">
 <h3>Transfert SFTP<a class="headerlink" href="#transfert-sftp" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpIn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transfer_sftp_in.html#TransferSftpIn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Récupération des prévisions des modèles météo par SFTP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -465,6 +498,12 @@ l’échéance en cours.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -476,7 +515,7 @@ l’échéance en cours.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadGfsData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">DownloadGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_gfs.html#DownloadGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadGfsData" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Téléchargement des prévisions émises par GFS.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -674,8 +713,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -688,8 +730,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -702,7 +747,7 @@ Valeur par défaut : 0.25</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_gfs.html#TransformGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Transforme les prévisions émises par GFS en fichier netcdf.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -793,8 +838,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -807,8 +855,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,7 +872,7 @@ Valeur par défaut : 0.25</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformEcmwfData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_ecmwf.html#TransformEcmwfData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Transforme les prévisions émises par le CEP en fichier netcdf.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -912,8 +963,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -926,8 +980,11 @@ Valeur par défaut : 0.25</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -940,13 +997,70 @@ Valeur par défaut : 0.25</p>
 <h2>Post-actions<a class="headerlink" href="#post-actions" title="Permalink to this heading"></a></h2>
 <section id="classe-de-base-des-post-actions">
 <h3>Classe de base des post-actions<a class="headerlink" href="#classe-de-base-des-post-actions" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PostAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe de base pour les opérations de traitement des résultats d’AtmoSwing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction._file_paths">
+<span class="sig-name descname"><span class="pre">_file_paths</span></span><a class="headerlink" href="#atmoswing_vigicrues.PostAction._file_paths" title="Permalink to this definition"></a></dt>
+<dd><p>Chemins des fichiers de prévision émis par AtmoSwing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction._metadata">
+<span class="sig-name descname"><span class="pre">_metadata</span></span><a class="headerlink" href="#atmoswing_vigicrues.PostAction._metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Méta-données issues de la prévision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction.feed">
+<span class="sig-name descname"><span class="pre">feed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction.feed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction.feed" title="Permalink to this definition"></a></dt>
+<dd><p>Transmission des données issues de la prévision</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_paths</strong> (<em>list</em>) – Chemins des fichiers de prévision émis par AtmoSwing.</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – Méta-données issues de la prévision.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction.run" title="Permalink to this definition"></a></dt>
+<dd><p>Exécution du traitement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="export-bdapbp">
 <h3>Export BdApBp<a class="headerlink" href="#export-bdapbp" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.ExportBdApBp">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportBdApBp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_bdapbp.html#ExportBdApBp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportBdApBp" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PostAction" title="atmoswing_vigicrues.postactions.postaction.PostAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></a></p>
 <p>Export des prévisions au format Json de la BdApBp.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1080,8 +1194,11 @@ Valeur par défaut : 0.25</p>
 <li><p>200 : Erreur lors du traitement fichier netcdf.</p></li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1094,7 +1211,7 @@ Valeur par défaut : 0.25</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.ExportPrv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportPrv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_prv.html#ExportPrv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportPrv" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PostAction" title="atmoswing_vigicrues.postactions.postaction.PostAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></a></p>
 <p>Export des prévisions au format PRV du logiciel Scores.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1200,8 +1317,11 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_prv.html#ExportPrv.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportPrv.run" title="Permalink to this definition"></a></dt>
 <dd><p>Exécution de la post-action.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1214,13 +1334,59 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <h2>Dissemination<a class="headerlink" href="#dissemination" title="Permalink to this heading"></a></h2>
 <section id="classe-de-base-des-disseminations">
 <h3>Classe de base des disséminations<a class="headerlink" href="#classe-de-base-des-disseminations" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">Dissemination</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe de base pour les opérations de diffusion des résultats d’AtmoSwing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination._file_paths">
+<span class="sig-name descname"><span class="pre">_file_paths</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination._file_paths" title="Permalink to this definition"></a></dt>
+<dd><p>Chemins des fichiers à diffuser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.feed">
+<span class="sig-name descname"><span class="pre">feed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination.feed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.feed" title="Permalink to this definition"></a></dt>
+<dd><p>Transmission des fichiers à diffuser</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_paths</strong> (<em>list</em>) – Chemins des fichiers à diffuser.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.run" title="Permalink to this definition"></a></dt>
+<dd><p>Exécution de la diffusion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="id1">
 <h3>Transfert SFTP<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_sftp_out.html#TransferSftpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dissemination</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.Dissemination" title="atmoswing_vigicrues.disseminations.dissemination.Dissemination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dissemination</span></code></a></p>
 <p>Transfer des résultats par SFTP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1407,8 +1573,11 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>

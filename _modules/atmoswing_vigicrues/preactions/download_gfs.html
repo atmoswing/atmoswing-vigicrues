@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>atmoswing_vigicrues.preactions.download_gfs &mdash; AtmoSwing Vigicrues 0.1.0 documentation</title>
+  <title>atmoswing_vigicrues.preactions.download_gfs &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -216,7 +216,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Vrai (True) en cas de succès, faux (False) autrement.</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">date</span><span class="p">)</span></div>
 
@@ -231,7 +232,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Vrai (True) en cas de succès, faux (False) autrement.</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">subregion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_subregion_request</span><span class="p">()</span>
         <span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_levels_request</span><span class="p">()</span>
