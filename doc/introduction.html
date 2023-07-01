@@ -49,6 +49,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#objectif">Objectif</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utilisation">Utilisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#exemple-de-fichier-de-configuration">Exemple de fichier de configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api/module.html">Composants</a></li>
@@ -104,7 +106,9 @@
 <section id="utilisation">
 <h2>Utilisation<a class="headerlink" href="#utilisation" title="Permalink to this heading"></a></h2>
 <p>Le paquet est constitué de plusieurs modules qui peuvent être activés et configurés dans un fichier de configuration. Plusieurs flux de prévision peuvent être configurés sur un serveur / PC par la création de différents fichiers de configuration. Il n’y a pas de paramètres codés en dur dans le code. L’exécution d’un flux de prévision est effectuée par la commande :</p>
-<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">atmoswing_vigicrues</span> <span class="pre">--config-file=&quot;chemin/vers/fichier/config.yaml</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>atmoswing_vigicrues<span class="w"> </span>--config-file<span class="o">=</span><span class="s2">&quot;chemin/vers/fichier/config.yaml&quot;</span>
+</pre></div>
+</div>
 <p>Le fichier de configuration définit :</p>
 <ul class="simple">
 <li><p>Les propriétés de la prévision par AtmoSwing</p></li>
@@ -112,6 +116,108 @@
 <li><p>Les post-actions : les actions à effectuer après la prévision par AtmoSwing</p></li>
 <li><p>Les disséminations : les actions de transfert des résultats</p></li>
 </ul>
+<p>Le flux de la prévision est le suivant :</p>
+<ol class="arabic simple">
+<li><p>pré-actions</p></li>
+<li><p>prévision par AtmoSwing</p></li>
+<li><p>post-actions</p></li>
+<li><p>diffusion</p></li>
+</ol>
+<p>La partie « Composants » de la documentation fournit le détail des paramètres de chaque action.</p>
+</section>
+<section id="exemple-de-fichier-de-configuration">
+<h2>Exemple de fichier de configuration<a class="headerlink" href="#exemple-de-fichier-de-configuration" title="Permalink to this heading"></a></h2>
+<p>Un exemple de fichier de configuration est présenté ci-dessous :</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">atmoswing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Forecast now</span>
+<span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">atmoswing_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;C:\Program</span><span class="nv"> </span><span class="s">Files\AtmoSwing\atmoswing-forecaster.exe&#39;</span>
+<span class="w">    </span><span class="nt">batch_file</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;files/batch_file.xml&#39;</span>
+<span class="w">    </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\forecasts&#39;</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;now&#39;</span>
+<span class="w">    </span><span class="nt">proxy</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">proxy_user</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+
+<span class="nt">pre_actions</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Download GFS data (Z)</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DownloadGfsData</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\gfs&#39;</span>
+<span class="w">      </span><span class="nt">lead_time_max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">168</span>
+<span class="w">      </span><span class="nt">variables</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;hgt&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">levels</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">500</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">30</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">65</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">      </span><span class="nt">max_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">      </span><span class="nt">proxies</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">http</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">        </span><span class="nt">https</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+
+<span class="nt">post_actions</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export BdApBp</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ExportBdApBp</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\exports\bdapbp&#39;</span>
+<span class="w">      </span><span class="nt">number_analogs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">      </span><span class="nt">only_relevant_stations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export PRV for Scores</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ExportPrv</span>
+<span class="w">    </span><span class="nt">enable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\exports\prv&#39;</span>
+<span class="w">      </span><span class="nt">frequencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.7</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.8</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.9</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.95</span><span class="p p-Indicator">]</span>
+
+<span class="nt">disseminations</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Transfer SFTP netcdf</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TransferSftpOut</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">local_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\forecasts&#39;</span>
+<span class="w">      </span><span class="nt">extension</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.nc&#39;</span>
+<span class="w">      </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;127.0.0.1&#39;</span>
+<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4422</span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;foo&#39;</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pass&#39;</span>
+<span class="w">      </span><span class="nt">proxy_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">proxy_port</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">remote_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;upload/netcdf&#39;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Transfer SFTP prv</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TransferSftpOut</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">local_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\exports&#39;</span>
+<span class="w">      </span><span class="nt">extension</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.json&#39;</span>
+<span class="w">      </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;127.0.0.1&#39;</span>
+<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4422</span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;foo&#39;</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pass&#39;</span>
+<span class="w">      </span><span class="nt">proxy_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">proxy_port</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">remote_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;upload/json&#39;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Transfer SFTP prv</span>
+<span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TransferSftpOut</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">local_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\atmoswing\exports&#39;</span>
+<span class="w">      </span><span class="nt">extension</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.csv&#39;</span>
+<span class="w">      </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;127.0.0.1&#39;</span>
+<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4422</span>
+<span class="w">      </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;foo&#39;</span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pass&#39;</span>
+<span class="w">      </span><span class="nt">proxy_host</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">proxy_port</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">      </span><span class="nt">remote_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;upload/prv&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this heading"></a></h2>
+<p>Le schéma ci-dessous présente la structure des classes principales du module.</p>
 <div class="graphviz"><img src="../_images/inheritance-e7b5f5dd917679a8d8fc4dc29bb5b4628c341223.png" alt="Inheritance diagram of Controller, PreAction, TransferSftpIn, DownloadGfsData, TransformGfsData, TransformEcmwfData, PostAction, ExportBdApBp, ExportPrv, Dissemination, TransferSftpOut" usemap="#inheritancea1c0ba0d13" class="inheritance graphviz" /></div>
 <map id="inheritancea1c0ba0d13" name="inheritancea1c0ba0d13">
 <area shape="rect" id="node1" href="../api/module.html#atmoswing_vigicrues.Controller" target="_top" title="Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues." alt="" coords="20,351,107,376"/>
@@ -125,15 +231,7 @@
 <area shape="rect" id="node5" href="../api/module.html#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="193,5,308,31"/>
 <area shape="rect" id="node6" href="../api/module.html#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="18,31,109,56"/>
 <area shape="rect" id="node7" href="../api/module.html#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="208,55,293,80"/>
-</map><p>Le flux de la prévision est le suivant :</p>
-<ol class="arabic simple">
-<li><p>pré-actions</p></li>
-<li><p>prévision par AtmoSwing</p></li>
-<li><p>post-actions</p></li>
-<li><p>diffusion</p></li>
-</ol>
-<p>La partie « Composants » de la documentation fournit le détail des paramètres de chaque action.</p>
-</section>
+</map></section>
 </section>
 
 
