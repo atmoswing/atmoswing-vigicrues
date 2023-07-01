@@ -39,6 +39,7 @@ Le fichier de configuration définit :
 * Les post-actions : les actions à effectuer après la prévision par AtmoSwing
 * Les disséminations : les actions de transfert des résultats
 
+.. currentmodule:: atmoswing_vigicrues
 .. inheritance-diagram:: Controller PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData PostAction ExportBdApBp ExportPrv Dissemination TransferSftpOut
    :parts: 1
 
