@@ -4,6 +4,17 @@ Introduction
 Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
 
 
+|github| |pypi| |docker| |python|
+
+.. |github| image:: https://img.shields.io/badge/source-v1.1.4-blue
+    :target: https://github.com/atmoswing/atmoswing-vigicrues
+.. |pypi| image:: https://img.shields.io/badge/PyPI-atmoswing_vigicrues-blue
+   :target: https://pypi.org/project/atmoswing-vigicrues/
+.. |docker| image:: https://img.shields.io/badge/Docker-atmoswing_vigicrues-blue
+   :target: https://hub.docker.com/r/atmoswing/atmoswing-vigicrues
+.. |python| image:: https://img.shields.io/badge/Python-3.7_min-green
+   :target: https://www.python.org/
+
 Objectif
 --------
 
@@ -142,6 +153,7 @@ Un exemple de fichier de configuration est présenté ci-dessous :
           proxy_port: ''
           remote_dir: 'upload/prv'
 
+La partie « Composants » de la documentation fournit le détail des paramètres de chaque action.
 
 Structure
 ---------
