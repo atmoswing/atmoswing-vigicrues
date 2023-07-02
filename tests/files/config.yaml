@@ -38,7 +38,7 @@ pre_actions:
     with:
       input_dir: '/tmp/ecmwf'
       output_dir: '/tmp/generic'
-      variables: ['hgt']
+      variables: ['Z']
 
 post_actions:
   - name: Export BdApBp

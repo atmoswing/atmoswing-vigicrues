@@ -91,8 +91,7 @@ class TransformEcmwfData(PreAction):
         forecast_date, forecast_hour = self._format_forecast_date(date)
 
         for variable in self.variables:
-            file_name_pattern = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
-                                f'{variable.lower()}.*.grib2'
+            file_name_pattern = f'CEP_{variable}_{forecast_date}{forecast_hour}00.grb'
             new_file_name = f'{forecast_date}{forecast_hour}.ECMWF_IFS.' \
                             f'{variable.lower()}.nc'
 

@@ -24,7 +24,7 @@ def options():
                 config_file=DIR_PATH + '/files/config.yaml'
             ))
 
-        action_options = options.config['pre_actions'][1]['with']
+        action_options = options.config['pre_actions'][2]['with']
         action_options['input_dir'] = DIR_PATH + '/files/ecmwf-grib2'
         action_options['output_dir'] = tmp_dir
 
