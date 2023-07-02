@@ -1,6 +1,14 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.5 - 02 Juillet 2023
+
+### Corrections
+
+*   Conversion du format des dates dans les exports pour assurer la compatibilité.
+*   Correction d'un problème avec la transformation des fichiers grib du CEP.
+
+
 ## v1.1.4 - 08 Juin 2023
 
 ### Changements
@@ -93,7 +101,7 @@
 *   Support de caractères spéciaux dans les fichiers de config (p.ex. mots de passe).
 
 
-## v1.0.1 - 18 Avr 2023
+## v1.0.1 - 18 Avril 2023
 
 ### Ajouts
 
@@ -105,6 +113,6 @@
 *   Ajout d'un retour positif après téléchargement des données par SFTP.
 
 
-## v1.0.0 - 17 Avr 2023
+## v1.0.0 - 17 Avril 2023
 
 Release initiale.
