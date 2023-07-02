@@ -24,7 +24,7 @@ Pour utiliser le module atmoswing-vigicrues, il faut installer :
 
 * Python >= 3.7
 * AtmoSwing Forecaster (de préférence la version serveur)
-* Le module atmoswing-vigicrues ("``pip install atmoswing-vigicrues``" ou l'image docker "``docker pull atmoswing/atmoswing-vigicrues``")
+* Le module atmoswing-vigicrues (``pip install atmoswing-vigicrues`` ou l'image docker ``docker pull atmoswing/atmoswing-vigicrues``)
 
 Utilisation
 -----------
