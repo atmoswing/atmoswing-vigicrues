@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues)](https://github.com/atmoswing/atmoswing-vigicrues)
 [![PyPI](https://img.shields.io/pypi/v/atmoswing-vigicrues)](https://pypi.org/project/atmoswing-vigicrues/)
 [![Docker Image Version](https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues)](https://hub.docker.com/r/atmoswing/atmoswing-vigicrues)
-![Static Badge](https://img.shields.io/badge/python-%3E%3D3.7-green)
+![Static Badge](https://img.shields.io/badge/python-%3E%3D3.7-blue)
    
 Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
 
