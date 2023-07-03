@@ -1,5 +1,10 @@
 # atmoswing-vigicrues
 
+[![GitHub release](https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues)](https://github.com/atmoswing/atmoswing-vigicrues)
+[![PyPI](https://img.shields.io/pypi/v/atmoswing-vigicrues)](https://pypi.org/project/atmoswing-vigicrues/)
+[![Docker Image Version](https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues)](https://hub.docker.com/r/atmoswing/atmoswing-vigicrues)
+![Static Badge](https://img.shields.io/badge/python-%3E%3D3.7-green)
+   
 Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
 
 Documentation API: http://atmoswing.org/atmoswing-vigicrues
@@ -30,7 +35,11 @@ Utilisation
 -----------
 
 Le paquet est constitué de plusieurs modules qui peuvent être activés et configurés dans un fichier de configuration. Plusieurs flux de prévision peuvent être configurés sur un serveur / PC par la création de différents fichiers de configuration. Il n’y a pas de paramètres codés en dur dans le code. L’exécution d’un flux de prévision est effectuée par la commande :
-``python -m atmoswing_vigicrues --config-file="chemin/vers/fichier/config.yaml``
+
+```
+python -m atmoswing_vigicrues --config-file="chemin/vers/fichier/config.yaml
+```
+
 Le fichier de configuration définit :
 
 * Les propriétés de la prévision par AtmoSwing
