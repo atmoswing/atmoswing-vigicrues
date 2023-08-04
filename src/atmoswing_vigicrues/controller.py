@@ -45,6 +45,9 @@ class Controller:
         """
         self.options = asv.Options(cli_options)
         self.time_increment = 6
+        if hasattr(cli_options, 'time_increment') and \
+                cli_options.time_increment is not None:
+            self.time_increment = cli_options.time_increment
         self.date = datetime.datetime.utcnow()
         self.existing_files = []
         self.pre_actions = []
