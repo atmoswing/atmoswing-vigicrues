@@ -12,7 +12,7 @@ Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
    :target: https://pypi.org/project/atmoswing-vigicrues/
 .. |docker| image:: https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker
    :target: https://hub.docker.com/r/atmoswing/atmoswing-vigicrues
-.. |python| image:: https://img.shields.io/badge/python-min_3.7-green
+.. |python| image:: https://img.shields.io/badge/python-%3E%3D3.7-green
    :target: https://www.python.org/
 
 Objectif
