@@ -118,6 +118,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">cli_options</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cli_options</span><span class="p">,</span> <span class="s1">&#39;time_increment&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="n">cli_options</span><span class="o">.</span><span class="n">time_increment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="n">cli_options</span><span class="o">.</span><span class="n">time_increment</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">existing_files</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span> <span class="o">=</span> <span class="p">[]</span>

@@ -45,6 +45,12 @@ Le paquet est constitué de plusieurs modules qui peuvent être activés et conf
 
     python -m atmoswing_vigicrues --config-file="chemin/vers/fichier/config.yaml"
 
+Les options de la ligne de commande sont :
+
+* ``--config-file`` ou ``-c``: le chemin vers le fichier de configuration
+* ``--date`` ou ``-d`` : la date de prévision au format YYYYMMDDHH
+* ``--time-increment`` ou ``-i`` : incrément en heures pour l'émission de la prévision (par défaut 6h).
+
 Le fichier de configuration définit :
 
 * Les propriétés de la prévision par AtmoSwing

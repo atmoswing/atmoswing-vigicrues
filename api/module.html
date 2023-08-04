@@ -583,7 +583,21 @@ Valeur par défaut : 0.25</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>attempts_step_hours<span class="classifier">int</span></dt><dd><p>Pas de temps auquel décrémenter la date pour rechercher d’anciens fichiers</p>
+<dt>attempts_step_hours<span class="classifier">int</span></dt><dd><p>Pas de temps auquel décrémenter la date pour rechercher d’anciens fichiers
+lorsque le fichier n’est pas trouvé</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>time_increment<span class="classifier">int</span></dt><dd><p>Pas de temps auquel décrémenter la date pour rechercher d’anciens fichiers
+afin de compléter les fichiers précédents de la journée
+Valeur par défaut : 6</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>time_step_back<span class="classifier">int</span></dt><dd><p>Nombre de pas de temps autorisé pour rechercher d’anciens fichiers
+Valeur par défaut : 4</p>
 </dd>
 </dl>
 </li>

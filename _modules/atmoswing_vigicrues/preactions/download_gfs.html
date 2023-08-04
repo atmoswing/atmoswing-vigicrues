@@ -120,6 +120,14 @@
 <span class="sd">            Décalage temporel autorisé pour rechercher d&#39;anciens fichiers</span>
 <span class="sd">        * attempts_step_hours : int</span>
 <span class="sd">            Pas de temps auquel décrémenter la date pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">            lorsque le fichier n&#39;est pas trouvé</span>
+<span class="sd">        * time_increment : int</span>
+<span class="sd">            Pas de temps auquel décrémenter la date pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">            afin de compléter les fichiers précédents de la journée</span>
+<span class="sd">            Valeur par défaut : 6</span>
+<span class="sd">        * time_step_back : int</span>
+<span class="sd">            Nombre de pas de temps autorisé pour rechercher d&#39;anciens fichiers</span>
+<span class="sd">            Valeur par défaut : 4</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -201,8 +209,15 @@
                     <span class="k">continue</span>
 
         <span class="c1"># Télécharge également les 4 pas de temps précédents (pas de temps de 6 h)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="mi">6</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_step_back</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="k">if</span> <span class="s1">&#39;time_increment&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;time_increment&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="mi">6</span>
+
+        <span class="k">if</span> <span class="s1">&#39;time_step_back&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_step_back</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;time_step_back&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_step_back</span> <span class="o">=</span> <span class="mi">4</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
