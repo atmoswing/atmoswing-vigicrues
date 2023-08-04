@@ -1,6 +1,14 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.6 - 04 Août 2023
+
+### Ajouts
+
+*   Ajout d'une option en ligne de commande pour spécifier l'intervalle de temps.
+*   Ajout de 'time_increment' et 'time_step_back' comme options de DownloadGfsData.
+
+
 ## v1.1.5 - 02 Juillet 2023
 
 ### Corrections
