@@ -47,6 +47,14 @@ class DownloadGfsData(PreAction):
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
             Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
+            lorsque le fichier n'est pas trouvé
+        * time_increment : int
+            Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
+            afin de compléter les fichiers précédents de la journée
+            Valeur par défaut : 6
+        * time_step_back : int
+            Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
+            Valeur par défaut : 4
 
     Attributes
     ----------
@@ -128,8 +136,15 @@ class DownloadGfsData(PreAction):
                     continue
 
         # Télécharge également les 4 pas de temps précédents (pas de temps de 6 h)
-        self.time_increment = 6
-        self.time_step_back = 4
+        if 'time_increment' in options:
+            self.time_increment = options['time_increment']
+        else:
+            self.time_increment = 6
+
+        if 'time_step_back' in options:
+            self.time_step_back = options['time_step_back']
+        else:
+            self.time_step_back = 4
 
         super().__init__()
 

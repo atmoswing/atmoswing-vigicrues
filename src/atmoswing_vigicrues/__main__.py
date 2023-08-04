@@ -14,6 +14,9 @@ def main(args=None) -> int:
     parser.add_argument(
         '-d', '--date', type=str, required=False,
         help="Date pour laquelle émettre une prévision (YYYYMMDDHH).")
+    parser.add_argument(
+        '-i', '--time-increment', type=int, required=False,
+        help="Incrément en heures pour l'émission de la prévision (par défaut 6h).")
 
     args = parser.parse_args(args)
 
