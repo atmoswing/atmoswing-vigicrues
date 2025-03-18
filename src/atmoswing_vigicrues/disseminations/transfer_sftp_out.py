@@ -79,8 +79,15 @@ class TransferSftpOut(Dissemination):
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
-            if 'proxy_port' in options and len(options['proxy_port']) > 0:
-                self.proxy_port = int(options['proxy_port'])
+            if 'proxy_port' in options:
+                if isinstance(options['proxy_port'], str) and len(
+                        options['proxy_port']) > 0:
+                    self.proxy_port = int(options['proxy_port'])
+                elif isinstance(options['proxy_port'], int):
+                    self.proxy_port = options['proxy_port']
+                else:
+                    raise asv.Error("Le port du proxy doit être une chaîne de "
+                                    "caractères ou un entier.")
             else:
                 self.proxy_port = 1080
         else:
