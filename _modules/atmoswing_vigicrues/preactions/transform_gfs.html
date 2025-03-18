@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>atmoswing_vigicrues.preactions.transform_gfs &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -71,15 +71,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for atmoswing_vigicrues.preactions.transform_gfs</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">atmoswing_vigicrues</span> <span class="k">as</span> <span class="nn">asv</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
 
-<span class="kn">from</span> <span class="nn">.preaction</span> <span class="kn">import</span> <span class="n">PreAction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreAction</span>
 
 <span class="k">if</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_eccodes</span> <span class="ow">and</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_netcdf</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">atmoswing_toolbox.datasets</span> <span class="kn">import</span> <span class="n">generic_dataset</span><span class="p">,</span> <span class="n">grib_dataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">atmoswing_toolbox.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">generic_dataset</span><span class="p">,</span> <span class="n">grib_dataset</span>
 
 
-<div class="viewcode-block" id="TransformGfsData"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData">[docs]</a><span class="k">class</span> <span class="nc">TransformGfsData</span><span class="p">(</span><span class="n">PreAction</span><span class="p">):</span>
+<div class="viewcode-block" id="TransformGfsData">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformGfsData</span><span class="p">(</span><span class="n">PreAction</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Transforme les prévisions émises par GFS en fichier netcdf.</span>
 
@@ -111,7 +113,7 @@
 <span class="sd">        Les variables météorologiques à convertir.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_netcdf</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Le paquet netCDF4 est requis pour cette action.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_eccodes</span><span class="p">:</span>
@@ -129,7 +131,9 @@
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="TransformGfsData.run"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="TransformGfsData.run">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Exécute l&#39;action.</span>
 
@@ -145,7 +149,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">date</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TransformGfsData.transform"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+
+<div class="viewcode-block" id="TransformGfsData.transform">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransformGfsData.transform">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transforme les prévisions de GFS pour une date d&#39;émission de la prévision.</span>
 
@@ -189,20 +196,22 @@
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_input_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_input_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_output_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_output_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
         <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output_dir</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_format_forecast_date</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_format_forecast_date</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
         <span class="n">forecast_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">hour</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">*</span> <span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">hour</span> <span class="o">//</span> <span class="mi">6</span><span class="p">)</span>
         <span class="n">forecast_hour</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">hour</span><span class="si">:</span><span class="s1">02d</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="k">return</span> <span class="n">forecast_date</span><span class="p">,</span> <span class="n">forecast_hour</span></div>
+
 </pre></div>
 
            </div>

@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Introduction &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -81,11 +81,11 @@
            <div itemprop="articleBody">
              
   <section id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h1>
+<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
 <p>Module Python pour l’intégration d’AtmoSwing dans le réseau Vigicrues.</p>
 <p><a class="reference external" href="https://github.com/atmoswing/atmoswing-vigicrues"><img alt="github" src="https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues" /></a> <a class="reference external" href="https://pypi.org/project/atmoswing-vigicrues/"><img alt="pypi" src="https://img.shields.io/pypi/v/atmoswing-vigicrues" /></a> <a class="reference external" href="https://hub.docker.com/r/atmoswing/atmoswing-vigicrues"><img alt="docker" src="https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker" /></a> <a class="reference external" href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.7-green" /></a></p>
 <section id="objectif">
-<h2>Objectif<a class="headerlink" href="#objectif" title="Permalink to this heading"></a></h2>
+<h2>Objectif<a class="headerlink" href="#objectif" title="Link to this heading"></a></h2>
 <p>Le module a pour but la gestion du flux de la prévision par AtmoSwing. Il permet :</p>
 <ul class="simple">
 <li><p>de télécharger les fichiers de sortie de modèles météo (p. ex. GFS),</p></li>
@@ -96,7 +96,7 @@
 </ul>
 </section>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <p>Pour utiliser le module atmoswing-vigicrues, il faut installer :</p>
 <ul class="simple">
 <li><p>Python &gt;= 3.7</p></li>
@@ -105,7 +105,7 @@
 </ul>
 </section>
 <section id="utilisation">
-<h2>Utilisation<a class="headerlink" href="#utilisation" title="Permalink to this heading"></a></h2>
+<h2>Utilisation<a class="headerlink" href="#utilisation" title="Link to this heading"></a></h2>
 <p>Le paquet est constitué de plusieurs modules qui peuvent être activés et configurés dans un fichier de configuration. Plusieurs flux de prévision peuvent être configurés sur un serveur / PC par la création de différents fichiers de configuration. Il n’y a pas de paramètres codés en dur dans le code. L’exécution d’un flux de prévision est effectuée par la commande :</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>atmoswing_vigicrues<span class="w"> </span>--config-file<span class="o">=</span><span class="s2">&quot;chemin/vers/fichier/config.yaml&quot;</span>
 </pre></div>
@@ -133,7 +133,7 @@
 <p>La partie « Composants » de la documentation fournit le détail des paramètres de chaque action.</p>
 </section>
 <section id="exemple-de-fichier-de-configuration">
-<h2>Exemple de fichier de configuration<a class="headerlink" href="#exemple-de-fichier-de-configuration" title="Permalink to this heading"></a></h2>
+<h2>Exemple de fichier de configuration<a class="headerlink" href="#exemple-de-fichier-de-configuration" title="Link to this heading"></a></h2>
 <p>Un exemple de fichier de configuration est présenté ci-dessous :</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">atmoswing</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Forecast now</span>
@@ -224,9 +224,9 @@
 <p>La partie « Composants » de la documentation fournit le détail des paramètres de chaque action.</p>
 </section>
 <section id="structure">
-<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this heading"></a></h2>
+<h2>Structure<a class="headerlink" href="#structure" title="Link to this heading"></a></h2>
 <p>Le schéma ci-dessous présente la structure des classes principales du module.</p>
-<div class="graphviz"><img src="../_images/inheritance-e7b5f5dd917679a8d8fc4dc29bb5b4628c341223.png" alt="Inheritance diagram of Controller, PreAction, TransferSftpIn, DownloadGfsData, TransformGfsData, TransformEcmwfData, PostAction, ExportBdApBp, ExportPrv, Dissemination, TransferSftpOut" usemap="#inheritancea1c0ba0d13" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-970602aab9eadb62757bdd30ea3cd6e3f3252108.png" alt="Inheritance diagram of Controller, PreAction, TransferSftpIn, DownloadGfsData, TransformGfsData, TransformEcmwfData, PostAction, ExportBdApBp, ExportPrv, Dissemination, TransferSftpOut" usemap="#inheritancea1c0ba0d13" class="inheritance graphviz" /></div>
 <map id="inheritancea1c0ba0d13" name="inheritancea1c0ba0d13">
 <area shape="rect" id="node1" href="../api/module.html#atmoswing_vigicrues.Controller" target="_top" title="Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues." alt="" coords="20,351,107,376"/>
 <area shape="rect" id="node2" href="../api/module.html#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="5,301,121,327"/>

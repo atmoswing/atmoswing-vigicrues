@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>atmoswing_vigicrues.postactions.export_prv &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -71,17 +71,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for atmoswing_vigicrues.postactions.export_prv</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">atmoswing_vigicrues</span> <span class="k">as</span> <span class="nn">asv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
 
-<span class="kn">from</span> <span class="nn">.postaction</span> <span class="kn">import</span> <span class="n">PostAction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.postaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">PostAction</span>
 
 
-<div class="viewcode-block" id="ExportPrv"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv">[docs]</a><span class="k">class</span> <span class="nc">ExportPrv</span><span class="p">(</span><span class="n">PostAction</span><span class="p">):</span>
+<div class="viewcode-block" id="ExportPrv">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExportPrv</span><span class="p">(</span><span class="n">PostAction</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Export des prévisions au format PRV du logiciel Scores.</span>
 
@@ -119,7 +121,7 @@
 <span class="sd">        Combinaison des différentes stations (entités) dans un seul fichier.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_netcdf</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Le paquet netCDF4 est requis pour cette action.&quot;</span><span class="p">)</span>
 
@@ -145,7 +147,9 @@
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ExportPrv.run"><a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="ExportPrv.run">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.ExportPrv.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Exécution de la post-action.</span>
 
@@ -196,7 +200,8 @@
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">_create_header_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_header_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
         <span class="n">list_frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">]</span>
 
         <span class="n">header</span> <span class="o">=</span> \
@@ -210,7 +215,7 @@
 
         <span class="k">return</span> <span class="n">header</span>
 
-    <span class="k">def</span> <span class="nf">_create_header_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_ids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_header_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_ids</span><span class="p">):</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">stat_ids</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;;</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">station_ids</span><span class="p">]</span>
@@ -229,7 +234,7 @@
 
         <span class="k">return</span> <span class="n">header</span>
 
-    <span class="k">def</span> <span class="nf">_create_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_ids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">,</span> <span class="n">station_ids</span><span class="p">):</span>
         <span class="c1"># Extracting variables</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;station_ids&#39;</span><span class="p">][:]</span>
         <span class="n">target_dates</span> <span class="o">=</span> <span class="n">nc_file</span><span class="p">[</span><span class="s1">&#39;target_dates&#39;</span><span class="p">][:]</span>
@@ -277,12 +282,12 @@
 
         <span class="k">return</span> <span class="n">content</span>
 
-    <span class="k">def</span> <span class="nf">_get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
         <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
         <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">local_path</span>
 
-    <span class="k">def</span> <span class="nf">_build_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">station_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">station_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">original_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">original_file_name</span><span class="p">:</span>
             <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -300,13 +305,13 @@
         <span class="n">file_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">file_name</span>
         <span class="k">return</span> <span class="n">file_path</span>
 
-    <span class="k">def</span> <span class="nf">_build_id_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_id_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc_file</span><span class="p">):</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">:</span>
             <span class="n">ids</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">nc_file</span><span class="o">.</span><span class="n">specific_tag</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">freq</span><span class="p">)</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">;&quot;</span>
         <span class="k">return</span> <span class="n">ids</span>
 
-    <span class="k">def</span> <span class="nf">_get_time_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_dates</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_time_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_dates</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_dates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
         <span class="n">time_step</span> <span class="o">=</span> <span class="n">target_dates</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="o">-</span> \
                     <span class="n">target_dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
@@ -316,6 +321,7 @@
         <span class="k">if</span> <span class="n">show_hour</span><span class="p">:</span>
             <span class="n">time_format_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_format</span> <span class="o">+</span> <span class="s2">&quot; %H:%M&quot;</span>
         <span class="k">return</span> <span class="n">time_format_target</span></div>
+
 </pre></div>
 
            </div>
