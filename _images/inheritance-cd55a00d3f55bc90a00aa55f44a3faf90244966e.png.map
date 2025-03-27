@@ -1,0 +1,5 @@
+<map id="inheritance54a5557647" name="inheritance54a5557647">
+<area shape="rect" id="node1" href="#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="5,31,121,56"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="171,5,290,31"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="169,55,292,80"/>
+</map>
