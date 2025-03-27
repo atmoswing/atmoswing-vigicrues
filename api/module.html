@@ -107,6 +107,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.TransferSftpOut"><code class="docutils literal notranslate"><span class="pre">TransferSftpOut</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#transfert-ftp">Transfert FTP</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.TransferFtpOut"><code class="docutils literal notranslate"><span class="pre">TransferFtpOut</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1600,6 +1604,210 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_sftp_out.html#TransferSftpOut.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.run" title="Link to this definition"></a></dt>
 <dd><p>Exécution de la diffusion par SFTP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="transfert-ftp">
+<h3>Transfert FTP<a class="headerlink" href="#transfert-ftp" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferFtpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_ftp_out.html#TransferFtpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.Dissemination" title="atmoswing_vigicrues.disseminations.dissemination.Dissemination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dissemination</span></code></a></p>
+<p>Transfer des résultats par FTP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Le nom de l’action</p></li>
+<li><p><strong>options</strong> (<em>dict</em>) – <p>Un dictionnaire contenant les options de l’action. Les champs possibles sont:</p>
+<ul>
+<li><dl class="simple">
+<dt>local_dir<span class="classifier">str</span></dt><dd><p>Répertoire local contenant les fichiers à exporter.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>extension<span class="classifier">str</span></dt><dd><p>Extension des fichiers à exporter.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>hostname<span class="classifier">str</span></dt><dd><p>Adresse du serveur pour la diffusion des résultats.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>port<span class="classifier">int</span></dt><dd><p>Port du serveur distant.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>username<span class="classifier">str</span></dt><dd><p>Utilisateur ayant un accès au serveur.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>password<span class="classifier">str</span></dt><dd><p>Mot de passe de l’utilisateur sur le serveur.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_host<span class="classifier">str</span></dt><dd><p>Adresse du proxy, si nécessaire.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_port<span class="classifier">int</span></dt><dd><p>Port du proxy si nécessaire (par défaut: 1080).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>remote_dir<span class="classifier">str</span></dt><dd><p>Chemin sur le serveur distant où enregistrer les fichiers.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.type_name" title="Link to this definition"></a></dt>
+<dd><p>Le nom du type de l’action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.name" title="Link to this definition"></a></dt>
+<dd><p>Le nom de l’action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.local_dir">
+<span class="sig-name descname"><span class="pre">local_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.local_dir" title="Link to this definition"></a></dt>
+<dd><p>Répertoire local contenant les fichiers à exporter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.extension">
+<span class="sig-name descname"><span class="pre">extension</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.extension" title="Link to this definition"></a></dt>
+<dd><p>Extension des fichiers à exporter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.hostname">
+<span class="sig-name descname"><span class="pre">hostname</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.hostname" title="Link to this definition"></a></dt>
+<dd><p>Adresse du serveur pour la diffusion des résultats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.port">
+<span class="sig-name descname"><span class="pre">port</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.port" title="Link to this definition"></a></dt>
+<dd><p>Port du serveur distant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.username">
+<span class="sig-name descname"><span class="pre">username</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.username" title="Link to this definition"></a></dt>
+<dd><p>Utilisateur ayant un accès au serveur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.password">
+<span class="sig-name descname"><span class="pre">password</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.password" title="Link to this definition"></a></dt>
+<dd><p>Mot de passe de l’utilisateur sur le serveur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.proxy_host">
+<span class="sig-name descname"><span class="pre">proxy_host</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.proxy_host" title="Link to this definition"></a></dt>
+<dd><p>Adresse du proxy, si nécessaire.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.proxy_port">
+<span class="sig-name descname"><span class="pre">proxy_port</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.proxy_port" title="Link to this definition"></a></dt>
+<dd><p>Port du proxy si nécessaire (par défaut: 1080).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.remote_dir">
+<span class="sig-name descname"><span class="pre">remote_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.remote_dir" title="Link to this definition"></a></dt>
+<dd><p>Chemin sur le serveur distant où enregistrer les fichiers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_ftp_out.html#TransferFtpOut.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.run" title="Link to this definition"></a></dt>
+<dd><p>Exécution de la diffusion par FTP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date de la prévision.</p>

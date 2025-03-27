@@ -117,14 +117,14 @@ Un exemple de fichier de configuration est présenté ci-dessous :
           frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
 
     disseminations:
-      - name: Transfer SFTP netcdf
-        uses: TransferSftpOut
+      - name: Transfer FTP netcdf
+        uses: TransferFtpOut
         active: True
         with:
           local_dir: 'D:\atmoswing\forecasts'
           extension: '.nc'
           hostname: '127.0.0.1'
-          port: 4422
+          port: 21
           username: 'foo'
           password: 'pass'
           proxy_host: ''
@@ -167,6 +167,6 @@ Structure
 Le schéma ci-dessous présente la structure des classes principales du module.
 
 .. currentmodule:: atmoswing_vigicrues
-.. inheritance-diagram:: Controller PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData PostAction ExportBdApBp ExportPrv Dissemination TransferSftpOut
+.. inheritance-diagram:: Controller PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData PostAction ExportBdApBp ExportPrv Dissemination TransferSftpOut TransferFtpOut
    :parts: 1
 
