@@ -10,7 +10,7 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Needs a running docker container
-RUN_FTP = True
+RUN_FTP = False
 
 
 @pytest.fixture
