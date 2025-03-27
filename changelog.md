@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.7 - 27 Mars 2025
+
+### Ajouts
+
+*   Ajout d'une dissémination des résultats par FTP.
+
+
 ## v1.1.6 - 04 Août 2023
 
 ### Ajouts
