@@ -18,6 +18,7 @@ else:
 from .controller import Controller
 from .disseminations.dissemination import Dissemination
 from .disseminations.transfer_sftp_out import TransferSftpOut
+from .disseminations.transfer_ftp_out import TransferFtpOut
 from .exceptions import (ConfigError, Error, FilePathError, OptionError,
                          PathError)
 from .options import Options
@@ -37,4 +38,4 @@ __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData', 'file_exists',
            'check_file_exists', 'check_dir_exists', 'build_date_dir_structure',
            'Dataset', 'eccodes', 'TransferSftpIn', 'PreAction', 'PostAction',
-           'Dissemination')
+           'Dissemination', 'TransferFtpOut')

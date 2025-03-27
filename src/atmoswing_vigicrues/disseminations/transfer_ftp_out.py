@@ -1,15 +1,16 @@
 import os
-
-import paramiko
+import ftplib
+import socks
+import socket
 
 import atmoswing_vigicrues as asv
 
 from .dissemination import Dissemination
 
 
-class TransferSftpOut(Dissemination):
+class TransferFtpOut(Dissemination):
     """
-    Transfer des résultats par SFTP.
+    Transfer des résultats par FTP.
 
     Parameters
     ----------
@@ -65,9 +66,9 @@ class TransferSftpOut(Dissemination):
 
     def __init__(self, name, options):
         """
-        Initialisation de l'instance TransferSftp
+        Initialisation de l'instance TransferFtp
         """
-        self.type_name = "Transfert SFTP"
+        self.type_name = "Transfert FTP"
         self.name = name
         self.local_dir = options['local_dir']
         self.extension = options['extension']
@@ -79,6 +80,7 @@ class TransferSftpOut(Dissemination):
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
+            self.proxy_type = socks.HTTP
             if 'proxy_port' in options:
                 if isinstance(options['proxy_port'], str) and len(
                         options['proxy_port']) > 0:
@@ -97,7 +99,7 @@ class TransferSftpOut(Dissemination):
 
     def run(self, date) -> bool:
         """
-        Exécution de la diffusion par SFTP.
+        Exécution de la diffusion par FTP.
 
         Parameters
         ----------
@@ -114,64 +116,52 @@ class TransferSftpOut(Dissemination):
             return False
 
         try:
-            # Create a transport object for the SFTP connection
-            transport = paramiko.Transport((self.hostname, self.port))
-
             if self.proxy_host:
-                transport.start_client()
-                transport.open_channel('direct-tcpip',
-                                       (self.hostname, self.port),
-                                       (self.proxy_host, self.proxy_port))
+                socks.set_default_proxy(self.proxy_type, self.proxy_host, self.proxy_port)
+                socket.socket = socks.socksocket  # Override the default socket
 
-            # Authenticate with the SFTP server
-            transport.connect(username=self.username, password=self.password)
+            # Connect to FTP
+            ftp = ftplib.FTP()
+            ftp.connect(self.hostname, self.port)
+            ftp.login(self.username, self.password)
 
-            # Create an SFTP client object
-            sftp = transport.open_sftp_client()
-
-            self._chdir_or_mkdir(self.remote_dir, sftp)
-            self._chdir_or_mkdir(date.strftime('%Y'), sftp)
-            self._chdir_or_mkdir(date.strftime('%m'), sftp)
-            self._chdir_or_mkdir(date.strftime('%d'), sftp)
+            self._chdir_or_mkdir(self.remote_dir, ftp)
+            self._chdir_or_mkdir(date.strftime('%Y'), ftp)
+            self._chdir_or_mkdir(date.strftime('%m'), ftp)
+            self._chdir_or_mkdir(date.strftime('%d'), ftp)
+            print("Directories created/changed successfully")
 
             for file in self._file_paths:
                 filename = os.path.basename(file)
                 asv.check_file_exists(file)
-                sftp.put(file, filename)
+                with open(file, 'rb') as f:
+                    ftp.storbinary(f'STOR {filename}', f)
+                    print(f"File {filename} uploaded successfully")
 
-            sftp.close()
-            transport.close()
+            ftp.quit()
 
             return True
 
-        except paramiko.ssh_exception.PasswordRequiredException as e:
-            print(f"SFTP PasswordRequiredException {e}")
-        except paramiko.ssh_exception.BadAuthenticationType as e:
-            print(f"SFTP BadAuthenticationType {e}")
-        except paramiko.ssh_exception.AuthenticationException as e:
-            print(f"SFTP AuthenticationException {e}")
-        except paramiko.ssh_exception.ChannelException as e:
-            print(f"SFTP ChannelException {e}")
-        except paramiko.ssh_exception.ProxyCommandFailure as e:
-            print(f"SFTP ProxyCommandFailure {e}")
-        except paramiko.ssh_exception.SSHException as e:
-            print(f"SFTP SSHException {e}")
-        except FileNotFoundError as e:
-            print(f"SFTP FileNotFoundError {e}")
         except Exception as e:
-            print(f"La diffusion SFTP a échoué ({e}).")
+            print(f"La diffusion FTP a échoué ({e}).")
 
-        if 'sftp' in locals():
-            sftp.close()
-        if 'transport' in locals():
-            transport.close()
+        if 'ftp' in locals():
+            ftp.quit()
 
         return False
 
     @staticmethod
-    def _chdir_or_mkdir(dir_path, sftp):
+    def _chdir_or_mkdir(dir_path, ftp):
+        current_remote_dir = ftp.pwd()
+
+        # If the path does not end with a slash, add one
+        if not current_remote_dir.endswith('/'):
+            current_remote_dir += '/'
+
+        current_remote_dir += dir_path
+
         try:
-            sftp.chdir(dir_path)
-        except OSError:
-            sftp.mkdir(dir_path)
-            sftp.chdir(dir_path)
+            ftp.cwd(current_remote_dir)
+        except Exception:
+            ftp.mkd(dir_path)
+            ftp.cwd(current_remote_dir)

@@ -165,39 +165,37 @@ class TransferSftpIn(PreAction):
             forecast_date = date.strftime("%Y%m%d")
             f_exist_d, f_new_d = self._get_files(sftp, forecast_date, local_path)
 
-            # Close the SFTP client and transport objects
-            sftp.close()
-            transport.close()
-
             print(f"  -> Nombre de fichiers existants : {f_exist_d - f_new_dt}.")
             print(f"  -> Nombre de fichiers récupérés : {f_new_dt + f_new_d}.")
 
+            sftp.close()
+            transport.close()
+
+            return True
+
         except paramiko.ssh_exception.PasswordRequiredException as e:
             print(f"SFTP PasswordRequiredException {e}")
-            return False
         except paramiko.ssh_exception.BadAuthenticationType as e:
             print(f"SFTP BadAuthenticationType {e}")
-            return False
         except paramiko.ssh_exception.AuthenticationException as e:
             print(f"SFTP AuthenticationException {e}")
-            return False
         except paramiko.ssh_exception.ChannelException as e:
             print(f"SFTP ChannelException {e}")
-            return False
         except paramiko.ssh_exception.ProxyCommandFailure as e:
             print(f"SFTP ProxyCommandFailure {e}")
-            return False
         except paramiko.ssh_exception.SSHException as e:
             print(f"SFTP SSHException {e}")
-            return False
         except FileNotFoundError as e:
             print(f"SFTP FileNotFoundError {e}")
-            return False
         except Exception as e:
             print(f"Le rapatriement des données par SFTP a échoué ({e}).")
-            return False
 
-        return True
+        if 'sftp' in locals():
+            sftp.close()
+        if 'transport' in locals():
+            transport.close()
+
+        return False
 
     def _get_files(self, sftp, forecast_date, local_path):
         files_count_existing = 0

@@ -1,0 +1,27 @@
+# Exemple de fichier de configuration
+
+atmoswing:
+  name: Forecast now
+  active: True
+  with:
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    batch_file: 'C:\Users\Pascal\Drive Home\AtmoSwing\params\forecast\CH-VS-precipitations\batch-test.xml'
+    output_dir: 'C:\Users\Pascal\AppData\Local\Temp\AtmoSwing'
+    target: 'now'
+    proxy: ''
+    proxy_user: ''
+
+disseminations:
+  - name: Transfer FTP netcdf
+    uses: TransferFtpOut
+    active: True
+    with:
+      local_dir: 'C:\Users\Pascal\AppData\Local\Temp\AtmoSwing'
+      extension: '.nc'
+      hostname: 'euso.ftp.infomaniak.com'
+      port: 21
+      username: 'euso_atmoswing_adn'
+      password: 'b$$wSI&Om&rSOP70'
+      proxy_host: ''
+      proxy_port: ''
+      remote_dir: ''

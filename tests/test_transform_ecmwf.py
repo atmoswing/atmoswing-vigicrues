@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import types
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -40,7 +40,7 @@ def test_transform_ecmwf_fails_if_files_not_found(options):
     if not has_required_packages():
         return
     action = asv.TransformEcmwfData('Transform ECMWF data', options)
-    date = datetime.utcnow()
+    date = datetime.now(timezone.utc)
     assert action.transform(date) is False
     shutil.rmtree(options['output_dir'])
 
