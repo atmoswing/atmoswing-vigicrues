@@ -2,11 +2,11 @@
 
 atmoswing:
   name: Forecast now
-  active: True
+  active: False
   with:
     atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
-    batch_file: 'C:\Users\Pascal\Drive Home\AtmoSwing\params\forecast\CH-VS-precipitations\batch-test.xml'
-    output_dir: 'C:\Users\Pascal\AppData\Local\Temp\AtmoSwing'
+    batch_file: 'files/batch_file.xml'
+    output_dir: '__tmp_dir__\output'
     target: 'now'
     proxy: ''
     proxy_user: ''
@@ -16,12 +16,12 @@ disseminations:
     uses: TransferFtpOut
     active: True
     with:
-      local_dir: 'C:\Users\Pascal\AppData\Local\Temp\AtmoSwing'
+      local_dir: '/tmp'
       extension: '.nc'
-      hostname: 'euso.ftp.infomaniak.com'
-      port: 21
-      username: 'euso_atmoswing_adn'
-      password: 'b$$wSI&Om&rSOP70'
+      hostname: '127.0.0.1'
+      port: 22
+      username: 'foo'
+      password: 'pass'
       proxy_host: ''
       proxy_port: ''
-      remote_dir: ''
+      remote_dir: 'some/dir'
