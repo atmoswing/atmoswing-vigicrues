@@ -94,7 +94,7 @@ Export PRV
 Dissemination
 -------------
 
-.. inheritance-diagram:: Dissemination TransferSftpOut
+.. inheritance-diagram:: Dissemination TransferSftpOut TransferFtpOut
    :parts: 1
 
 Classe de base des disséminations
