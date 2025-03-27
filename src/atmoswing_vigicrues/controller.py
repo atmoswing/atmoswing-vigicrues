@@ -48,7 +48,7 @@ class Controller:
         if hasattr(cli_options, 'time_increment') and \
                 cli_options.time_increment is not None:
             self.time_increment = cli_options.time_increment
-        self.date = datetime.datetime.utcnow()
+        self.date = datetime.datetime.now(datetime.timezone.utc)
         self.existing_files = []
         self.pre_actions = []
         self.post_actions = []
