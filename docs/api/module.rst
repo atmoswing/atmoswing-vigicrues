@@ -112,3 +112,11 @@ Transfert SFTP
    :members:
    :undoc-members:
    :show-inheritance:
+
+Transfert FTP
+~~~~~~~~~~~~~~
+
+.. autoclass:: TransferFtpOut
+   :members:
+   :undoc-members:
+   :show-inheritance:
