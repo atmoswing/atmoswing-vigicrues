@@ -4,6 +4,6 @@ from setuptools import setup
 if __name__ == "__main__":
     setup(
         name="atmoswing-vigicrues",
-        version="1.1.7",
+        version="1.1.8",
         author="Pascal Horton",
     )

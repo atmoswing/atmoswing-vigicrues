@@ -133,3 +133,5 @@ dmypy.json
 .vscode/
 **/__data_cache__
 **/__tmp_dir__
+
+tests/files/config_dissemination_ftp_adn.yaml
