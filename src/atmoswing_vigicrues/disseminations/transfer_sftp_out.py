@@ -137,6 +137,15 @@ class TransferSftpOut(Dissemination):
             for file in self._file_paths:
                 filename = os.path.basename(file)
                 asv.check_file_exists(file)
+
+                # If file exists remotely, do not upload
+                try:
+                    sftp.stat(filename)
+                    print(f"Le fichier {filename} existe déjà sur le serveur distant.")
+                    continue
+                except FileNotFoundError:
+                    pass
+
                 sftp.put(file, filename)
 
             sftp.close()

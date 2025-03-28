@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.8 - 28 Mars 2025
+
+### Changements
+
+*   Dissémination FTP: si le fichier est déjà présent, il n'est pas écrasé.
+
+
 ## v1.1.7 - 27 Mars 2025
 
 ### Ajouts

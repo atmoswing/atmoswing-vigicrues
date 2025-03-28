@@ -134,6 +134,13 @@ class TransferFtpOut(Dissemination):
             for file in self._file_paths:
                 filename = os.path.basename(file)
                 asv.check_file_exists(file)
+
+                # If file exists remotely, do not upload
+                if filename in ftp.nlst():
+                    print(f"File {filename} already exists on the server. "
+                          f"Skipping upload.")
+                    continue
+
                 with open(file, 'rb') as f:
                     ftp.storbinary(f'STOR {filename}', f)
                     print(f"File {filename} uploaded successfully")
