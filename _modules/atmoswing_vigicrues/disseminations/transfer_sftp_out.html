@@ -214,6 +214,15 @@
             <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span><span class="p">:</span>
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
                 <span class="n">asv</span><span class="o">.</span><span class="n">check_file_exists</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+                <span class="c1"># If file exists remotely, do not upload</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">sftp</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Le fichier </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> existe déjà sur le serveur distant.&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
                 <span class="n">sftp</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 
             <span class="n">sftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
