@@ -20,7 +20,7 @@ RUN pip install -r requirements.txt \
     && pip install -r requirements-optional.txt
 
 # Install own module
-RUN pip install -e .
+RUN pip install --no-cache-dir .
 
 
 ENTRYPOINT ["python3", "-m", "atmoswing_vigicrues"]
