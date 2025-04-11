@@ -72,7 +72,8 @@
              
   <h1>Source code for atmoswing_vigicrues.disseminations.transfer_sftp_out</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ssl</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">paramiko</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
@@ -164,7 +165,7 @@
                     <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Le port du proxy doit être une chaîne de &quot;</span>
                                     <span class="s2">&quot;caractères ou un entier.&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="mi">1080</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="mi">8080</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -191,20 +192,20 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Create a transport object for the SFTP connection</span>
-            <span class="n">transport</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">Transport</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">:</span>
-                <span class="n">transport</span><span class="o">.</span><span class="n">start_client</span><span class="p">()</span>
-                <span class="n">transport</span><span class="o">.</span><span class="n">open_channel</span><span class="p">(</span><span class="s1">&#39;direct-tcpip&#39;</span><span class="p">,</span>
-                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span>
-                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">))</span>
+                <span class="n">proxy_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect_via_http_proxy</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+                <span class="n">transport</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">Transport</span><span class="p">(</span><span class="n">proxy_socket</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Create a transport object for the SFTP connection</span>
+                <span class="n">transport</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">Transport</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
 
             <span class="c1"># Authenticate with the SFTP server</span>
             <span class="n">transport</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
 
-            <span class="c1"># Create an SFTP client object</span>
-            <span class="n">sftp</span> <span class="o">=</span> <span class="n">transport</span><span class="o">.</span><span class="n">open_sftp_client</span><span class="p">()</span>
+            <span class="c1"># Create SFTP client</span>
+            <span class="n">sftp</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SFTPClient</span><span class="o">.</span><span class="n">from_transport</span><span class="p">(</span><span class="n">transport</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span><span class="p">,</span> <span class="n">sftp</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y&#39;</span><span class="p">),</span> <span class="n">sftp</span><span class="p">)</span>
@@ -254,6 +255,20 @@
 
         <span class="k">return</span> <span class="kc">False</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_connect_via_http_proxy</span><span class="p">(</span><span class="n">proxy_host</span><span class="p">,</span> <span class="n">proxy_port</span><span class="p">,</span> <span class="n">target_host</span><span class="p">,</span> <span class="n">target_port</span><span class="p">):</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="n">proxy_host</span><span class="p">,</span> <span class="n">proxy_port</span><span class="p">))</span>
+        <span class="n">connect_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CONNECT </span><span class="si">{</span><span class="n">target_host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">target_port</span><span class="si">}</span><span class="s2"> HTTP/1.1</span><span class="se">\r\n</span><span class="s2">Host: &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">target_port</span><span class="si">}</span><span class="se">\r\n\r\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sock</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">connect_str</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+
+        <span class="c1"># Wait for HTTP 200 connection established</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;200 Connection established&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to connect via proxy. Response:</span><span class="se">\n</span><span class="si">{</span><span class="n">response</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sock</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_chdir_or_mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">sftp</span><span class="p">):</span>
