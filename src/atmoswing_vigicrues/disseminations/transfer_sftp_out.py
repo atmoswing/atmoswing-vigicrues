@@ -1,5 +1,6 @@
 import os
-
+import socket
+import ssl
 import paramiko
 
 import atmoswing_vigicrues as asv
@@ -89,7 +90,7 @@ class TransferSftpOut(Dissemination):
                     raise asv.Error("Le port du proxy doit être une chaîne de "
                                     "caractères ou un entier.")
             else:
-                self.proxy_port = 1080
+                self.proxy_port = 8080
         else:
             self.proxy_host = None
 
@@ -114,20 +115,20 @@ class TransferSftpOut(Dissemination):
             return False
 
         try:
-            # Create a transport object for the SFTP connection
-            transport = paramiko.Transport((self.hostname, self.port))
-
             if self.proxy_host:
-                transport.start_client()
-                transport.open_channel('direct-tcpip',
-                                       (self.hostname, self.port),
-                                       (self.proxy_host, self.proxy_port))
+                proxy_socket = self._connect_via_http_proxy(
+                    self.proxy_host, self.proxy_port, self.hostname, self.port)
+                transport = paramiko.Transport(proxy_socket)
+
+            else:
+                # Create a transport object for the SFTP connection
+                transport = paramiko.Transport((self.hostname, self.port))
 
             # Authenticate with the SFTP server
             transport.connect(username=self.username, password=self.password)
 
-            # Create an SFTP client object
-            sftp = transport.open_sftp_client()
+            # Create SFTP client
+            sftp = paramiko.SFTPClient.from_transport(transport)
 
             self._chdir_or_mkdir(self.remote_dir, sftp)
             self._chdir_or_mkdir(date.strftime('%Y'), sftp)
@@ -176,6 +177,20 @@ class TransferSftpOut(Dissemination):
             transport.close()
 
         return False
+
+    @staticmethod
+    def _connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port):
+        sock = socket.create_connection((proxy_host, proxy_port))
+        connect_str = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: "
+                       f"{target_host}:{target_port}\r\n\r\n")
+        sock.sendall(connect_str.encode())
+
+        # Wait for HTTP 200 connection established
+        response = sock.recv(4096).decode()
+        if "200 Connection established" not in response:
+            raise Exception(f"Failed to connect via proxy. Response:\n{response}")
+
+        return sock
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):
