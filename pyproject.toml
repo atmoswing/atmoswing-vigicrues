@@ -1,6 +1,6 @@
 [project]
 name = "atmoswing-vigicrues"
-version = "1.1.8"
+version = "1.1.9"
 authors = [
   { name="Pascal Horton", email="pascal.horton@terranum.ch" },
 ]

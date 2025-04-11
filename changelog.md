@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.1.9 - 11 Avril 2025
+
+### Changements
+
+*   Amélioration du support des proxys HTTP dans le téléversement SFTP.
+
+
 ## v1.1.8 - 28 Mars 2025
 
 ### Changements
