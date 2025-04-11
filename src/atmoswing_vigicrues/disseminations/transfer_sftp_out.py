@@ -187,7 +187,7 @@ class TransferSftpOut(Dissemination):
 
         # Wait for HTTP 200 connection established
         response = sock.recv(4096).decode()
-        if "200 Connection established" not in response:
+        if "200 connection established" not in response.lower():
             raise Exception(f"Failed to connect via proxy. Response:\n{response}")
 
         return sock
