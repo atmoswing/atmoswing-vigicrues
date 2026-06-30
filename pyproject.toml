@@ -13,8 +13,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[console_scripts]
-asv_forecast = "atmoswing_vigicrues=atmoswing_vigicrues.__main__:main"
+[project.scripts]
+asv_forecast = "atmoswing_vigicrues.__main__:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
