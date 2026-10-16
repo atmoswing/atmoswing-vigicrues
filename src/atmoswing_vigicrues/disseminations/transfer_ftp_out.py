@@ -196,21 +196,24 @@ class TransferFtpOut(Dissemination):
             self._chdir_or_mkdir(date.strftime('%Y'), ftp)
             self._chdir_or_mkdir(date.strftime('%m'), ftp)
             self._chdir_or_mkdir(date.strftime('%d'), ftp)
-            print("Directories created/changed successfully")
+            ftp.voidcmd('TYPE I')  # Requis par la commande SIZE
+            remote_files = self._list_remote_files(ftp)
 
             for file in self._file_paths:
                 filename = os.path.basename(file)
                 asv.check_file_exists(file)
 
-                # If file exists remotely, do not upload
-                if filename in ftp.nlst():
-                    print(f"File {filename} already exists on the server. "
-                          f"Skipping upload.")
-                    continue
+                # If file exists remotely, upload only if it must be replaced
+                if filename in remote_files:
+                    if not self._must_replace(file, self._remote_size(ftp, filename)):
+                        print(f"Le fichier {filename} existe déjà sur le serveur "
+                              f"distant.")
+                        continue
+                    print(f"Remplacement du fichier {filename} sur le serveur "
+                          f"distant.")
 
                 with open(file, 'rb') as f:
                     ftp.storbinary(f'STOR {filename}', f)
-                    print(f"File {filename} uploaded successfully")
 
             ftp.quit()
 
@@ -223,6 +226,21 @@ class TransferFtpOut(Dissemination):
             ftp.close()
 
         return False
+
+    @staticmethod
+    def _list_remote_files(ftp):
+        try:
+            return set(ftp.nlst())
+        except ftplib.error_perm:
+            # Certains serveurs répondent par une erreur pour un répertoire vide
+            return set()
+
+    @staticmethod
+    def _remote_size(ftp, filename):
+        try:
+            return ftp.size(filename)
+        except ftplib.all_errors:
+            return None
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, ftp):

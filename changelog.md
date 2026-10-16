@@ -24,6 +24,8 @@
 *   Conversion des dates MJD : les dates infra-journalières (ex. horaires) enregistrées en float32 par AtmoSwing étaient erronées (calcul en float32 et troncature) ; elles sont désormais arrondies à l'heure.
 *   Les erreurs d'AtmoSwing Forecaster ne sont plus signalées (ni le journal affiché) deux fois, et l'absence du journal ne provoque plus d'exception.
 *   Ajout d'un délai maximal (option `timeout`, 120 s par défaut) pour le téléchargement des données GFS.
+*   Diffusion SFTP/FTP : les exports JSON en erreur déjà présents sur le serveur distant sont désormais remplacés (un export en erreur est toujours transmis, un export réussi remplace une copie distante de taille différente). Les autres fichiers ne sont jamais écrasés.
+*   Diffusion FTP : un répertoire distant vide ne provoque plus d'erreur (certains serveurs répondent par une erreur à la commande NLST), et les messages sont désormais en français.
 
 
 ## v1.2.0 - 11 Avril 2025

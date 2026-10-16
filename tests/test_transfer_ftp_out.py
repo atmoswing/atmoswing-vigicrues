@@ -1,4 +1,6 @@
+import ftplib
 import glob
+import json
 import os
 import socket
 import types
@@ -102,3 +104,80 @@ def test_ftp_via_proxy_rejects_active_mode(proxied_connections):
     with pytest.raises(asv.Error):
         ftp.ntransfercmd('STOR file.nc')
     ftp.close()
+
+
+class FakeFtp:
+    def __init__(self, remote_files, size_supported=True):
+        self.remote_files = remote_files
+        self.size_supported = size_supported
+        self.uploaded = []
+
+    def connect(self, host, port):
+        pass
+
+    def login(self, username, password):
+        pass
+
+    def pwd(self):
+        return '/'
+
+    def cwd(self, path):
+        pass
+
+    def mkd(self, path):
+        pass
+
+    def voidcmd(self, cmd):
+        pass
+
+    def nlst(self):
+        if not self.remote_files:
+            raise ftplib.error_perm("550 No files found")
+        return list(self.remote_files)
+
+    def size(self, filename):
+        if not self.size_supported:
+            raise ftplib.error_perm("500 Unknown command")
+        return self.remote_files[filename]
+
+    def storbinary(self, cmd, f):
+        self.uploaded.append(cmd.replace('STOR ', ''))
+
+    def quit(self):
+        pass
+
+    def close(self):
+        pass
+
+
+@pytest.fixture
+def local_exports(tmp_path):
+    ok_file = tmp_path / 'ok.json'
+    ok_file.write_text(json.dumps({'status': 0, 'data': 'résultats'}))
+    error_file = tmp_path / 'error.json'
+    error_file.write_text(json.dumps({'status': 200, 'data': None}))
+    nc_file = tmp_path / 'forecast.nc'
+    nc_file.write_text('données netcdf')
+    return [str(ok_file), str(error_file), str(nc_file)]
+
+
+@pytest.mark.parametrize('remote_sizes, size_supported, expected', [
+    ({}, True, ['ok.json', 'error.json', 'forecast.nc']),
+    ('same', True, ['error.json']),
+    ({'ok.json': 5, 'error.json': 5, 'forecast.nc': 5}, True,
+     ['ok.json', 'error.json']),
+    ('same', False, ['ok.json', 'error.json']),
+])
+def test_upload_replaces_remote_exports_in_error(options, local_exports, monkeypatch,
+                                                 remote_sizes, size_supported,
+                                                 expected):
+    if remote_sizes == 'same':
+        remote_sizes = {os.path.basename(f): os.path.getsize(f)
+                        for f in local_exports}
+    ftp = FakeFtp(remote_sizes, size_supported)
+    monkeypatch.setattr(ftplib, 'FTP', lambda: ftp)
+
+    action = asv.TransferFtpOut('Upload over FTP', options)
+    action.feed(local_exports)
+    assert action.run(datetime(2022, 12, 16, 00))
+    assert ftp.uploaded == expected

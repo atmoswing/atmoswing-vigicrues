@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import types
 from datetime import datetime
@@ -66,3 +67,59 @@ def test_unknown_proxy_type_is_rejected(options):
     options['proxy_type'] = 'socks6'
     with pytest.raises(asv.Error):
         asv.TransferSftpOut('Upload nc files over SFTP', options)
+
+
+class FakeSftp:
+    def __init__(self, remote_files):
+        self.remote_files = remote_files
+        self.uploaded = []
+
+    def chdir(self, path):
+        pass
+
+    def mkdir(self, path):
+        pass
+
+    def stat(self, filename):
+        if filename not in self.remote_files:
+            raise FileNotFoundError(filename)
+        return types.SimpleNamespace(st_size=self.remote_files[filename])
+
+    def put(self, local_path, filename):
+        self.uploaded.append(filename)
+
+    def close(self):
+        pass
+
+
+@pytest.fixture
+def local_exports(tmp_path):
+    ok_file = tmp_path / 'ok.json'
+    ok_file.write_text(json.dumps({'status': 0, 'data': 'résultats'}))
+    error_file = tmp_path / 'error.json'
+    error_file.write_text(json.dumps({'status': 200, 'data': None}))
+    nc_file = tmp_path / 'forecast.nc'
+    nc_file.write_text('données netcdf')
+    return [str(ok_file), str(error_file), str(nc_file)]
+
+
+@pytest.mark.parametrize('remote_sizes, expected', [
+    ({}, ['ok.json', 'error.json', 'forecast.nc']),
+    ('same', ['error.json']),
+    ({'ok.json': 5, 'error.json': 5, 'forecast.nc': 5}, ['ok.json', 'error.json']),
+])
+def test_upload_replaces_remote_exports_in_error(options, local_exports, monkeypatch,
+                                                 remote_sizes, expected):
+    if remote_sizes == 'same':
+        remote_sizes = {os.path.basename(f): os.path.getsize(f)
+                        for f in local_exports}
+    sftp = FakeSftp(remote_sizes)
+    monkeypatch.setattr(paramiko, 'Transport', lambda address: types.SimpleNamespace(
+        connect=lambda username, password: None, close=lambda: None))
+    monkeypatch.setattr(paramiko.SFTPClient, 'from_transport',
+                        lambda transport: sftp)
+
+    action = asv.TransferSftpOut('Upload over SFTP', options)
+    action.feed(local_exports)
+    assert action.run(datetime(2022, 12, 16, 00))
+    assert sftp.uploaded == expected
