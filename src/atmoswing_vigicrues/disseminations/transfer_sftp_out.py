@@ -39,6 +39,10 @@ class TransferSftpOut(Dissemination):
             Port du proxy si nécessaire (par défaut: 8080).
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
+        * known_hosts : str
+            Fichier known_hosts (format OpenSSH, ex. produit par 'ssh-keyscan')
+            contenant la clé du serveur. Si défini, l'identité du serveur est
+            vérifiée avant l'envoi du mot de passe (recommandé).
 
     Attributes
     ----------
@@ -66,6 +70,8 @@ class TransferSftpOut(Dissemination):
         Port du proxy si nécessaire (par défaut: 8080).
     remote_dir : str
         Chemin sur le serveur distant où enregistrer les fichiers.
+    host_key : paramiko.PKey
+        Clé attendue du serveur (None si l'identité du serveur n'est pas vérifiée).
     """
 
     def __init__(self, name, options):
@@ -100,6 +106,11 @@ class TransferSftpOut(Dissemination):
         else:
             self.proxy_host = None
 
+        self.host_key = None
+        if options.get('known_hosts'):
+            self.host_key = asv.utils.load_host_key(
+                options['known_hosts'], self.hostname, self.port)
+
         super().__init__()
 
     def run(self, date) -> bool:
@@ -131,8 +142,9 @@ class TransferSftpOut(Dissemination):
                 # Create a transport object for the SFTP connection
                 transport = paramiko.Transport((self.hostname, self.port))
 
-            # Authenticate with the SFTP server
-            transport.connect(username=self.username, password=self.password)
+            # Verify the server key (if defined) and authenticate
+            transport.connect(hostkey=self.host_key, username=self.username,
+                              password=self.password)
 
             # Create SFTP client
             sftp = paramiko.SFTPClient.from_transport(transport)

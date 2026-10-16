@@ -96,7 +96,7 @@ class Options:
     def _load_config(self):
         asv.check_file_exists(self.cli_options.config_file)
         with open(self.cli_options.config_file, mode='rb') as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
+            self.config = yaml.safe_load(f)
 
     def _override_options(self):
         if hasattr(self.cli_options, 'batch_file'):

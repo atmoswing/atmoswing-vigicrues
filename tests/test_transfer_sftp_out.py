@@ -115,7 +115,7 @@ def test_upload_replaces_remote_exports_in_error(options, local_exports, monkeyp
                         for f in local_exports}
     sftp = FakeSftp(remote_sizes)
     monkeypatch.setattr(paramiko, 'Transport', lambda address: types.SimpleNamespace(
-        connect=lambda username, password: None, close=lambda: None))
+        connect=lambda hostkey, username, password: None, close=lambda: None))
     monkeypatch.setattr(paramiko.SFTPClient, 'from_transport',
                         lambda transport: sftp)
 

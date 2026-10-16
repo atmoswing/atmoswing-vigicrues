@@ -1,6 +1,12 @@
+import bz2
+import gzip
+import lzma
 import os
 import shutil
+import socket
+import tarfile
 import tempfile
+import threading
 import types
 from datetime import datetime
 
@@ -122,7 +128,7 @@ def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypa
             self.closed = False
             transports.append(self)
 
-        def connect(self, username, password):
+        def connect(self, hostkey, username, password):
             raise paramiko.ssh_exception.SSHException("arrêt du test")
 
         def close(self):
@@ -144,3 +150,122 @@ def test_unknown_proxy_type_is_rejected(options_no_variables):
     options_no_variables['proxy_type'] = 'ftp'
     with pytest.raises(asv.Error):
         asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+
+
+class RecordingSshServer(paramiko.ServerInterface):
+    """Serveur SSH minimal qui enregistre les mots de passe reçus."""
+
+    def __init__(self):
+        self.passwords = []
+
+    def get_allowed_auths(self, username):
+        return 'password'
+
+    def check_auth_password(self, username, password):
+        self.passwords.append(password)
+        return paramiko.AUTH_SUCCESSFUL
+
+
+@pytest.fixture(scope='module')
+def ssh_server_key():
+    return paramiko.RSAKey.generate(1024)
+
+
+@pytest.fixture
+def ssh_server(ssh_server_key):
+    """Serveur SSH local, exécuté dans un thread (une seule connexion)."""
+    listener = socket.socket()
+    listener.bind(('127.0.0.1', 0))
+    listener.listen(1)
+    server = RecordingSshServer()
+    transports = []
+
+    def serve():
+        try:
+            conn, _ = listener.accept()
+        except OSError:
+            return
+        transport = paramiko.Transport(conn)
+        transports.append(transport)
+        transport.add_server_key(ssh_server_key)
+        try:
+            transport.start_server(server=server)
+            transport.join(timeout=10)
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=serve, daemon=True)
+    thread.start()
+    yield listener.getsockname()[1], server
+    listener.close()
+    for transport in transports:
+        transport.close()
+    thread.join(timeout=10)
+
+
+def write_known_hosts(path, port, key):
+    host_keys = paramiko.HostKeys()
+    host_keys.add(f'[127.0.0.1]:{port}', key.get_name(), key)
+    host_keys.save(str(path))
+    return str(path)
+
+
+@pytest.mark.parametrize('known_key, password_sent', [
+    ('server', True),
+    ('other', False),
+    (None, True),
+])
+def test_server_key_is_verified_before_sending_password(
+        options_no_variables, ssh_server, ssh_server_key, tmp_path, known_key,
+        password_sent):
+    port, server = ssh_server
+    options_no_variables['hostname'] = '127.0.0.1'
+    options_no_variables['port'] = port
+    options_no_variables['password'] = 'secret'
+    if known_key:
+        key = ssh_server_key if known_key == 'server' else \
+            paramiko.RSAKey.generate(1024)
+        options_no_variables['known_hosts'] = write_known_hosts(
+            tmp_path / 'known_hosts', port, key)
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+    # Le serveur de test ne fournit pas le sous-système SFTP : échec après
+    # l'authentification dans tous les cas.
+    assert not action.run(datetime(2023, 4, 13, 12))
+    assert server.passwords == (['secret'] if password_sent else [])
+
+
+def test_missing_known_hosts_file_is_rejected(options_no_variables, tmp_path):
+    options_no_variables['known_hosts'] = str(tmp_path / 'absent')
+    with pytest.raises(asv.FilePathError):
+        asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+
+
+def test_unpack_tar_archive_extracts_regular_files_flat(tmp_path):
+    source = tmp_path / 'source'
+    (source / 'sub').mkdir(parents=True)
+    (source / 'sub' / 'CEP_z_2023041312.grb').write_bytes(b'grib')
+    archive_path = tmp_path / 'CEP_2023041312.tar.gz'
+    with tarfile.open(archive_path, 'w:gz') as archive:
+        archive.add(source / 'sub' / 'CEP_z_2023041312.grb',
+                    arcname='../../sub/CEP_z_2023041312.grb')
+        link = tarfile.TarInfo('lien')
+        link.type = tarfile.SYMTYPE
+        link.linkname = '/etc/passwd'
+        archive.addfile(link)
+
+    target = tmp_path / 'target'
+    target.mkdir()
+    asv.TransferSftpIn._unpack_if_needed(archive_path, target)
+    assert sorted(p.name for p in target.iterdir()) == ['CEP_z_2023041312.grb']
+    assert (target / 'CEP_z_2023041312.grb').read_bytes() == b'grib'
+
+
+@pytest.mark.parametrize('suffix, opener', [
+    ('.gz', gzip.open), ('.bz2', bz2.open), ('.xz', lzma.open)])
+def test_unpack_single_compressed_file(tmp_path, suffix, opener):
+    compressed = tmp_path / f'CEP_z_2023041312.grb{suffix}'
+    with opener(compressed, 'wb') as f:
+        f.write(b'grib')
+    asv.TransferSftpIn._unpack_if_needed(compressed, tmp_path)
+    assert (tmp_path / 'CEP_z_2023041312.grb').read_bytes() == b'grib'

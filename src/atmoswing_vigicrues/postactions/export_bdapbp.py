@@ -347,8 +347,8 @@ class ExportBdApBp(PostAction):
     @staticmethod
     def _get_time_format(target_dates):
         assert len(target_dates) > 1
-        time_step = target_dates[1].astype(datetime.datetime) - \
-                    target_dates[0].astype(datetime.datetime)
+        time_step = (target_dates[1].astype(datetime.datetime)
+                     - target_dates[0].astype(datetime.datetime))
         time_step = time_step.total_seconds()
         show_hour = time_step < 24 * 3600
         time_format_target = "%Y%m%d"

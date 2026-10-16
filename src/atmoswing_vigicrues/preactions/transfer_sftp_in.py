@@ -1,5 +1,9 @@
+import bz2
 import fnmatch
+import gzip
+import lzma
 import os
+import shutil
 import tarfile
 from pathlib import Path
 
@@ -8,6 +12,11 @@ import paramiko
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+ARCHIVE_SUFFIXES = ['.gz', '.tgz', '.xz', '.txz', '.bz2', '.tbz', '.tbz2', '.tb2']
+
+# Fichiers compressés seuls (hors archive tar)
+COMPRESSED_FILE_OPENERS = {'.gz': gzip.open, '.bz2': bz2.open, '.xz': lzma.open}
 
 
 class TransferSftpIn(PreAction):
@@ -44,6 +53,10 @@ class TransferSftpIn(PreAction):
             Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
             Chemin sur le serveur distant où se trouvent les fichiers.
+        * known_hosts : str
+            Fichier known_hosts (format OpenSSH, ex. produit par 'ssh-keyscan')
+            contenant la clé du serveur. Si défini, l'identité du serveur est
+            vérifiée avant l'envoi du mot de passe (recommandé).
         * attempts_max_hours : int
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
@@ -77,6 +90,8 @@ class TransferSftpIn(PreAction):
         Adresse du proxy, si nécessaire.
     proxy_port : int
         Port du proxy si nécessaire (par défaut: 1080).
+    host_key : paramiko.PKey
+        Clé attendue du serveur (None si l'identité du serveur n'est pas vérifiée).
     """
 
     def __init__(self, name, options):
@@ -118,6 +133,11 @@ class TransferSftpIn(PreAction):
         else:
             self.proxy_host = None
 
+        self.host_key = None
+        if options.get('known_hosts'):
+            self.host_key = asv.utils.load_host_key(
+                options['known_hosts'], self.hostname, self.port)
+
         super().__init__()
 
     def run(self, date) -> bool:
@@ -152,8 +172,9 @@ class TransferSftpIn(PreAction):
             else:
                 transport = paramiko.Transport((self.hostname, self.port))
 
-            # Authenticate with the SFTP server
-            transport.connect(username=self.username, password=self.password)
+            # Verify the server key (if defined) and authenticate
+            transport.connect(hostkey=self.host_key, username=self.username,
+                              password=self.password)
 
             # Create an SFTP client object
             sftp = transport.open_sftp_client()
@@ -258,11 +279,30 @@ class TransferSftpIn(PreAction):
 
     @staticmethod
     def _unpack_if_needed(local_file, local_path):
-        if local_file.suffix in ['.gz', '.tgz', '.xz', '.txz', '.bz2',
-                                 '.tbz', '.tbz2', '.tb2']:
-            file = tarfile.open(local_file)
-            for member in file.getmembers():
-                if member.isreg():
+        """
+        Décompresse un fichier récupéré, s'il s'agit d'une archive tar (compressée
+        ou non) ou d'un fichier compressé seul (ex. '.grb.gz' -> '.grb').
+        """
+        if local_file.suffix not in ARCHIVE_SUFFIXES:
+            return
+
+        if tarfile.is_tarfile(local_file):
+            with tarfile.open(local_file) as archive:
+                for member in archive.getmembers():
+                    # Seuls les fichiers réguliers sont extraits, à plat : les liens
+                    # et les chemins (ex. '../') sont ignorés.
+                    if not member.isreg():
+                        continue
                     member.name = os.path.basename(member.name)
-                    file.extract(member, local_path)
-            file.close()
+                    if hasattr(tarfile, 'data_filter'):
+                        archive.extract(member, local_path, filter='data')
+                    else:
+                        archive.extract(member, local_path)
+            return
+
+        opener = COMPRESSED_FILE_OPENERS.get(local_file.suffix)
+        if opener is None:
+            raise asv.Error(f"L'archive {local_file.name} n'est pas une archive tar.")
+        with opener(local_file, 'rb') as source, \
+                open(local_path / local_file.stem, 'wb') as target:
+            shutil.copyfileobj(source, target)

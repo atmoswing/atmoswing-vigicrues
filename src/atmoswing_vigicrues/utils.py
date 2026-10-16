@@ -3,6 +3,7 @@ import socket
 from pathlib import Path
 
 import numpy as np
+import paramiko
 import socks
 
 import atmoswing_vigicrues as asv
@@ -127,6 +128,40 @@ def build_date_dir_structure(base, date):
     base = base / date.strftime("%m")
     base = base / date.strftime("%d")
     return base
+
+
+def load_host_key(known_hosts, hostname, port=22):
+    """
+    Charge la clé publique attendue d'un serveur SSH depuis un fichier known_hosts
+    (format OpenSSH, ex. produit par 'ssh-keyscan').
+
+    Parameters
+    ----------
+    known_hosts: str or Path
+        Le chemin du fichier known_hosts.
+    hostname: str
+        L'adresse du serveur.
+    port: int
+        Le port du serveur.
+
+    Returns
+    -------
+    paramiko.PKey
+        La clé attendue du serveur.
+
+    Raises
+    ------
+    asv.Error
+        Si le fichier ne contient aucune clé pour ce serveur.
+    """
+    check_file_exists(known_hosts)
+    host_keys = paramiko.HostKeys(str(known_hosts))
+    entry = hostname if int(port) == 22 else f"[{hostname}]:{port}"
+    keys = host_keys.lookup(entry)
+    if not keys:
+        raise asv.Error(f"Aucune clé pour le serveur '{entry}' dans le fichier "
+                        f"'{known_hosts}'.")
+    return keys[next(iter(keys))]
 
 
 def parse_proxy_type(value):

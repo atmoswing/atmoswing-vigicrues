@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 
 import numpy as np
+import paramiko
 import pytest
 
 import atmoswing_vigicrues as asv
@@ -179,3 +180,43 @@ def test_mjd_to_datetime_rounds_to_nearest_hour():
     almost_noon = 59215.5 - 1e-6
     date = asv.utils.mjd_to_datetime(np.array([almost_noon]))[0]
     assert date == np.datetime64('2021-01-01T12:00:00')
+
+
+@pytest.fixture(scope='module')
+def server_key():
+    return paramiko.RSAKey.generate(1024)
+
+
+def write_known_hosts(path, entry, key):
+    host_keys = paramiko.HostKeys()
+    host_keys.add(entry, key.get_name(), key)
+    host_keys.save(str(path))
+    return str(path)
+
+
+def test_load_host_key(tmp_path, server_key):
+    known_hosts = write_known_hosts(tmp_path / 'known_hosts', 'sftp.example.org',
+                                    server_key)
+    key = asv.utils.load_host_key(known_hosts, 'sftp.example.org', 22)
+    assert key == server_key
+
+
+def test_load_host_key_with_custom_port(tmp_path, server_key):
+    known_hosts = write_known_hosts(tmp_path / 'known_hosts',
+                                    '[sftp.example.org]:2222', server_key)
+    key = asv.utils.load_host_key(known_hosts, 'sftp.example.org', 2222)
+    assert key == server_key
+    with pytest.raises(asv.Error):
+        asv.utils.load_host_key(known_hosts, 'sftp.example.org', 22)
+
+
+def test_load_host_key_fails_for_unknown_host(tmp_path, server_key):
+    known_hosts = write_known_hosts(tmp_path / 'known_hosts', 'other.example.org',
+                                    server_key)
+    with pytest.raises(asv.Error, match="sftp.example.org"):
+        asv.utils.load_host_key(known_hosts, 'sftp.example.org', 22)
+
+
+def test_load_host_key_fails_for_missing_file(tmp_path):
+    with pytest.raises(asv.FilePathError):
+        asv.utils.load_host_key(tmp_path / 'absent', 'sftp.example.org', 22)

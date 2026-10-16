@@ -9,6 +9,9 @@
 *   Le code de retour vaut 1 lorsque la prévision a été émise mais qu'au moins une post-action ou une dissémination a échoué.
 *   Les dépendances optionnelles (GRIB) sont disponibles via `pip install atmoswing-vigicrues[grib]`.
 *   Ajout de l'option `proxy_type` (`http`, `socks4` ou `socks5` ; par défaut `http`) pour les transferts SFTP (`TransferSftpIn` et `TransferSftpOut`).
+*   Ajout de l'option `known_hosts` pour les transferts SFTP : si elle est définie, la clé du serveur est vérifiée avant l'envoi du mot de passe (fichier au format OpenSSH, ex. `ssh-keyscan -p 22 serveur > known_hosts`). Recommandé.
+*   Le fichier de configuration est chargé avec `yaml.safe_load`.
+*   Récupération SFTP : les fichiers compressés seuls (ex. `.grb.gz`, hors archive tar) sont désormais décompressés au lieu de faire échouer la récupération, et l'extraction des archives tar utilise le filtre de sécurité `data` lorsqu'il est disponible.
 
 ### Corrections
 
