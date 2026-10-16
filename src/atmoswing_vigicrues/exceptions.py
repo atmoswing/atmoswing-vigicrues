@@ -50,7 +50,7 @@ class FilePathError(Error):
     """
 
     def __init__(self, path, message=None):
-        if type(path) == Path:
+        if isinstance(path, Path):
             path = str(path)
         if not message:
             message = f"Le fichier '{path}' n'a pas été trouvé."

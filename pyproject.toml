@@ -6,10 +6,11 @@ authors = [
 ]
 description = "Package to integrate AtmoSwing in the Vigicrues network."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -42,7 +43,7 @@ tests = [
 asv_forecast = "atmoswing_vigicrues.__main__:main"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

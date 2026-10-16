@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Test Python package
 
 on:
@@ -14,47 +11,62 @@ on:
       - dev
 
 jobs:
-  build:
+  lint:
+    runs-on: ubuntu-latest
 
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    # Versions identiques à celles de .pre-commit-config.yaml
+    - name: Install linters
+      run: python -m pip install flake8==7.4.1 flake8-bugbear==26.9.30
+
+    - name: Lint with flake8
+      run: flake8 src tests
+
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Install system libraries
-      run: sudo apt-get update && sudo apt-get install -y libeccodes0 netcdf-bin
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: pyproject.toml
 
-    - name: Install dependencies
+    - name: Install package and test dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest setuptools build
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Present working dir
-      run: pwd
-
-    - name: Build
-      run: python -m build
-
-    - name: Install
-      run: pip install -e .
+        python -m pip install -e ".[tests]"
 
     - name: Test with pytest
+      run: pytest
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Build and check distributions
       run: |
-        pytest
+        python -m pip install --upgrade pip build twine
+        python -m build
+        twine check --strict dist/*

@@ -1,0 +1,11 @@
+# Seuls les fichiers nécessaires à l'image sont transmis au build Docker
+# (liste blanche) : les environnements virtuels, données de test, caches et
+# documentation générée en sont exclus.
+*
+!requirements.txt
+!requirements-optional.txt
+!pyproject.toml
+!README.md
+!src/
+**/__pycache__
+src/*.egg-info

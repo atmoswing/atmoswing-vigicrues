@@ -13,9 +13,14 @@
 *   Le fichier de configuration est chargé avec `yaml.safe_load`.
 *   Récupération SFTP : les fichiers compressés seuls (ex. `.grb.gz`, hors archive tar) sont désormais décompressés au lieu de faire échouer la récupération, et l'extraction des archives tar utilise le filtre de sécurité `data` lorsqu'il est disponible.
 
+*   Python 3.9 ou supérieur est requis (testé de 3.9 à 3.13).
+*   Image Docker : l'image de base AtmoSwing Forecaster est épinglée par digest (mise à jour via Dependabot), l'image est vérifiée avant publication, et le paquet `openssh-client` (fournissant `ssh-keyscan`) remplace `ssh`.
+*   Intégration continue : flake8 bloque désormais le build, les tests couvrent Python 3.9 à 3.13 et les distributions sont vérifiées avec `twine check`.
+
 ### Corrections
 
 *   Les dépendances du paquet sont désormais déclarées dans `pyproject.toml` (elles n'étaient pas installées depuis PyPI).
+*   Image Docker : le module n'était plus installé (paquet vide `UNKNOWN`, dû au pip d'Ubuntu 22.04 qui ignore la table `[project]` de `pyproject.toml`).
 *   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
 *   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
 *   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.

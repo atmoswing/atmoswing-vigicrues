@@ -1,4 +1,7 @@
 [flake8]
 max-line-length = 88
+# B042 : les exceptions du module reconstruisent leur message a partir de
+# leurs arguments ; elles ne sont jamais serialisees (pickle/copy).
+extend-ignore = B042
 per-file-ignores =
     test_controller.py:B009

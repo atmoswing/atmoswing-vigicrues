@@ -21,7 +21,7 @@ pytest tests/test_controller.py # single file
 pytest tests/test_controller.py::test_controller_instance_succeeds  # single test
 
 # Lint / format (also enforced via pre-commit)
-flake8 .                        # max-line-length = 88
+flake8 src tests                # max-line-length = 88 (same pinned versions as CI)
 black .
 pre-commit run --all-files
 

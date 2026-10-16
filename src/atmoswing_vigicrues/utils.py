@@ -34,8 +34,7 @@ def file_exists(path):
     >>> file_exists(R'C:\\Users\\username\\Documents\\file.txt')
     True
     """
-    if type(path) == str:
-        path = Path(path)
+    path = Path(path)
     if not path.exists():
         return False
     if not path.is_file():
@@ -63,8 +62,7 @@ def check_file_exists(path):
     --------
     >>> check_file_exists(R'C:\\Users\\username\\Documents\\file.txt')
     """
-    if type(path) == str:
-        path = Path(path)
+    path = Path(path)
     if not path.exists():
         raise asv.FilePathError(path)
     if not path.is_file():
