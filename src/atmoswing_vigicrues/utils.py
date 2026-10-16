@@ -1,4 +1,5 @@
 import datetime
+import socket
 from pathlib import Path
 
 import numpy as np
@@ -119,6 +120,65 @@ def build_date_dir_structure(base, date):
     base = base / date.strftime("%m")
     base = base / date.strftime("%d")
     return base
+
+
+def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
+                           timeout=30):
+    """
+    Ouvre un tunnel TCP vers un serveur distant au travers d'un proxy HTTP
+    (méthode CONNECT).
+
+    Parameters
+    ----------
+    proxy_host: str
+        L'adresse du proxy.
+    proxy_port: int
+        Le port du proxy.
+    target_host: str
+        L'adresse du serveur distant.
+    target_port: int
+        Le port du serveur distant.
+    timeout: float
+        Le délai maximal (en secondes) pour l'établissement du tunnel.
+
+    Returns
+    -------
+    socket.socket
+        Le socket connecté au serveur distant au travers du proxy.
+
+    Raises
+    ------
+    asv.Error
+        Si le proxy refuse ou interrompt la connexion.
+    """
+    sock = socket.create_connection((proxy_host, proxy_port), timeout=timeout)
+    try:
+        request = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\n"
+                   f"Host: {target_host}:{target_port}\r\n\r\n")
+        sock.sendall(request.encode())
+
+        # Lecture octet par octet jusqu'à la fin des en-têtes, afin de ne pas
+        # consommer les données envoyées par le serveur distant (ex. bannière SSH).
+        response = b""
+        while not response.endswith(b"\r\n\r\n"):
+            byte = sock.recv(1)
+            if not byte:
+                raise asv.Error("Le proxy a fermé la connexion.")
+            response += byte
+            if len(response) > 16384:
+                raise asv.Error("Réponse du proxy trop longue.")
+
+        status_line = response.split(b"\r\n", 1)[0].decode(errors='replace')
+        status = status_line.split()
+        if len(status) < 2 or status[1] != '200':
+            raise asv.Error(f"Échec de la connexion via le proxy ({status_line}).")
+
+        sock.settimeout(None)
+        return sock
+
+    except BaseException:
+        sock.close()
+        raise
 
 
 def jd_to_date(jd):

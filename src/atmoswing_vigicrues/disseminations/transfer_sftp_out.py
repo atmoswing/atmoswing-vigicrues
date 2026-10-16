@@ -1,6 +1,5 @@
 import os
-import socket
-import ssl
+
 import paramiko
 
 import atmoswing_vigicrues as asv
@@ -116,7 +115,7 @@ class TransferSftpOut(Dissemination):
 
         try:
             if self.proxy_host:
-                proxy_socket = self._connect_via_http_proxy(
+                proxy_socket = asv.utils.connect_via_http_proxy(
                     self.proxy_host, self.proxy_port, self.hostname, self.port)
                 transport = paramiko.Transport(proxy_socket)
 
@@ -177,20 +176,6 @@ class TransferSftpOut(Dissemination):
             transport.close()
 
         return False
-
-    @staticmethod
-    def _connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port):
-        sock = socket.create_connection((proxy_host, proxy_port))
-        connect_str = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: "
-                       f"{target_host}:{target_port}\r\n\r\n")
-        sock.sendall(connect_str.encode())
-
-        # Wait for HTTP 200 connection established
-        response = sock.recv(4096).decode()
-        if "200 connection established" not in response.lower():
-            raise Exception(f"Failed to connect via proxy. Response:\n{response}")
-
-        return sock
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):

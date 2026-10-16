@@ -36,7 +36,7 @@ class TransferSftpIn(PreAction):
         * password : str
             Mot de passe de l'utilisateur sur le serveur.
         * proxy_host : str
-            Adresse du proxy, si nécessaire.
+            Adresse du proxy HTTP (méthode CONNECT), si nécessaire.
         * proxy_port : int
             Port du proxy si nécessaire (par défaut: 1080).
         * remote_dir : str
@@ -69,7 +69,7 @@ class TransferSftpIn(PreAction):
     variables : list
         Liste des variables météorologiques à importer.
     proxy_host : str
-        Adresse du proxy, si nécessaire.
+        Adresse du proxy HTTP (méthode CONNECT), si nécessaire.
     proxy_port : int
         Port du proxy si nécessaire (par défaut: 1080).
     """
@@ -127,6 +127,8 @@ class TransferSftpIn(PreAction):
         bool
             Vrai (True) en cas de succès, faux (False) autrement.
         """
+        transport = None
+        sftp = None
         try:
 
             # Check if files already in the local folder (only with defined variables)
@@ -135,14 +137,12 @@ class TransferSftpIn(PreAction):
                     print("  -> Fichiers déjà présents localement.")
                     return True
 
-            # Create a transport object for the SFTP connection
-            transport = paramiko.Transport((self.hostname, self.port))
-
             if self.proxy_host:
-                transport.start_client()
-                transport.open_channel('direct-tcpip',
-                                       (self.hostname, self.port),
-                                       (self.proxy_host, self.proxy_port))
+                proxy_socket = asv.utils.connect_via_http_proxy(
+                    self.proxy_host, self.proxy_port, self.hostname, self.port)
+                transport = paramiko.Transport(proxy_socket)
+            else:
+                transport = paramiko.Transport((self.hostname, self.port))
 
             # Authenticate with the SFTP server
             transport.connect(username=self.username, password=self.password)
@@ -168,9 +168,6 @@ class TransferSftpIn(PreAction):
             print(f"  -> Nombre de fichiers existants : {f_exist_d - f_new_dt}.")
             print(f"  -> Nombre de fichiers récupérés : {f_new_dt + f_new_d}.")
 
-            sftp.close()
-            transport.close()
-
             return True
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
@@ -189,11 +186,11 @@ class TransferSftpIn(PreAction):
             print(f"SFTP FileNotFoundError {e}")
         except Exception as e:
             print(f"Le rapatriement des données par SFTP a échoué ({e}).")
-
-        if 'sftp' in locals():
-            sftp.close()
-        if 'transport' in locals():
-            transport.close()
+        finally:
+            if sftp is not None:
+                sftp.close()
+            if transport is not None:
+                transport.close()
 
         return False
 

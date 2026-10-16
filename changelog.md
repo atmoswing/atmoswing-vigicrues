@@ -15,6 +15,9 @@
 *   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
 *   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
 *   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.
+*   Correction du support des proxys HTTP dans la récupération SFTP (`TransferSftpIn`), qui ne passait pas réellement par le proxy.
+*   La connexion SFTP via proxy HTTP accepte toute réponse 200 du proxy (pas uniquement « Connection established »), applique un délai maximal et ne consomme plus la bannière SSH du serveur.
+*   La connexion SFTP de `TransferSftpIn` est désormais fermée lorsqu'aucun fichier n'est disponible.
 
 
 ## v1.2.0 - 11 Avril 2025
