@@ -101,14 +101,18 @@ def test_download_arpege_succeeds(options_arpege):
         shutil.rmtree(options_arpege['local_dir'])
 
 
-def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypatch):
+@pytest.mark.parametrize('proxy_type', [None, 'http', 'socks5'])
+def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypatch,
+                                                  proxy_type):
     options_no_variables['proxy_host'] = 'proxy.local'
     options_no_variables['proxy_port'] = 3128
+    if proxy_type:
+        options_no_variables['proxy_type'] = proxy_type
     proxy_socket = object()
     tunnels = []
     transports = []
 
-    def fake_connect_via_http_proxy(*args):
+    def fake_connect_via_proxy(*args):
         tunnels.append(args)
         return proxy_socket
 
@@ -124,13 +128,19 @@ def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypa
         def close(self):
             self.closed = True
 
-    monkeypatch.setattr(asv.utils, 'connect_via_http_proxy',
-                        fake_connect_via_http_proxy)
+    monkeypatch.setattr(asv.utils, 'connect_via_proxy', fake_connect_via_proxy)
     monkeypatch.setattr(paramiko, 'Transport', FakeTransport)
 
     action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
     assert not action.run(datetime(2023, 4, 13, 12))
-    assert tunnels == [('proxy.local', 3128, options_no_variables['hostname'],
+    assert tunnels == [(proxy_type or 'http', 'proxy.local', 3128,
+                        options_no_variables['hostname'],
                         int(options_no_variables['port']))]
     assert transports[0].sock is proxy_socket
     assert transports[0].closed
+
+
+def test_unknown_proxy_type_is_rejected(options_no_variables):
+    options_no_variables['proxy_type'] = 'ftp'
+    with pytest.raises(asv.Error):
+        asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)

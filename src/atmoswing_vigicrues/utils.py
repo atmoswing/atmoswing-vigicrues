@@ -3,8 +3,15 @@ import socket
 from pathlib import Path
 
 import numpy as np
+import socks
 
 import atmoswing_vigicrues as asv
+
+PROXY_TYPES = {
+    'http': None,
+    'socks4': socks.SOCKS4,
+    'socks5': socks.SOCKS5,
+}
 
 
 def file_exists(path):
@@ -120,6 +127,76 @@ def build_date_dir_structure(base, date):
     base = base / date.strftime("%m")
     base = base / date.strftime("%d")
     return base
+
+
+def parse_proxy_type(value):
+    """
+    Contrôle et normalise le type de proxy.
+
+    Parameters
+    ----------
+    value: str or None
+        Le type de proxy ('http', 'socks4' ou 'socks5'). Une valeur vide
+        correspond à 'http'.
+
+    Returns
+    -------
+    str
+        Le type de proxy en minuscules.
+
+    Raises
+    ------
+    asv.Error
+        Si le type de proxy n'est pas supporté.
+    """
+    if not value:
+        return 'http'
+    proxy_type = str(value).strip().lower()
+    if proxy_type not in PROXY_TYPES:
+        raise asv.Error(f"Le type de proxy '{value}' n'est pas supporté "
+                        f"(options : {', '.join(PROXY_TYPES)}).")
+    return proxy_type
+
+
+def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_port,
+                      timeout=30):
+    """
+    Ouvre une connexion TCP vers un serveur distant au travers d'un proxy.
+
+    Parameters
+    ----------
+    proxy_type: str
+        Le type de proxy ('http', 'socks4' ou 'socks5').
+    proxy_host: str
+        L'adresse du proxy.
+    proxy_port: int
+        Le port du proxy.
+    target_host: str
+        L'adresse du serveur distant.
+    target_port: int
+        Le port du serveur distant.
+    timeout: float
+        Le délai maximal (en secondes) pour l'établissement de la connexion.
+
+    Returns
+    -------
+    socket.socket
+        Le socket connecté au serveur distant au travers du proxy.
+    """
+    proxy_type = parse_proxy_type(proxy_type)
+    if proxy_type == 'http':
+        return connect_via_http_proxy(proxy_host, proxy_port, target_host,
+                                      target_port, timeout)
+
+    try:
+        sock = socks.create_connection(
+            (target_host, target_port), timeout,
+            proxy_type=PROXY_TYPES[proxy_type], proxy_addr=proxy_host,
+            proxy_port=proxy_port, proxy_rdns=True)
+    except socks.ProxyError as e:
+        raise asv.Error(f"Échec de la connexion via le proxy ({e}).") from e
+    sock.settimeout(None)
+    return sock
 
 
 def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,

@@ -30,10 +30,13 @@ class TransferSftpOut(Dissemination):
             Utilisateur ayant un accès au serveur.
         * password : str
             Mot de passe de l'utilisateur sur le serveur.
+        * proxy_type : str
+            Type de proxy : 'http' (méthode CONNECT), 'socks4' ou 'socks5'
+            (par défaut: 'http').
         * proxy_host : str
             Adresse du proxy, si nécessaire.
         * proxy_port : int
-            Port du proxy si nécessaire (par défaut: 1080).
+            Port du proxy si nécessaire (par défaut: 8080).
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
 
@@ -55,10 +58,12 @@ class TransferSftpOut(Dissemination):
         Utilisateur ayant un accès au serveur.
     password : str
         Mot de passe de l'utilisateur sur le serveur.
+    proxy_type : str
+        Type de proxy ('http', 'socks4' ou 'socks5').
     proxy_host : str
         Adresse du proxy, si nécessaire.
     proxy_port : int
-        Port du proxy si nécessaire (par défaut: 1080).
+        Port du proxy si nécessaire (par défaut: 8080).
     remote_dir : str
         Chemin sur le serveur distant où enregistrer les fichiers.
     """
@@ -76,6 +81,8 @@ class TransferSftpOut(Dissemination):
         self.username = options['username']
         self.password = options['password']
         self.remote_dir = options['remote_dir']
+
+        self.proxy_type = asv.utils.parse_proxy_type(options.get('proxy_type'))
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
@@ -115,8 +122,9 @@ class TransferSftpOut(Dissemination):
 
         try:
             if self.proxy_host:
-                proxy_socket = asv.utils.connect_via_http_proxy(
-                    self.proxy_host, self.proxy_port, self.hostname, self.port)
+                proxy_socket = asv.utils.connect_via_proxy(
+                    self.proxy_type, self.proxy_host, self.proxy_port,
+                    self.hostname, self.port)
                 transport = paramiko.Transport(proxy_socket)
 
             else:

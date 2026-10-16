@@ -8,6 +8,7 @@
 *   Le flux s'interrompt (code de retour -1) lorsque les pré-actions échouent pour toutes les dates tentées, au lieu de lancer AtmoSwing sur une date sans données.
 *   Le code de retour vaut 1 lorsque la prévision a été émise mais qu'au moins une post-action ou une dissémination a échoué.
 *   Les dépendances optionnelles (GRIB) sont disponibles via `pip install atmoswing-vigicrues[grib]`.
+*   Ajout de l'option `proxy_type` (`http`, `socks4` ou `socks5` ; par défaut `http`) pour les transferts SFTP (`TransferSftpIn` et `TransferSftpOut`).
 
 ### Corrections
 
