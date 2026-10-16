@@ -208,17 +208,18 @@ class Controller:
 
         try:
             ret = subprocess.run(cmd, capture_output=True)
-
-            if ret.returncode != 0:
-                print("  -> Échec de l'exécution.")
-                self._parse_log_file()
-                raise asv.Error("Erreur de AtmoSwing Forecaster.")
-            else:
-                print("  -> Exécution correcte.")
         except Exception as e:
             print("  -> Échec de l'exécution.")
             self._parse_log_file()
-            raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}")
+            raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}") from e
+
+        if ret.returncode != 0:
+            print("  -> Échec de l'exécution.")
+            self._parse_log_file()
+            raise asv.Error(f"Erreur de AtmoSwing Forecaster (code de retour "
+                            f"{ret.returncode}).")
+
+        print("  -> Exécution correcte.")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
@@ -346,7 +347,8 @@ class Controller:
         log_file = tmp_dir / "AtmoSwingForecaster.log"
         if not log_file.exists():
             print(f"  -> Le journal des logs n'a pas été trouvé ({str(log_file)}).")
-        with open(str(log_file)) as file:
+            return
+        with open(str(log_file), errors='replace') as file:
             for item in file:
                 content = item.replace("\r\n", "").replace("\n", "")
                 print(f"     | {content}")

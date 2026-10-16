@@ -5,6 +5,7 @@ import types
 from datetime import datetime, timedelta, timezone
 
 import pytest
+import requests
 
 import atmoswing_vigicrues as asv
 
@@ -106,4 +107,21 @@ def test_download_gfs_entire_atmosphere_var(options):
     date = datetime.now(timezone.utc) - timedelta(days=1)
     assert action.run(date)
     assert count_files_recursively(options) == 3 * 4
+    shutil.rmtree(options['output_dir'])
+
+
+@pytest.mark.parametrize('timeout, expected', [(None, 120), (30, 30)])
+def test_download_gfs_uses_timeout(options, monkeypatch, timeout, expected):
+    if timeout:
+        options['timeout'] = timeout
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append(kwargs)
+        raise requests.exceptions.Timeout("délai dépassé")
+
+    monkeypatch.setattr(requests, 'get', fake_get)
+    action = asv.DownloadGfsData('Download GFS data', options)
+    assert action.download(datetime(2023, 6, 1, 0)) is False
+    assert calls[0]['timeout'] == expected
     shutil.rmtree(options['output_dir'])

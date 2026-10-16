@@ -258,97 +258,18 @@ def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
         raise
 
 
-def jd_to_date(jd):
-    """
-    Transforme un nombre de jour julien en date (année, mois, jour).
-    De https://gist.github.com/jiffyclub/1294443
-
-    Parameters
-    ----------
-    jd: float
-        Le nombre de jour julien.
-
-    Returns
-    -------
-    year: int
-        L'année.
-    month: int
-        Le mois.
-    day: int
-        Le jour.
-
-    Examples
-    --------
-    >>> jd_to_date(2460096.5)
-    (2023, 6, 1)
-    """
-    jd = jd + 0.5
-
-    f, i = np.modf(jd)
-    i = i.astype(int)
-
-    a = np.trunc((i - 1867216.25) / 36524.25)
-    b = np.zeros(len(jd))
-
-    idx = tuple([i > 2299160])
-    b[idx] = i[idx] + 1 + a[idx] - np.trunc(a[idx] / 4.)
-    idx = tuple([i <= 2299160])
-    b[idx] = i[idx]
-
-    c = b + 1524
-    d = np.trunc((c - 122.1) / 365.25)
-    e = np.trunc(365.25 * d)
-    g = np.trunc((c - e) / 30.6001)
-
-    day = c - e + f - np.trunc(30.6001 * g)
-
-    month = np.zeros(len(jd))
-    month[g < 13.5] = g[g < 13.5] - 1
-    month[g >= 13.5] = g[g >= 13.5] - 13
-    month = month.astype(int)
-
-    year = np.zeros(len(jd))
-    year[month > 2.5] = d[month > 2.5] - 4716
-    year[month <= 2.5] = d[month <= 2.5] - 4715
-    year = year.astype(int)
-
-    return year, month, day
-
-
-def days_to_hours_mins(days):
-    """
-    Transforme un nombre de jours en heures et minutes.
-
-    Parameters
-    ----------
-    days: float
-        Le nombre de jours.
-
-    Returns
-    -------
-    hour: int
-        L'heure.
-    minute: int
-        La minute.
-
-    Examples
-    --------
-    >>> days_to_hours_mins(0.5)
-    (12, 0)
-    """
-    hours = days * 24.
-    hours, hour = np.modf(hours)
-
-    minutes = hours * 60.
-    _, minute = np.modf(minutes)
-
-    return hour.astype(int), minute.astype(int)
+MJD_EPOCH = np.datetime64('1858-11-17T00:00:00', 's')
 
 
 def mjd_to_datetime(mjd):
     """
-    Transforme un tableau de nombre de jour julien modifié (MJD) en date
-    (année, mois, jour, heure, minute).
+    Transforme un tableau de nombre de jour julien modifié (MJD) en date, arrondie
+    à l'heure la plus proche.
+
+    AtmoSwing enregistre les dates en float32, dont la précision n'est que
+    d'environ 5.6 minutes autour de MJD 60000 : une date horaire (ex. 1/24 jour)
+    n'est donc pas représentée exactement. Les dates d'AtmoSwing étant toujours
+    des heures pleines, l'arrondi à l'heure restitue la date exacte.
 
     Parameters
     ----------
@@ -365,21 +286,8 @@ def mjd_to_datetime(mjd):
     >>> mjd_to_datetime(np.array([59215.5, 59216.5]))
     array(['2021-01-01T12:00:00', '2021-01-02T12:00:00'], dtype='datetime64[s]')
     """
-    jd = mjd + 2400000.5
-    year, month, day = jd_to_date(jd)
-
-    frac_days, day = np.modf(day)
-    day = day.astype(int)
-
-    hour, minute = days_to_hours_mins(frac_days)
-
-    date = np.empty(len(mjd), dtype='datetime64[s]')
-
-    for idx, _ in enumerate(year):
-        date[idx] = datetime.datetime(year[idx], month[idx], day[idx],
-                                      hour[idx], minute[idx], 0, 0)
-
-    return date
+    hours = np.round(np.asarray(mjd, dtype=np.float64) * 24).astype(np.int64)
+    return MJD_EPOCH + hours.astype('timedelta64[h]')
 
 
 def build_cumulative_frequency(size):

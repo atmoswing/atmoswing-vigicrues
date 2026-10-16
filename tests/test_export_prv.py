@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import types
 
+import netCDF4
 import pytest
 
 import atmoswing_vigicrues as asv
@@ -69,4 +70,28 @@ def test_export_prv_runs_multi_time_steps(options):
     export.feed(files, metadata)
     export.run()
     assert count_files_recursively(options) == 4
+    shutil.rmtree(options['output_dir'])
+
+
+@pytest.mark.parametrize('combine', [True, False])
+def test_export_prv_closes_netcdf_files(options, forecast_files, metadata,
+                                        monkeypatch, combine):
+    options['combine_stations_in_one_file'] = combine
+    opened = []
+
+    class TrackedDataset(netCDF4.Dataset):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            opened.append(self)
+
+    monkeypatch.setattr(asv, 'Dataset', TrackedDataset)
+
+    # Le second passage ignore les fichiers déjà exportés
+    for _ in range(2):
+        export = asv.ExportPrv('Export PRV', options)
+        export.feed(forecast_files, metadata)
+        export.run()
+
+    assert len(opened) == 2 * len(forecast_files)
+    assert not any(nc_file.isopen() for nc_file in opened)
     shutil.rmtree(options['output_dir'])

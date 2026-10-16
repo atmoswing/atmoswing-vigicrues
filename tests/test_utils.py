@@ -3,6 +3,7 @@ import tempfile
 import threading
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import atmoswing_vigicrues as asv
@@ -157,3 +158,24 @@ def test_connect_via_socks5_proxy_fails_when_unreachable():
     with pytest.raises(asv.Error):
         asv.utils.connect_via_proxy('socks5', '127.0.0.1', port,
                                     'sftp.example.org', 22, timeout=5)
+
+
+def test_mjd_to_datetime():
+    dates = asv.utils.mjd_to_datetime(np.array([59215.5, 59216.5]))
+    assert dates.dtype == np.dtype('datetime64[s]')
+    assert list(dates) == [np.datetime64('2021-01-01T12:00:00'),
+                           np.datetime64('2021-01-02T12:00:00')]
+
+
+def test_mjd_to_datetime_with_hourly_float32_dates():
+    # Les dates horaires ne sont pas représentées exactement en float32
+    mjd = (59853 + np.arange(48) / 24).astype(np.float32)
+    expected = np.datetime64('2022-10-01T00', 's') + \
+        np.arange(48).astype('timedelta64[h]')
+    assert (asv.utils.mjd_to_datetime(mjd) == expected).all()
+
+
+def test_mjd_to_datetime_rounds_to_nearest_hour():
+    almost_noon = 59215.5 - 1e-6
+    date = asv.utils.mjd_to_datetime(np.array([almost_noon]))[0]
+    assert date == np.datetime64('2021-01-01T12:00:00')

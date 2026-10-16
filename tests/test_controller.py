@@ -7,6 +7,7 @@ import sys
 import tempfile
 import types
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import pytest
 
@@ -325,3 +326,45 @@ def test_main_exits_with_controller_return_code(tmp_path):
     ret = subprocess.run(
         [sys.executable, '-m', 'atmoswing_vigicrues', '-c', str(config_file)])
     assert ret.returncode != 0
+
+
+@pytest.fixture
+def atmoswing_controller(tmp_path, monkeypatch):
+    """Contrôleur dont la commande AtmoSwing est remplacée par un exécutable donné."""
+    monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
+
+    def build(executable):
+        config_file = tmp_path / 'config.yaml'
+        config_file.write_text(
+            "atmoswing:\n"
+            "  name: Forecast now\n"
+            "  with:\n"
+            f"    atmoswing_path: '{Path(executable).as_posix()}'\n"
+            "    batch_file: 'batch_file.xml'\n"
+            f"    output_dir: '{(tmp_path / 'output').as_posix()}'\n",
+            encoding='utf-8')
+        return asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+
+    return build
+
+
+def test_atmoswing_failure_is_reported_once(atmoswing_controller, tmp_path, capsys):
+    (tmp_path / 'AtmoSwingForecaster.log').write_text("ligne du journal\n")
+    # Python refuse l'option '-f' : code de retour non nul
+    controller = atmoswing_controller(sys.executable)
+    with pytest.raises(asv.Error, match="code de retour") as error:
+        controller._run_atmoswing()
+    assert "Exception" not in str(error.value)
+    assert capsys.readouterr().out.count("ligne du journal") == 1
+
+
+def test_atmoswing_exception_is_reported(atmoswing_controller, tmp_path):
+    controller = atmoswing_controller(tmp_path / 'atmoswing-introuvable')
+    with pytest.raises(asv.Error, match="Exception de AtmoSwing Forecaster"):
+        controller._run_atmoswing()
+
+
+def test_parse_log_file_handles_missing_log(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
+    asv.Controller._parse_log_file()
+    assert "n'a pas été trouvé" in capsys.readouterr().out

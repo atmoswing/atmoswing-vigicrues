@@ -55,6 +55,9 @@ class DownloadGfsData(PreAction):
         * time_step_back : int
             Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
             Valeur par défaut : 4
+        * timeout : float
+            Délai maximal d'attente du serveur (en secondes) pour chaque requête.
+            Valeur par défaut : 120
 
     Attributes
     ----------
@@ -80,6 +83,8 @@ class DownloadGfsData(PreAction):
         Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     time_step_back : int
         Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
+    timeout : float
+        Délai maximal d'attente du serveur (en secondes) pour chaque requête.
     """
 
     def __init__(self, name, options):
@@ -145,6 +150,8 @@ class DownloadGfsData(PreAction):
             self.time_step_back = options['time_step_back']
         else:
             self.time_step_back = 4
+
+        self.timeout = options.get('timeout') or 120
 
         super().__init__()
 
@@ -216,10 +223,8 @@ class DownloadGfsData(PreAction):
                         continue
 
                     try:
-                        if self.proxies:
-                            r = requests.get(url, proxies=self.proxies)
-                        else:
-                            r = requests.get(url)
+                        r = requests.get(url, proxies=self.proxies,
+                                         timeout=self.timeout)
                     except requests.exceptions.RequestException as e:
                         print(f"  -> {e}")
                         print("  -> Le téléchargement de GFS a échoué.")
@@ -229,7 +234,8 @@ class DownloadGfsData(PreAction):
                         return False
 
                     if r.status_code == 200:
-                        open(file_path, 'wb').write(r.content)
+                        with open(file_path, 'wb') as f:
+                            f.write(r.content)
                         files_count += 1
                     else:
                         clean_text = re.sub(CLEAN_HTML, '', r.text)

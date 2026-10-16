@@ -19,6 +19,11 @@
 *   Correction du support des proxys HTTP dans la récupération SFTP (`TransferSftpIn`), qui ne passait pas réellement par le proxy.
 *   La connexion SFTP via proxy HTTP accepte toute réponse 200 du proxy (pas uniquement « Connection established »), applique un délai maximal et ne consomme plus la bannière SSH du serveur.
 *   La connexion SFTP de `TransferSftpIn` est désormais fermée lorsqu'aucun fichier n'est disponible.
+*   Export BdApBp : un fichier contenant une erreur est régénéré lors de l'exécution suivante (il était conservé indéfiniment), les codes d'erreur 100 (fichier absent) et 110 (fichier corrompu) ne sont plus remplacés par 200, et l'export signale un échec lorsqu'un fichier est en erreur.
+*   Export PRV : les fichiers netCDF sont toujours fermés, y compris lorsque l'export existe déjà ou en cas d'erreur.
+*   Conversion des dates MJD : les dates infra-journalières (ex. horaires) enregistrées en float32 par AtmoSwing étaient erronées (calcul en float32 et troncature) ; elles sont désormais arrondies à l'heure.
+*   Les erreurs d'AtmoSwing Forecaster ne sont plus signalées (ni le journal affiché) deux fois, et l'absence du journal ne provoque plus d'exception.
+*   Ajout d'un délai maximal (option `timeout`, 120 s par défaut) pour le téléchargement des données GFS.
 
 
 ## v1.2.0 - 11 Avril 2025
