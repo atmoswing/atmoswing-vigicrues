@@ -1,6 +1,9 @@
+import datetime
 import importlib
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import types
 import xml.etree.ElementTree as ET
@@ -199,3 +202,126 @@ def test_flux_stops_when_preprocess_failing(tmp_dir):
     if RUN_ATMOSWING:
         controller.run()
     shutil.rmtree(tmp_dir)
+
+
+class StubPreAction(asv.PreAction):
+    def __init__(self, results, attempts_max_hours=24, attempts_step_hours=6):
+        self.type_name = "Stub"
+        self.name = "stub"
+        self.results = list(results)
+        self.dates = []
+        self.attempts_max_hours = attempts_max_hours
+        self.attempts_step_hours = attempts_step_hours
+        super().__init__()
+
+    def run(self, date) -> bool:
+        self.dates.append(date)
+        return self.results.pop(0) if self.results else False
+
+
+class StubPostAction(asv.PostAction):
+    def __init__(self, result):
+        self.type_name = "Stub"
+        self.name = "stub"
+        self.result = result
+        super().__init__()
+
+    def run(self) -> bool:
+        return self.result
+
+
+class StubDissemination(asv.Dissemination):
+    def __init__(self, local_dir, result):
+        self.type_name = "Stub"
+        self.name = "stub"
+        self.local_dir = local_dir
+        self.extension = '.json'
+        self.result = result
+        super().__init__()
+
+    def run(self, date) -> bool:
+        return self.result
+
+
+@pytest.fixture
+def stub_controller(tmp_path):
+    output_dir = (tmp_path / 'output').as_posix()
+    config_file = tmp_path / 'config.yaml'
+    config_file.write_text(
+        "atmoswing:\n"
+        "  name: Forecast now\n"
+        "  active: False\n"
+        "  with:\n"
+        f"    output_dir: '{output_dir}'\n",
+        encoding='utf-8')
+    controller = asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+    controller.date = datetime.datetime(2023, 6, 1, 12)
+    return controller
+
+
+def test_pre_actions_step_back_in_time_until_success(stub_controller):
+    action = StubPreAction([False, False, True])
+    stub_controller.pre_actions = [action]
+    assert stub_controller.run() == 0
+    assert action.dates == [datetime.datetime(2023, 6, 1, 12),
+                            datetime.datetime(2023, 6, 1, 6),
+                            datetime.datetime(2023, 6, 1, 0)]
+    assert stub_controller.date == datetime.datetime(2023, 6, 1, 0)
+
+
+def test_flux_stops_when_pre_actions_exhaust_attempts(stub_controller):
+    action = StubPreAction([], attempts_max_hours=24, attempts_step_hours=6)
+    post_action = StubPostAction(True)
+    stub_controller.pre_actions = [action]
+    stub_controller.post_actions = [post_action]
+    stub_controller._run_atmoswing = lambda: pytest.fail("AtmoSwing ne doit pas "
+                                                         "être exécuté.")
+    assert stub_controller.run() == -1
+    assert len(action.dates) == 4
+
+
+def test_pre_actions_attempted_once_when_no_step_back_allowed(stub_controller):
+    action = StubPreAction([], attempts_max_hours=0)
+    stub_controller.pre_actions = [action]
+    assert stub_controller.run() == -1
+    assert len(action.dates) == 1
+
+
+def test_return_code_when_post_action_fails(stub_controller, monkeypatch):
+    monkeypatch.setattr(stub_controller, '_list_atmoswing_output_files',
+                        lambda: ['file.nc'])
+    stub_controller.post_actions = [StubPostAction(False), StubPostAction(True)]
+    assert stub_controller.run() == 1
+
+
+def test_return_code_when_dissemination_fails(stub_controller, tmp_path):
+    stub_controller.disseminations = [
+        StubDissemination(str(tmp_path), True),
+        StubDissemination(str(tmp_path), False)]
+    assert stub_controller.run() == 1
+
+
+def test_return_code_when_all_actions_succeed(stub_controller, monkeypatch):
+    monkeypatch.setattr(stub_controller, '_list_atmoswing_output_files',
+                        lambda: ['file.nc'])
+    stub_controller.pre_actions = [StubPreAction([True])]
+    stub_controller.post_actions = [StubPostAction(True)]
+    assert stub_controller.run() == 0
+
+
+def test_main_exits_with_controller_return_code(tmp_path):
+    config_file = tmp_path / 'config.yaml'
+    config_file.write_text(
+        "atmoswing:\n"
+        "  name: Forecast now\n"
+        "  active: False\n"
+        "  with:\n"
+        f"    output_dir: '{(tmp_path / 'output').as_posix()}'\n"
+        "post_actions:\n"
+        "  - name: Unknown\n"
+        "    uses: FakeAction\n"
+        "    with: {}\n",
+        encoding='utf-8')
+    ret = subprocess.run(
+        [sys.executable, '-m', 'atmoswing_vigicrues', '-c', str(config_file)])
+    assert ret.returncode != 0

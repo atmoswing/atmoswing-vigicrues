@@ -1,6 +1,20 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## Non publié
+
+### Changements
+
+*   Le flux s'interrompt (code de retour -1) lorsque les pré-actions échouent pour toutes les dates tentées, au lieu de lancer AtmoSwing sur une date sans données.
+*   Le code de retour vaut 1 lorsque la prévision a été émise mais qu'au moins une post-action ou une dissémination a échoué.
+*   Les dépendances optionnelles (GRIB) sont disponibles via `pip install atmoswing-vigicrues[grib]`.
+
+### Corrections
+
+*   Les dépendances du paquet sont désormais déclarées dans `pyproject.toml` (elles n'étaient pas installées depuis PyPI).
+*   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
+
+
 ## v1.2.0 - 11 Avril 2025
 
 ### Corrections

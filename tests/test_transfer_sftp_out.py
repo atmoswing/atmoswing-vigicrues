@@ -10,14 +10,14 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = False
+RUN_SFTP = True
 
 
 @pytest.fixture
 def options():
     options = asv.Options(
         types.SimpleNamespace(
-            config_file=DIR_PATH + '/files/config_dissemination_sftp.yaml'
+            config_file=DIR_PATH + '/files/config_dissemination_sftp_adn.yaml'
         ))
 
     action_options = options.config['disseminations'][0]['with']

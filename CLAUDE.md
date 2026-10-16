@@ -63,4 +63,6 @@ When adding a new action: subclass the right base, set `self.type_name` and `sel
 
 ## Deployment
 
-Packaged to PyPI and as a Docker image built `FROM atmoswing/forecaster` (the Dockerfile installs this module on top of the forecaster image, so the binary is already on PATH). Version is set in both `pyproject.toml` and `setup.py` — keep them in sync, and update `changelog.md` (in French).
+Packaged to PyPI and as a Docker image built `FROM atmoswing/forecaster` (the Dockerfile installs this module on top of the forecaster image, so the binary is already on PATH). Packaging metadata, dependencies and the version live only in `pyproject.toml` (no `setup.py`/`setup.cfg`); keep `requirements*.txt` in sync with its `dependencies` / `optional-dependencies` (used by CI and the Dockerfile), and update `changelog.md` (in French).
+
+Exit codes of `Controller.run()` (propagated by `__main__`): `0` success, `1` forecast produced but a post-action or dissemination failed, `-1` fatal (pre-actions exhausted all attempts, AtmoSwing failed, or an exception).

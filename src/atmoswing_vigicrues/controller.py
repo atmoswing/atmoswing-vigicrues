@@ -69,7 +69,12 @@ class Controller:
         Returns
         -------
         int
-            Le code de retour (0 en cas de succès)
+            Le code de retour :
+
+            * 0 : succès.
+            * 1 : la prévision a été émise, mais au moins une post-action ou une
+              dissémination a échoué.
+            * -1 : échec de la prévision (pré-actions, AtmoSwing ou exception).
         """
 
         if date:
@@ -81,16 +86,16 @@ class Controller:
             self._run_pre_actions()
             self.existing_files = self._list_atmoswing_output_files()
             self._run_atmoswing()
-            self._run_post_actions()
-            self._run_disseminations()
-        except asv.Error as e:
-            print("La prévision a échoué.")
-            print(f"Erreur: {e}")
-            return -1
+            post_actions_ok = self._run_post_actions()
+            disseminations_ok = self._run_disseminations()
         except Exception as e:
             print("La prévision a échoué.")
             print(f"Erreur: {e}")
             return -1
+
+        if not post_actions_ok or not disseminations_ok:
+            print("La prévision a été émise, mais certaines actions ont échoué.")
+            return 1
 
         return 0
 
@@ -145,8 +150,17 @@ class Controller:
     def _run_pre_actions(self):
         """
         Exécute les opérations préalables à la prévision par AtmoSwing.
+
+        En cas d'échec d'une pré-action, la date de la prévision est reculée de
+        'attempts_step_hours' et l'ensemble des pré-actions est relancé, jusqu'à
+        un recul maximal de 'attempts_max_hours'.
+
+        Raises
+        ------
+        asv.Error
+            Si les pré-actions échouent pour toutes les dates tentées.
         """
-        if not self.pre_actions or len(self.pre_actions) == 0:
+        if not self.pre_actions:
             return
 
         attempts_max_hours = 7 * 24
@@ -156,23 +170,25 @@ class Controller:
             attempts_step_hours = max(attempts_step_hours, action.attempts_step_hours)
 
         attempts_hours = 0
-        while attempts_hours < attempts_max_hours:
+        while True:
             success = True
             for action in self.pre_actions:
                 print(f"Exécution de : '{action.type_name}' [{action.name}]")
                 if not action.run(self.date):
-                    attempts_hours += attempts_step_hours
                     success = False
                     break
             if success:
                 print("  -> Exécution correcte.")
+                return
+
+            attempts_hours += attempts_step_hours
+            if attempts_hours >= attempts_max_hours:
                 break
-            else:
-                print("  -> Recul de l'heure de la prévision.")
-                self._back_in_time(attempts_step_hours)
-        else:
-            print("  -> Échec de l'exécution.")
-            print("  -> Nombre maximum de tentatives atteint pour la pré-action.")
+            print("  -> Recul de l'heure de la prévision.")
+            self._back_in_time(attempts_step_hours)
+
+        print("  -> Échec de l'exécution.")
+        raise asv.Error("Nombre maximum de tentatives atteint pour les pré-actions.")
 
     def _run_atmoswing(self):
         """
@@ -241,18 +257,24 @@ class Controller:
 
         return cmd
 
-    def _run_post_actions(self):
+    def _run_post_actions(self) -> bool:
         """
         Exécute les opérations postérieures à la prévision par AtmoSwing.
+
+        Returns
+        -------
+        bool
+            Vrai (True) si toutes les post-actions ont réussi, faux (False) autrement.
         """
-        if not self.post_actions or len(self.post_actions) == 0:
-            return
+        if not self.post_actions:
+            return True
 
         files = self._list_atmoswing_output_files()
         if len(files) == 0:
             print("  -> Aucun nouveau fichier à traiter en post-action.")
-            return
+            return True
 
+        all_ok = True
         for action in self.post_actions:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
@@ -260,14 +282,24 @@ class Controller:
                 print("  -> Exécution correcte.")
             else:
                 print("  -> Échec de l'exécution.")
+                all_ok = False
 
-    def _run_disseminations(self):
+        return all_ok
+
+    def _run_disseminations(self) -> bool:
         """
         Exécute les opérations de diffusion.
-        """
-        if not self.disseminations or len(self.disseminations) == 0:
-            return
 
+        Returns
+        -------
+        bool
+            Vrai (True) si toutes les disséminations ont réussi, faux (False)
+            autrement.
+        """
+        if not self.disseminations:
+            return True
+
+        all_ok = True
         for action in self.disseminations:
             print(f"Exécution de : '{action.type_name}' [{action.name}]")
             local_dir = action.local_dir
@@ -278,6 +310,9 @@ class Controller:
                 print("  -> Exécution correcte.")
             else:
                 print("  -> Échec de l'exécution.")
+                all_ok = False
+
+        return all_ok
 
     def _fix_date(self):
         date = self.date

@@ -1,4 +1,5 @@
 import argparse
+import sys
 from datetime import datetime
 
 from atmoswing_vigicrues.controller import Controller
@@ -30,4 +31,4 @@ def main(args=None) -> int:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
