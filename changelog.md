@@ -26,6 +26,8 @@
 *   Une date mal formatée (`-d`) est signalée par un message d'erreur de la ligne de commande.
 *   `TransformEcmwfData` s'affichait comme « Transformation données GFS ».
 *   Les transformations GRIB signalent l'absence du paquet `atmoswing-toolbox` à leur création, au lieu d'échouer lors de l'exécution.
+*   Une diffusion sans fichier à transmettre n'est plus considérée comme un échec (code de retour 0 au lieu de 1).
+*   Téléchargement GFS : seuls les proxys renseignés de l'option `proxies` sont utilisés (une valeur vide, ex. `https: ''`, était transmise telle quelle), et la documentation de l'option est corrigée.
 *   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
 *   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
 *   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.

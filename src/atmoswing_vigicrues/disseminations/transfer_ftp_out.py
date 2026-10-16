@@ -181,7 +181,7 @@ class TransferFtpOut(Dissemination):
         """
         if not self._file_paths:
             print("  -> Aucun fichier à traiter")
-            return False
+            return True
 
         try:
             if self.proxy_host:

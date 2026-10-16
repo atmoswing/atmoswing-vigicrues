@@ -115,3 +115,15 @@ def test_download_gfs_uses_timeout(options, monkeypatch, timeout, expected):
     assert action.download(datetime(2023, 6, 1, 0)) is False
     assert calls[0]['timeout'] == expected
     shutil.rmtree(options['output_dir'])
+
+
+@pytest.mark.parametrize('proxies, expected', [
+    (None, None),
+    ({'http': '', 'https': ''}, None),
+    ({'http': 'http://proxy:3128', 'https': ''}, {'http': 'http://proxy:3128'}),
+])
+def test_download_gfs_ignores_empty_proxies(options, proxies, expected):
+    options['proxies'] = proxies
+    action = asv.DownloadGfsData('Download GFS data', options)
+    assert action.proxies == expected
+    shutil.rmtree(options['output_dir'])

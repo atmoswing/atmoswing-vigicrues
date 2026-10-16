@@ -39,10 +39,10 @@ class DownloadGfsData(PreAction):
             Résolution spatiale des données.
             Options: 0.25, 0.50, 1
             Valeur par défaut : 0.25
-        * proxy_host : str
-            L'adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port
-        * proxy_user : str
-            L'utilisateur et le mot de passe pour le proxy. Format : username:password
+        * proxies : dict
+            Les proxys à utiliser (si nécessaire), par protocole, au format de la
+            bibliothèque requests. Exemple :
+            {'http': 'http://user:pass@proxy:3128', 'https': 'http://proxy:3128'}
         * attempts_max_hours : int
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
@@ -77,8 +77,8 @@ class DownloadGfsData(PreAction):
         Domaine à télécharger (coordonnées géographiques).
     resolution : float
         Résolution spatiale des données.
-    proxies : list
-        Les informations de connexion au proxy.
+    proxies : dict
+        Les proxys à utiliser, par protocole (None si aucun proxy n'est défini).
     time_increment : int
         Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     time_step_back : int
@@ -127,18 +127,14 @@ class DownloadGfsData(PreAction):
             elif resolution == 1:
                 self.resolution = '1p00'
             else:
-                raise ValueError("La résolution fournie pour GFS ne correspond pas"
+                raise ValueError("La résolution fournie pour GFS ne correspond pas "
                                  "aux options disponibles (0.25, 0.5, 1).")
         else:
             self.resolution = '0p25'
 
-        self.proxies = None
-        if 'proxies' in options and options['proxies']:
-            proxies = options['proxies']
-            for key in proxies:
-                if proxies[key]:
-                    self.proxies = proxies
-                    continue
+        # Seuls les proxys renseignés sont conservés (les valeurs vides sont ignorées)
+        proxies = options.get('proxies') or {}
+        self.proxies = {key: value for key, value in proxies.items() if value} or None
 
         # Télécharge également les 4 pas de temps précédents (pas de temps de 6 h)
         if 'time_increment' in options:
