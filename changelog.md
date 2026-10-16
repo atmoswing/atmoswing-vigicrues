@@ -13,6 +13,8 @@
 
 *   Les dépendances du paquet sont désormais déclarées dans `pyproject.toml` (elles n'étaient pas installées depuis PyPI).
 *   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
+*   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
+*   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.
 
 
 ## v1.2.0 - 11 Avril 2025

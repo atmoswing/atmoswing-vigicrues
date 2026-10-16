@@ -1,11 +1,79 @@
-import os
 import ftplib
+import os
+
 import socks
-import socket
 
 import atmoswing_vigicrues as asv
 
 from .dissemination import Dissemination
+
+
+class FtpViaProxy(ftplib.FTP):
+    """
+    Client FTP dont les connexions (contrôle et données) passent par un proxy.
+
+    Seules les connexions de cette instance sont concernées : le module socket
+    n'est pas modifié. Seul le mode passif est supporté, le mode actif nécessitant
+    une connexion entrante depuis le serveur.
+
+    Parameters
+    ----------
+    proxy_type : int
+        Type de proxy (socks.HTTP, socks.SOCKS4 ou socks.SOCKS5).
+    proxy_host : str
+        Adresse du proxy.
+    proxy_port : int
+        Port du proxy.
+    """
+
+    def __init__(self, proxy_type, proxy_host, proxy_port, **kwargs):
+        self.proxy_type = proxy_type
+        self.proxy_host = proxy_host
+        self.proxy_port = proxy_port
+        super().__init__(**kwargs)
+
+    def _create_connection(self, host, port):
+        return socks.create_connection(
+            (host, port), self.timeout, source_address=self.source_address,
+            proxy_type=self.proxy_type, proxy_addr=self.proxy_host,
+            proxy_port=self.proxy_port)
+
+    def connect(self, host='', port=0, timeout=-999, source_address=None):
+        if host != '':
+            self.host = host
+        if port > 0:
+            self.port = port
+        if timeout != -999:
+            self.timeout = timeout
+        if source_address is not None:
+            self.source_address = source_address
+        self.sock = self._create_connection(self.host, self.port)
+        self.af = self.sock.family
+        self.file = self.sock.makefile('r', encoding=self.encoding)
+        self.welcome = self.getresp()
+        return self.welcome
+
+    def ntransfercmd(self, cmd, rest=None):
+        if not self.passiveserver:
+            raise asv.Error("Le mode FTP actif n'est pas supporté via un proxy.")
+        host, port = self.makepasv()
+        conn = self._create_connection(host, port)
+        try:
+            if rest is not None:
+                self.sendcmd(f"REST {rest}")
+            resp = self.sendcmd(cmd)
+            # Certains serveurs envoient une réponse 200 avant la réponse 150
+            if resp[0] == '2':
+                resp = self.getresp()
+            if resp[0] != '1':
+                raise ftplib.error_reply(resp)
+        except BaseException:
+            conn.close()
+            raise
+        size = None
+        if resp[:3] == '150':
+            size = ftplib.parse150(resp)
+        return conn, size
 
 
 class TransferFtpOut(Dissemination):
@@ -117,11 +185,10 @@ class TransferFtpOut(Dissemination):
 
         try:
             if self.proxy_host:
-                socks.set_default_proxy(self.proxy_type, self.proxy_host, self.proxy_port)
-                socket.socket = socks.socksocket  # Override the default socket
+                ftp = FtpViaProxy(self.proxy_type, self.proxy_host, self.proxy_port)
+            else:
+                ftp = ftplib.FTP()
 
-            # Connect to FTP
-            ftp = ftplib.FTP()
             ftp.connect(self.hostname, self.port)
             ftp.login(self.username, self.password)
 
@@ -153,7 +220,7 @@ class TransferFtpOut(Dissemination):
             print(f"La diffusion FTP a échoué ({e}).")
 
         if 'ftp' in locals():
-            ftp.quit()
+            ftp.close()
 
         return False
 
