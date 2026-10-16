@@ -358,18 +358,6 @@ class ExportBdApBp(PostAction):
             time_format_analogs = "%Y-%m-%d %H"
         return time_format_analogs, time_format_target
 
-    @staticmethod
-    def _to_str_dict(var):
-        var = var.flatten()
-        new_list = [str(x) for x in var]
-        return dict(enumerate(new_list))
-
-    @staticmethod
-    def _to_int_dict(var):
-        var = var.flatten()
-        new_list = [int(x) for x in var]
-        return dict(enumerate(new_list))
-
     def _reset_status(self):
         self.status = 0
         self.message = "Exécution correcte"

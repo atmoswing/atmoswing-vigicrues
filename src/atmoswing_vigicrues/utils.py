@@ -1,4 +1,5 @@
 import datetime
+import os
 import socket
 from pathlib import Path
 
@@ -96,6 +97,31 @@ def check_dir_exists(path, create=False):
             path_output.mkdir(parents=True, exist_ok=True)
         else:
             raise asv.Error(f"Le répertoire '{path}' n'a pas été trouvé.")
+
+
+def use_builtin_eccodes_definitions():
+    """
+    Ignore, pour le processus Python uniquement, les définitions désignées par
+    ECCODES_DEFINITION_PATH lorsque la bibliothèque eccodes utilisée embarque ses
+    propres définitions (paquet pip 'eccodeslib').
+
+    L'image AtmoSwing Forecaster définit ECCODES_DEFINITION_PATH pour la version
+    système d'eccodes, plus ancienne : la bibliothèque embarquée chargerait alors
+    des définitions incompatibles et ne pourrait décoder aucun fichier GRIB. La
+    variable d'environnement n'est pas modifiée, afin de rester valable pour
+    AtmoSwing Forecaster (exécuté en sous-processus).
+    """
+    env_paths = os.environ.get('ECCODES_DEFINITION_PATH')
+    if not env_paths:
+        return
+    try:
+        import eccodes
+        current = eccodes.codes_definition_path().split(':')
+        builtin = [p for p in current if p not in env_paths.split(':')]
+        if builtin:
+            eccodes.codes_set_definitions_path(':'.join(builtin))
+    except Exception:
+        pass
 
 
 def build_date_dir_structure(base, date):

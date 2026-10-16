@@ -17,9 +17,6 @@ import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = False
-
 
 @pytest.fixture
 def options_no_variables():
@@ -68,43 +65,43 @@ def count_files_recursively(options):
     return nb_files
 
 
+@pytest.mark.sftp
 def test_download_cep_no_variables_succeeds(options_no_variables):
     action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
     date = datetime(2023, 4, 13, 12)
-    if RUN_SFTP:
-        assert action.run(date)
-        assert count_files_recursively(options_no_variables) == 6
-        shutil.rmtree(options_no_variables['local_dir'])
+    assert action.run(date)
+    assert count_files_recursively(options_no_variables) == 6
+    shutil.rmtree(options_no_variables['local_dir'])
 
 
+@pytest.mark.sftp
 def test_download_cep_with_variables_succeeds(options_with_variables):
     action = asv.TransferSftpIn('Get CEP data over SFTP', options_with_variables)
     date = datetime(2023, 4, 13, 12)
-    if RUN_SFTP:
-        assert action.run(date)
-        assert count_files_recursively(options_with_variables) == 4
-        shutil.rmtree(options_with_variables['local_dir'])
+    assert action.run(date)
+    assert count_files_recursively(options_with_variables) == 4
+    shutil.rmtree(options_with_variables['local_dir'])
 
 
+@pytest.mark.sftp
 def test_do_not_download_if_exists(options_with_variables, capsys):
     action = asv.TransferSftpIn('Get CEP data over SFTP', options_with_variables)
     date = datetime(2023, 4, 13, 12)
-    if RUN_SFTP:
-        assert action.run(date)
-        assert count_files_recursively(options_with_variables) == 4
-        assert action.run(date)
-        captured = capsys.readouterr()
-        assert captured.out == "  -> Fichiers déjà présents localement.\n"
-        shutil.rmtree(options_with_variables['local_dir'])
+    assert action.run(date)
+    assert count_files_recursively(options_with_variables) == 4
+    assert action.run(date)
+    captured = capsys.readouterr()
+    assert captured.out == "  -> Fichiers déjà présents localement.\n"
+    shutil.rmtree(options_with_variables['local_dir'])
 
 
+@pytest.mark.sftp
 def test_download_arpege_succeeds(options_arpege):
     action = asv.TransferSftpIn('Get ARPEGE data over SFTP', options_arpege)
     date = datetime(2023, 4, 17, 00)
-    if RUN_SFTP:
-        assert action.run(date)
-        assert count_files_recursively(options_arpege) == 3
-        shutil.rmtree(options_arpege['local_dir'])
+    assert action.run(date)
+    assert count_files_recursively(options_arpege) == 3
+    shutil.rmtree(options_arpege['local_dir'])
 
 
 @pytest.mark.parametrize('proxy_type', [None, 'http', 'socks5'])

@@ -30,7 +30,9 @@ pip install -e ".[dev,tests]"
 ```
 
 ### Important about tests
-Tests that actually run AtmoSwing or SFTP are gated behind module-level flags that default to **False**: `RUN_ATMOSWING` and `RUN_SFTP` (see `tests/test_controller.py`). Without them, those tests only exercise construction/configuration, not the real external binary or network transfer. `RUN_ATMOSWING` needs a local AtmoSwing Forecaster install and a `DATA_PATH` that points to a private dataset; `RUN_SFTP` needs a running SFTP docker container. Do not assume these flags can be flipped on in CI.
+Tests that need an external resource carry a pytest marker and are **skipped** (reported as such) unless the matching environment variable is `1` (see `tests/conftest.py`): `atmoswing` (`ASV_TEST_ATMOSWING`, needs a local AtmoSwing Forecaster and the private dataset at `ASV_TEST_DATA_PATH`), `sftp` (`ASV_TEST_SFTP`, running SFTP docker container), `ftp` (`ASV_TEST_FTP`), `network` (`ASV_TEST_NETWORK`, NOMADS downloads). Do not enable them in CI. Never gate a test with a module-level flag or an early `return`: it would pass silently.
+
+The GRIB transformation tests are skipped unless `eccodes` and `atmoswing-toolbox` are installed; they only run in CI inside the Docker image (`build-docker-image.yml`). To run the full suite with eccodes locally: build the image and run `pytest` in it with the repo mounted.
 
 ## Architecture
 
@@ -41,14 +43,14 @@ The flow is fixed and lives in `Controller.run()` (`src/atmoswing_vigicrues/cont
 Key pieces:
 
 - **`Controller`** — owns the run. Resolves the forecast `date` (floored to a multiple of `time_increment`, default 6h, via `_fix_date`), discovers AtmoSwing output files by date-stamped glob, builds and runs the forecaster command line (`_build_atmoswing_cmd`), and on failure prints the forecaster log from the temp dir. Catches all exceptions in `run()` and returns a non-zero code rather than raising.
-- **`Options`** (`options.py`) — merges CLI args with the YAML config (loaded with `yaml.FullLoader`). Use `options.has(key)` / `options.get(key)`; `get` raises `OptionError` if missing.
-- **Plugin registration** — actions are not imported directly. The controller reads `pre_actions` / `post_actions` / `disseminations` lists from the config, and for each entry looks up the class named in its `uses:` field via `getattr(importlib.import_module('atmoswing_vigicrues'), uses)`. **This means every action class must be exported from `src/atmoswing_vigicrues/__init__.py`** or it will be reported as unknown. Each entry's `with:` dict is passed to the class constructor. An `active: False` entry is skipped.
+- **`Options`** (`options.py`) — merges CLI args with the YAML config (loaded with `yaml.safe_load`). Use `options.has(key)` / `options.get(key)`; `get` raises `OptionError` if missing.
+- **Plugin registration** — actions are not imported directly. `Controller._register_actions` reads the `pre_actions` / `post_actions` / `disseminations` lists from the config and, for each entry, looks up the class named in its `uses:` field on the `atmoswing_vigicrues` package; it must be a subclass of that section's base class. **This means every action class must be exported from `src/atmoswing_vigicrues/__init__.py`** or it will be reported as unknown (`ConfigError`). Each entry's `with:` dict is passed to the class constructor; a missing required option (`KeyError`) becomes a `ConfigError` naming the action. An `active: False` entry is skipped. Configuration errors are reported by `__main__` (exit code `-1`) without a traceback.
 
 ### Action base classes and contracts
 
-Three families, each a subclass tree under its own subpackage:
+Three families, each an `abc.ABC` subclass tree under its own subpackage (`run` is abstract):
 
-- **`PreAction`** (`preactions/`) — `run(date) -> bool`. The controller retries the whole pre-action set with a back-in-time loop: if any pre-action returns False, the forecast date steps back by `attempts_step_hours` and retries up to `attempts_max_hours` (set via `_set_attempts_attributes`). Implementations: `DownloadGfsData`, `TransformGfsData`, `TransformEcmwfData`, `TransferSftpIn`.
+- **`PreAction`** (`preactions/`) — `run(date) -> bool`. The controller retries the whole pre-action set with a back-in-time loop: if any pre-action returns False, the forecast date steps back by `attempts_step_hours` and retries up to `attempts_max_hours` (set via `_set_attempts_attributes`). Implementations: `DownloadGfsData`, `TransferSftpIn`, and `TransformGfsData` / `TransformEcmwfData`, which share `TransformGribData` (`transform_grib.py`; subclasses only define the GRIB file pattern, `dataset_tag` and `type_name`).
 - **`PostAction`** (`postactions/`) — `feed(file_paths, metadata)` then `run() -> bool`. Operates on the NetCDF files AtmoSwing just produced. Implementations: `ExportBdApBp` (JSON), `ExportPrv`.
 - **`Dissemination`** (`disseminations/`) — exposes `local_dir` and `extension` attributes (the controller uses them to glob files), then `feed(file_paths)` and `run(date) -> bool`. Implementations: `TransferSftpOut`, `TransferFtpOut`.
 
@@ -57,7 +59,8 @@ When adding a new action: subclass the right base, set `self.type_name` and `sel
 ### Conventions worth knowing
 
 - **Date-based directory layout**: files are organized as `base/YYYY/MM/DD` via `utils.build_date_dir_structure`, and SFTP/FTP transfers recreate that structure remotely. File discovery globs `YYYY-MM-DD_HH.*<ext>`.
-- **Optional heavy deps** are guarded at import time in `__init__.py` (`has_netcdf`, `has_eccodes`); `eccodes`, `pandas`, and `atmoswing-toolbox` live in `requirements-optional.txt`, not the core `requirements.txt`.
+- **Optional heavy deps** are guarded at import time in `__init__.py` (`has_netcdf`, `has_eccodes`) and `transform_grib.py` (`has_toolbox`); `eccodes`, `pandas`, and `atmoswing-toolbox` live in `requirements-optional.txt` / the `grib` extra, not the core dependencies.
+- **eccodes definitions in Docker**: the forecaster base image sets `ECCODES_DEFINITION_PATH` for its older system eccodes; the pip `eccodes` bundles a newer library that cannot decode with those definitions. `utils.use_builtin_eccodes_definitions()` (called at package import) overrides the path for the Python process only, via the eccodes API — never change `os.environ` for this, the forecaster subprocess needs the variable.
 - **Errors** use the hierarchy in `exceptions.py` (`Error` base, plus `OptionError`, `ConfigError`, `PathError`, `FilePathError`). Path checks go through `utils.check_file_exists` / `check_dir_exists` / `file_exists`.
 - **Config files may contain special characters** (e.g. passwords with accents/symbols) — there is a test guarding this; preserve UTF-8 handling.
 

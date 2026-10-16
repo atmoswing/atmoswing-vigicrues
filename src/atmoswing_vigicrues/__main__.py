@@ -2,6 +2,7 @@ import argparse
 import sys
 from datetime import datetime
 
+import atmoswing_vigicrues as asv
 from atmoswing_vigicrues.controller import Controller
 
 
@@ -21,13 +22,22 @@ def main(args=None) -> int:
 
     args = parser.parse_args(args)
 
-    controller = Controller(args)
-
+    date = None
     if args.date:
-        date = datetime.strptime(args.date, '%Y%m%d%H')
-        return controller.run(date)
+        try:
+            date = datetime.strptime(args.date, '%Y%m%d%H')
+        except ValueError:
+            parser.error(f"La date '{args.date}' ne respecte pas le format "
+                         f"YYYYMMDDHH.")
 
-    return controller.run()
+    try:
+        controller = Controller(args)
+    except (asv.Error, ImportError) as e:
+        print("La configuration est invalide.")
+        print(f"Erreur: {e}")
+        return -1
+
+    return controller.run(date)
 
 
 if __name__ == "__main__":

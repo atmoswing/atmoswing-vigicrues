@@ -246,14 +246,6 @@ class TransferSftpIn(PreAction):
 
         return files_count_existing, files_count_new
 
-    @staticmethod
-    def _chdir_or_mkdir(dir_path, sftp):
-        try:
-            sftp.chdir(dir_path)
-        except OSError:
-            sftp.mkdir(dir_path)
-            sftp.chdir(dir_path)
-
     def _get_local_path(self, date):
         local_path = asv.build_date_dir_structure(self.local_dir, date)
         local_path.mkdir(parents=True, exist_ok=True)

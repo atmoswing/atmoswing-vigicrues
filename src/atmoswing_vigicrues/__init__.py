@@ -31,7 +31,11 @@ from .preactions.transfer_sftp_in import TransferSftpIn
 from .preactions.transform_ecmwf import TransformEcmwfData
 from .preactions.transform_gfs import TransformGfsData
 from .utils import (build_date_dir_structure, check_dir_exists,
-                    check_file_exists, file_exists)
+                    check_file_exists, file_exists,
+                    use_builtin_eccodes_definitions)
+
+if has_eccodes:
+    use_builtin_eccodes_definitions()
 
 __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'Controller', 'Options', 'ExportBdApBp', 'ExportPrv', 'TransferSftpOut',

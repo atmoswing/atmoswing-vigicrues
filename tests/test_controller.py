@@ -1,4 +1,5 @@
 import datetime
+import glob
 import importlib
 import os
 import shutil
@@ -15,18 +16,15 @@ import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Needs a running version of AtmoSwing Forecaster installed
-RUN_ATMOSWING = False
-DATA_PATH = R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing'
-
-# Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = False
+# Jeu de données privé requis par les tests marqués 'atmoswing'
+DATA_PATH = os.environ.get(
+    'ASV_TEST_DATA_PATH',
+    R'D:\_Terranum\2022 DREAL AtmoSwing\Data\Python module testing')
 
 
 @pytest.fixture
-def tmp_dir():
-    tmp_dir = tempfile.TemporaryDirectory().name
-    os.mkdir(tmp_dir)
+def tmp_dir(tmp_path):
+    tmp_dir = str(tmp_path)
     batch_file = DIR_PATH + '/files/batch_file.xml'
 
     # Open the XML file
@@ -117,50 +115,52 @@ def test_controller_can_instantiate_actions():
         fct('Download GFS data', action['with'])
 
 
+@pytest.mark.atmoswing
 def test_run_atmoswing_now(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
+@pytest.mark.atmoswing
 def test_run_atmoswing_date(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_date.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
+@pytest.mark.atmoswing
 def test_run_atmoswing_past(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_past.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = get_controller_with_fixed_paths_simple(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
+@pytest.mark.atmoswing
 def test_run_atmoswing_now_full_pipeline(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = get_controller_with_fixed_paths_full(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
+@pytest.mark.atmoswing
+@pytest.mark.sftp
 def test_run_atmoswing_now_full_pipeline_with_dissemination(tmp_dir):
     config_file_name = 'config_atmoswing_now_full_with_dissemination.yaml'
     options = types.SimpleNamespace(
@@ -168,8 +168,7 @@ def test_run_atmoswing_now_full_pipeline_with_dissemination(tmp_dir):
         batch_file=tmp_dir + '/batch_file.xml'
     )
     controller = get_controller_with_fixed_paths_full(options, tmp_dir)
-    if RUN_ATMOSWING and RUN_SFTP:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
@@ -183,25 +182,25 @@ def test_special_characters_in_config_file():
     assert decoded_password == '@#°§&£¢$*[]{}()+'
 
 
+@pytest.mark.atmoswing
 def test_catches_atmoswing_when_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_full.yaml',
         batch_file=tmp_dir + '/batch_file_fail.xml'
     )
     controller = get_controller_with_fixed_paths_full(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
+@pytest.mark.atmoswing
 def test_flux_stops_when_preprocess_failing(tmp_dir):
     options = types.SimpleNamespace(
         config_file=DIR_PATH + '/files/config_atmoswing_now_failing_preaction.yaml',
         batch_file=tmp_dir + '/batch_file_fail.xml'
     )
     controller = get_controller_with_fixed_paths_preaction(options, tmp_dir)
-    if RUN_ATMOSWING:
-        controller.run()
+    controller.run()
     shutil.rmtree(tmp_dir)
 
 
@@ -368,3 +367,53 @@ def test_parse_log_file_handles_missing_log(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
     asv.Controller._parse_log_file()
     assert "n'a pas été trouvé" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('config_file', sorted(
+    os.path.basename(f) for f in glob.glob(DIR_PATH + '/files/config*.yaml')))
+def test_example_config_files_can_be_loaded(config_file, tmp_path, monkeypatch):
+    # Les répertoires relatifs des configurations sont créés dans tmp_path
+    monkeypatch.chdir(tmp_path)
+    with open(DIR_PATH + '/files/' + config_file, encoding='utf-8') as f:
+        content = f.read()
+    uses_grib = 'TransformGfsData' in content or 'TransformEcmwfData' in content
+    if uses_grib and not asv.preactions.transform_grib.has_toolbox:
+        pytest.skip("Nécessite eccodes et atmoswing-toolbox.")
+    options = types.SimpleNamespace(config_file=DIR_PATH + '/files/' + config_file)
+    asv.Controller(options)
+
+
+def test_unknown_action_is_rejected(tmp_path):
+    config_file = tmp_path / 'config.yaml'
+    config_file.write_text(
+        "pre_actions:\n"
+        "  - name: Mauvais type\n"
+        "    uses: ExportPrv\n"
+        "    with: {}\n",
+        encoding='utf-8')
+    with pytest.raises(asv.ConfigError, match="ExportPrv"):
+        asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+
+
+def test_missing_action_option_is_reported(tmp_path):
+    config_file = tmp_path / 'config.yaml'
+    config_file.write_text(
+        "post_actions:\n"
+        "  - name: Export sans répertoire\n"
+        "    uses: ExportPrv\n"
+        "    with: {}\n",
+        encoding='utf-8')
+    with pytest.raises(asv.ConfigError, match="output_dir.*Export sans répertoire"):
+        asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+
+
+def test_base_classes_cannot_be_used_as_actions(tmp_path):
+    config_file = tmp_path / 'config.yaml'
+    config_file.write_text(
+        "pre_actions:\n"
+        "  - name: Base\n"
+        "    uses: PreAction\n"
+        "    with: {}\n",
+        encoding='utf-8')
+    with pytest.raises(asv.ConfigError):
+        asv.Controller(types.SimpleNamespace(config_file=str(config_file)))

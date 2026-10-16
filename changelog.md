@@ -21,6 +21,11 @@
 
 *   Les dépendances du paquet sont désormais déclarées dans `pyproject.toml` (elles n'étaient pas installées depuis PyPI).
 *   Image Docker : le module n'était plus installé (paquet vide `UNKNOWN`, dû au pip d'Ubuntu 22.04 qui ignore la table `[project]` de `pyproject.toml`).
+*   Image Docker : les transformations GRIB (`TransformGfsData`, `TransformEcmwfData`) ne pouvaient décoder aucun fichier, la bibliothèque eccodes installée par pip chargeant les définitions de la version système désignées par `ECCODES_DEFINITION_PATH`. Ces définitions sont désormais ignorées pour le processus Python uniquement (la variable reste valable pour AtmoSwing Forecaster).
+*   Les erreurs de configuration (action inconnue, option manquante, fichier introuvable) sont signalées par un message explicite (code de retour -1) au lieu d'une trace d'exception, et une action déclarée dans la mauvaise section (ex. un export en pré-action) est refusée.
+*   Une date mal formatée (`-d`) est signalée par un message d'erreur de la ligne de commande.
+*   `TransformEcmwfData` s'affichait comme « Transformation données GFS ».
+*   Les transformations GRIB signalent l'absence du paquet `atmoswing-toolbox` à leur création, au lieu d'échouer lors de l'exécution.
 *   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
 *   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
 *   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.

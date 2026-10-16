@@ -1,14 +1,24 @@
 import json
 import os
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 
-class Dissemination:
+class Dissemination(ABC):
     """
     Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.
 
     Attributes
     ----------
+    type_name : str
+        Le nom du type de l'action (défini par les classes dérivées).
+    name : str
+        Le nom de l'action (défini par les classes dérivées).
+    local_dir : str
+        Répertoire local contenant les fichiers à diffuser (défini par les classes
+        dérivées).
+    extension : str
+        Extension des fichiers à diffuser (défini par les classes dérivées).
     _file_paths : list
         Chemins des fichiers à diffuser.
     """
@@ -27,6 +37,7 @@ class Dissemination:
         """
         self._file_paths = file_paths
 
+    @abstractmethod
     def run(self, date) -> bool:
         """
         Exécution de la diffusion.
@@ -41,7 +52,6 @@ class Dissemination:
         bool
             Vrai (True) en cas de succès, faux (False) autrement.
         """
-        raise NotImplementedError
 
     @staticmethod
     def _must_replace(file_path, remote_size):

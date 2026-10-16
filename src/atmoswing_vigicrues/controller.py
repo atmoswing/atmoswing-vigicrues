@@ -1,6 +1,5 @@
 import datetime
 import glob
-import importlib
 import subprocess
 import tempfile
 from pathlib import Path
@@ -28,9 +27,6 @@ class Controller:
         (par défaut 6 heures).
     date : datetime.datetime
         Date de la prévision.
-    existing_files : list
-        Liste des fichiers de prévision d'AtmoSwing Forecaster déjà existants pour
-        l'échéance en cours.
     pre_actions : list
         Liste des actions préalables à la prévision.
     post_actions : list
@@ -49,13 +45,12 @@ class Controller:
                 cli_options.time_increment is not None:
             self.time_increment = cli_options.time_increment
         self.date = datetime.datetime.now(datetime.timezone.utc)
-        self.existing_files = []
-        self.pre_actions = []
-        self.post_actions = []
-        self.disseminations = []
-        self._register_pre_actions()
-        self._register_post_actions()
-        self._register_disseminations()
+        self.pre_actions = self._register_actions(
+            'pre_actions', asv.PreAction, "la pré-action")
+        self.post_actions = self._register_actions(
+            'post_actions', asv.PostAction, "la post-action")
+        self.disseminations = self._register_actions(
+            'disseminations', asv.Dissemination, "la dissémination")
 
     def run(self, date=None) -> int:
         """
@@ -84,7 +79,6 @@ class Controller:
 
         try:
             self._run_pre_actions()
-            self.existing_files = self._list_atmoswing_output_files()
             self._run_atmoswing()
             post_actions_ok = self._run_post_actions()
             disseminations_ok = self._run_disseminations()
@@ -99,53 +93,57 @@ class Controller:
 
         return 0
 
-    def _register_pre_actions(self):
+    def _register_actions(self, key, base_class, label):
         """
-        Enregistre les actions préalables à la prévision
-        """
-        if self.options.has('pre_actions'):
-            for action in self.options.get('pre_actions'):
-                if 'active' in action and not action['active']:
-                    continue
-                name = action['name']
-                module = action['uses']
-                print(f"Chargement de la pre-action '{name}'")
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
-                    raise asv.Error(f"L'action {module} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.pre_actions.append(fct(name, action['with']))
+        Instancie les actions actives d'une section du fichier de configuration.
 
-    def _register_post_actions(self):
-        """
-        Enregistre les actions postérieures à la prévision
-        """
-        if self.options.has('post_actions'):
-            for action in self.options.get('post_actions'):
-                if 'active' in action and not action['active']:
-                    continue
-                name = action['name']
-                module = action['uses']
-                print(f"Chargement de la post-action '{name}'")
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
-                    raise asv.Error(f"L'action {module} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.post_actions.append(fct(name, action['with']))
+        Parameters
+        ----------
+        key : str
+            La section du fichier de configuration ('pre_actions', 'post_actions'
+            ou 'disseminations').
+        base_class : type
+            La classe de base dont les actions de cette section doivent hériter.
+        label : str
+            Le libellé du type d'action, pour les messages.
 
-    def _register_disseminations(self):
+        Returns
+        -------
+        list
+            Les actions instanciées.
+
+        Raises
+        ------
+        asv.ConfigError
+            Si une action est inconnue, n'est pas du bon type, ou si une option
+            requise n'est pas définie.
         """
-        Enregistre les actions préalables à la prévision
-        """
-        if self.options.has('disseminations'):
-            for action in self.options.get('disseminations'):
-                if 'active' in action and not action['active']:
-                    continue
-                name = action['name']
-                module = action['uses']
-                print(f"Chargement de la disseminations '{name}'")
-                if not hasattr(importlib.import_module('atmoswing_vigicrues'), module):
-                    raise asv.Error(f"L'action {module} est inconnue.")
-                fct = getattr(importlib.import_module('atmoswing_vigicrues'), module)
-                self.disseminations.append(fct(name, action['with']))
+        actions = []
+        if not self.options.has(key):
+            return actions
+
+        for action in self.options.get(key):
+            if not action.get('active', True):
+                continue
+            uses = action.get('uses')
+            name = action.get('name') or uses
+            print(f"Chargement de {label} '{name}'")
+
+            cls = getattr(asv, str(uses), None)
+            if not isinstance(cls, type) or not issubclass(cls, base_class) or \
+                    cls is base_class:
+                raise asv.ConfigError(
+                    key, f"L'action '{uses}' est inconnue en tant que {label} "
+                         f"('{name}').")
+
+            try:
+                actions.append(cls(name, action.get('with') or {}))
+            except KeyError as e:
+                raise asv.ConfigError(
+                    e.args[0], f"L'option {e} n'est pas définie pour {label} "
+                               f"'{name}'.") from e
+
+        return actions
 
     def _run_pre_actions(self):
         """
@@ -329,11 +327,6 @@ class Controller:
     def _list_atmoswing_output_files(self):
         output_dir = self.options.get('atmoswing')['with']['output_dir']
         return self._list_files(output_dir, '.nc', '%Y-%m-%d_%H')
-
-    def _get_files_for_post_actions(self):
-        files = self._list_atmoswing_output_files()
-        files = [x for x in files if x not in self.existing_files]
-        return files
 
     def _list_files(self, local_dir, ext, pattern='%Y-%m-%d_%H'):
         local_dir = asv.utils.build_date_dir_structure(local_dir, self.date)

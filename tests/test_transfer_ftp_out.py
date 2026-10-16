@@ -14,9 +14,6 @@ from atmoswing_vigicrues.disseminations.transfer_ftp_out import FtpViaProxy
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Needs a running docker container
-RUN_FTP = False
-
 
 @pytest.fixture
 def options():
@@ -36,12 +33,12 @@ def forecast_files():
     return glob.glob(DIR_PATH + "/files/atmoswing-forecasts-v2.1/2022/12/16/*.nc")
 
 
+@pytest.mark.ftp
 def test_upload_nc_succeeds(options, forecast_files):
     action = asv.TransferFtpOut('Upload nc files over FTP', options)
     action.feed(forecast_files)
     date = datetime(2022, 12, 16, 00)
-    if RUN_FTP:
-        assert action.run(date)
+    assert action.run(date)
 
 
 def _closed_port():

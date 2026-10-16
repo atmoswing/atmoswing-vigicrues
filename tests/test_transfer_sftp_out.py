@@ -11,9 +11,6 @@ import atmoswing_vigicrues as asv
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Needs a running docker container (see files/sftp-docker-instructions.txt)
-RUN_SFTP = False
-
 
 @pytest.fixture
 def options():
@@ -33,12 +30,12 @@ def forecast_files():
     return glob.glob(DIR_PATH + "/files/atmoswing-forecasts-v2.1/2022/12/16/*.nc")
 
 
+@pytest.mark.sftp
 def test_upload_nc_succeeds(options, forecast_files):
     action = asv.TransferSftpOut('Upload nc files over SFTP', options)
     action.feed(forecast_files)
     date = datetime(2022, 12, 16, 00)
-    if RUN_SFTP:
-        assert action.run(date)
+    assert action.run(date)
 
 
 def test_proxy_type_is_used_for_sftp_connection(options, forecast_files,

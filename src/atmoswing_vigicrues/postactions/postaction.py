@@ -1,9 +1,16 @@
-class PostAction:
+from abc import ABC, abstractmethod
+
+
+class PostAction(ABC):
     """
     Classe de base pour les opérations de traitement des résultats d'AtmoSwing.
 
     Attributes
     ----------
+    type_name : str
+        Le nom du type de l'action (défini par les classes dérivées).
+    name : str
+        Le nom de l'action (défini par les classes dérivées).
     _file_paths : list
         Chemins des fichiers de prévision émis par AtmoSwing.
     _metadata : dict
@@ -28,6 +35,7 @@ class PostAction:
         self._file_paths = file_paths
         self._metadata = metadata
 
+    @abstractmethod
     def run(self) -> bool:
         """
         Exécution du traitement.
@@ -37,7 +45,6 @@ class PostAction:
         bool
             Vrai (True) en cas de succès, faux (False) autrement.
         """
-        raise NotImplementedError
 
     def _get_metadata(self, key):
         if key in self._metadata:
