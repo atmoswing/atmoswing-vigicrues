@@ -1,3 +1,4 @@
+import base64
 import datetime
 import os
 import socket
@@ -217,8 +218,49 @@ def parse_proxy_type(value):
     return proxy_type
 
 
+def parse_proxy_credentials(options, proxy_type='http'):
+    """
+    Lit les identifiants du proxy ('proxy_username' et 'proxy_password').
+
+    Parameters
+    ----------
+    options: dict
+        Les options de l'action.
+    proxy_type: str
+        Le type de proxy ('http', 'socks4' ou 'socks5').
+
+    Returns
+    -------
+    tuple
+        L'utilisateur et le mot de passe (None lorsqu'ils ne sont pas définis).
+
+    Raises
+    ------
+    asv.Error
+        Si les identifiants sont incomplets ou non supportés par le type de proxy.
+    """
+    username = options.get('proxy_username')
+    password = options.get('proxy_password')
+    username = None if username is None or username == '' else str(username)
+    password = None if password is None or password == '' else str(password)
+
+    if proxy_type == 'socks4':
+        # SOCKS4 ne transmet qu'un identifiant utilisateur
+        if password is not None:
+            raise asv.Error("Le proxy SOCKS4 ne supporte pas de mot de passe "
+                            "('proxy_password').")
+    elif password is not None and username is None:
+        raise asv.Error("L'option 'proxy_username' doit être définie avec "
+                        "'proxy_password'.")
+    elif username is not None and password is None:
+        raise asv.Error("L'option 'proxy_password' doit être définie avec "
+                        "'proxy_username'.")
+
+    return username, password
+
+
 def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_port,
-                      timeout=30):
+                      timeout=30, username=None, password=None):
     """
     Ouvre une connexion TCP vers un serveur distant au travers d'un proxy.
 
@@ -236,6 +278,10 @@ def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_po
         Le port du serveur distant.
     timeout: float
         Le délai maximal (en secondes) pour l'établissement de la connexion.
+    username: str
+        L'utilisateur du proxy, si nécessaire (identifiant pour SOCKS4).
+    password: str
+        Le mot de passe de l'utilisateur du proxy, si nécessaire.
 
     Returns
     -------
@@ -245,13 +291,14 @@ def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_po
     proxy_type = parse_proxy_type(proxy_type)
     if proxy_type == 'http':
         return connect_via_http_proxy(proxy_host, proxy_port, target_host,
-                                      target_port, timeout)
+                                      target_port, timeout, username, password)
 
     try:
         sock = socks.create_connection(
             (target_host, target_port), timeout,
             proxy_type=PROXY_TYPES[proxy_type], proxy_addr=proxy_host,
-            proxy_port=proxy_port, proxy_rdns=True)
+            proxy_port=proxy_port, proxy_rdns=True,
+            proxy_username=username, proxy_password=password)
     except socks.ProxyError as e:
         raise asv.Error(f"Échec de la connexion via le proxy ({e}).") from e
     sock.settimeout(None)
@@ -259,7 +306,7 @@ def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_po
 
 
 def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
-                           timeout=30):
+                           timeout=30, username=None, password=None):
     """
     Ouvre un tunnel TCP vers un serveur distant au travers d'un proxy HTTP
     (méthode CONNECT).
@@ -276,6 +323,10 @@ def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
         Le port du serveur distant.
     timeout: float
         Le délai maximal (en secondes) pour l'établissement du tunnel.
+    username: str
+        L'utilisateur du proxy, si nécessaire (authentification Basic).
+    password: str
+        Le mot de passe de l'utilisateur du proxy, si nécessaire.
 
     Returns
     -------
@@ -290,7 +341,12 @@ def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
     sock = socket.create_connection((proxy_host, proxy_port), timeout=timeout)
     try:
         request = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\n"
-                   f"Host: {target_host}:{target_port}\r\n\r\n")
+                   f"Host: {target_host}:{target_port}\r\n")
+        if username is not None:
+            credentials = base64.b64encode(
+                f"{username}:{password or ''}".encode('utf-8')).decode('ascii')
+            request += f"Proxy-Authorization: Basic {credentials}\r\n"
+        request += "\r\n"
         sock.sendall(request.encode())
 
         # Lecture octet par octet jusqu'à la fin des en-têtes, afin de ne pas
@@ -306,6 +362,9 @@ def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
 
         status_line = response.split(b"\r\n", 1)[0].decode(errors='replace')
         status = status_line.split()
+        if len(status) >= 2 and status[1] == '407':
+            raise asv.Error(f"Le proxy requiert une authentification valide "
+                            f"('proxy_username', 'proxy_password') ({status_line}).")
         if len(status) < 2 or status[1] != '200':
             raise asv.Error(f"Échec de la connexion via le proxy ({status_line}).")
 

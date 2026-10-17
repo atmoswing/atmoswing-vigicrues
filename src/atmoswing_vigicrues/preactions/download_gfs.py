@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 
 import requests
@@ -6,6 +7,8 @@ import requests
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+logger = logging.getLogger(__name__)
 
 CLEAN_HTML = re.compile('<.*?>')
 
@@ -195,7 +198,7 @@ class DownloadGfsData(PreAction):
             )
 
             date_msg = date_ref.strftime('%d/%m/%Y %Hh')
-            print(f"  -> Téléchargement des prévisions du : {date_msg}.")
+            logger.info(f"  -> Téléchargement des prévisions du : {date_msg}.")
             forecast_date, forecast_hour = self._format_forecast_date(date_ref)
 
             for lead_time in range(0, self.lead_time_max + 1, 6):
@@ -222,11 +225,11 @@ class DownloadGfsData(PreAction):
                         r = requests.get(url, proxies=self.proxies,
                                          timeout=self.timeout)
                     except requests.exceptions.RequestException as e:
-                        print(f"  -> {e}")
-                        print("  -> Le téléchargement de GFS a échoué.")
+                        logger.error(f"  -> {e}")
+                        logger.error("  -> Le téléchargement de GFS a échoué.")
                         return False
                     except Exception:
-                        print("  -> Le téléchargement de GFS a échoué.")
+                        logger.error("  -> Le téléchargement de GFS a échoué.")
                         return False
 
                     if r.status_code == 200:
@@ -235,10 +238,10 @@ class DownloadGfsData(PreAction):
                         files_count += 1
                     else:
                         clean_text = re.sub(CLEAN_HTML, '', r.text)
-                        print(f"  -> {clean_text}")
+                        logger.error(f"  -> {clean_text}")
                         return False
 
-        print(f"  -> Nombre de fichiers téléchargés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers téléchargés : {files_count}.")
 
         return True
 

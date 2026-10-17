@@ -1,3 +1,4 @@
+import base64
 import socket
 import tempfile
 import threading
@@ -81,6 +82,47 @@ def test_connect_via_http_proxy_fails_on_refused_tunnel(fake_proxy):
         asv.utils.connect_via_http_proxy('127.0.0.1', port, 'sftp.example.org', 22)
 
 
+def test_connect_via_http_proxy_sends_credentials(fake_proxy):
+    port, received = fake_proxy(b"HTTP/1.1 200 OK\r\n\r\n")
+    sock = asv.utils.connect_via_proxy('http', '127.0.0.1', port,
+                                       'sftp.example.org', 22,
+                                       username='utilisateur', password='pàss:w')
+    sock.close()
+    expected = base64.b64encode('utilisateur:pàss:w'.encode()).decode()
+    assert f"\r\nProxy-Authorization: Basic {expected}\r\n" in received[0]
+
+
+def test_connect_via_http_proxy_without_credentials(fake_proxy):
+    port, received = fake_proxy(b"HTTP/1.1 200 OK\r\n\r\n")
+    sock = asv.utils.connect_via_http_proxy('127.0.0.1', port, 'sftp.example.org', 22)
+    sock.close()
+    assert "Proxy-Authorization" not in received[0]
+
+
+def test_connect_via_http_proxy_reports_authentication_required(fake_proxy):
+    port, _ = fake_proxy(b"HTTP/1.1 407 Proxy Authentication Required\r\n\r\n")
+    with pytest.raises(asv.Error, match="authentification"):
+        asv.utils.connect_via_http_proxy('127.0.0.1', port, 'sftp.example.org', 22)
+
+
+@pytest.mark.parametrize('options, proxy_type, expected', [
+    ({}, 'http', (None, None)),
+    ({'proxy_username': '', 'proxy_password': ''}, 'http', (None, None)),
+    ({'proxy_username': 'u', 'proxy_password': 1234}, 'socks5', ('u', '1234')),
+    ({'proxy_username': 'u'}, 'socks4', ('u', None))])
+def test_parse_proxy_credentials(options, proxy_type, expected):
+    assert asv.utils.parse_proxy_credentials(options, proxy_type) == expected
+
+
+@pytest.mark.parametrize('options, proxy_type', [
+    ({'proxy_username': 'u'}, 'http'),
+    ({'proxy_password': 'p'}, 'socks5'),
+    ({'proxy_username': 'u', 'proxy_password': 'p'}, 'socks4')])
+def test_parse_proxy_credentials_rejects_incomplete_credentials(options, proxy_type):
+    with pytest.raises(asv.Error, match="proxy_"):
+        asv.utils.parse_proxy_credentials(options, proxy_type)
+
+
 def test_connect_via_http_proxy_fails_on_closed_connection(fake_proxy):
     port, _ = fake_proxy(b"HTTP/1.1 200", close=True)
     with pytest.raises(asv.Error, match="fermé"):
@@ -142,6 +184,66 @@ def test_connect_via_socks5_proxy(fake_socks5_proxy):
         assert sock.recv(64) == b"SSH-2.0-Banner\r\n"
     # Type d'adresse 3 : le nom de domaine est résolu par le proxy
     assert received == [(3, 'sftp.example.org', 22)]
+
+
+@pytest.fixture
+def fake_socks5_auth_proxy():
+    """Proxy SOCKS5 local exigeant une authentification (RFC 1929)."""
+    server = socket.socket()
+    server.bind(('127.0.0.1', 0))
+    server.listen(1)
+    received = []
+
+    def recv_exact(conn, size):
+        data = b""
+        while len(data) < size:
+            data += conn.recv(size - len(data))
+        return data
+
+    def serve():
+        conn, _ = server.accept()
+        with conn:
+            nb_methods = recv_exact(conn, 2)[1]
+            methods = recv_exact(conn, nb_methods)
+            if 2 not in methods:
+                conn.sendall(b"\x05\xff")
+                return
+            conn.sendall(b"\x05\x02")
+            recv_exact(conn, 1)  # Version de la sous-négociation
+            username = recv_exact(conn, recv_exact(conn, 1)[0]).decode()
+            password = recv_exact(conn, recv_exact(conn, 1)[0]).decode()
+            received.append((username, password))
+            conn.sendall(b"\x01\x00")
+            recv_exact(conn, 4)
+            recv_exact(conn, recv_exact(conn, 1)[0])
+            recv_exact(conn, 2)
+            conn.sendall(b"\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x16")
+            conn.sendall(b"SSH-2.0-Banner\r\n")
+            conn.recv(1)  # Attend la fermeture côté client
+
+    thread = threading.Thread(target=serve, daemon=True)
+    thread.start()
+    yield server.getsockname()[1], received
+    thread.join(timeout=5)
+    server.close()
+
+
+def test_connect_via_socks5_proxy_with_credentials(fake_socks5_auth_proxy):
+    port, received = fake_socks5_auth_proxy
+    sock = asv.utils.connect_via_proxy('socks5', '127.0.0.1', port,
+                                       'sftp.example.org', 22,
+                                       username='utilisateur', password='secret')
+    with sock:
+        assert sock.recv(64) == b"SSH-2.0-Banner\r\n"
+    assert received == [('utilisateur', 'secret')]
+
+
+def test_connect_via_socks5_proxy_without_credentials_is_refused(
+        fake_socks5_auth_proxy):
+    port, _ = fake_socks5_auth_proxy
+    with pytest.raises(asv.Error):
+        asv.utils.connect_via_proxy('socks5', '127.0.0.1', port,
+                                    'sftp.example.org', 22, timeout=5)
 
 
 def test_connect_via_proxy_uses_http_connect_by_default(fake_proxy):

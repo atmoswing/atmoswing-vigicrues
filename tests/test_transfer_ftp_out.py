@@ -89,9 +89,30 @@ def test_ftp_via_proxy_routes_control_and_data_connections(proxied_connections,
     ftp.close()
 
     proxy = {'proxy_type': socks.HTTP, 'proxy_addr': 'proxy.local',
-             'proxy_port': 3128}
+             'proxy_port': 3128, 'proxy_username': None, 'proxy_password': None}
     assert proxied_connections == [(('ftp.example.org', 21), proxy),
                                    (('10.0.0.5', 50000), proxy)]
+
+
+def test_proxy_credentials_are_used_for_ftp_connection(options, forecast_files,
+                                                       monkeypatch):
+    options['proxy_host'] = 'proxy.local'
+    options['proxy_port'] = 3128
+    options['proxy_username'] = 'utilisateur'
+    options['proxy_password'] = 'secret'
+    calls = []
+
+    def fake_create_connection(dest_pair, timeout=None, source_address=None,
+                               **kwargs):
+        calls.append(kwargs)
+        raise OSError("arrêt du test")
+
+    monkeypatch.setattr(socks, 'create_connection', fake_create_connection)
+    action = asv.TransferFtpOut('Upload nc files over FTP', options)
+    action.feed(forecast_files)
+    assert not action.run(datetime(2022, 12, 16, 00))
+    assert calls[0]['proxy_username'] == 'utilisateur'
+    assert calls[0]['proxy_password'] == 'secret'
 
 
 def test_ftp_via_proxy_rejects_active_mode(proxied_connections):

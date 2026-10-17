@@ -1,6 +1,9 @@
+import logging
 import os
 
 import pytest
+
+from atmoswing_vigicrues.__main__ import LOG_HANDLER_NAME
 
 # Tests nécessitant une ressource externe : ignorés (et signalés comme tels) sauf
 # si la variable d'environnement correspondante vaut 1.
@@ -12,6 +15,18 @@ EXTERNAL_MARKERS = {
     'ftp': ('ASV_TEST_FTP', "un serveur FTP"),
     'network': ('ASV_TEST_NETWORK', "un accès aux serveurs NOMADS"),
 }
+
+
+@pytest.fixture(autouse=True)
+def reset_logging():
+    """Retire la configuration de la journalisation faite par main()."""
+    yield
+    root = logging.getLogger()
+    for handler in list(root.handlers):
+        if handler.get_name() == LOG_HANDLER_NAME:
+            root.removeHandler(handler)
+    root.setLevel(logging.WARNING)
+    logging.getLogger('atmoswing_vigicrues').setLevel(logging.NOTSET)
 
 
 def pytest_configure(config):

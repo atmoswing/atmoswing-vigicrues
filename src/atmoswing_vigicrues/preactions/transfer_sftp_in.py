@@ -1,6 +1,7 @@
 import bz2
 import fnmatch
 import gzip
+import logging
 import lzma
 import os
 import shutil
@@ -12,6 +13,8 @@ import paramiko
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+logger = logging.getLogger(__name__)
 
 ARCHIVE_SUFFIXES = ['.gz', '.tgz', '.xz', '.txz', '.bz2', '.tbz', '.tbz2', '.tb2']
 
@@ -51,6 +54,12 @@ class TransferSftpIn(PreAction):
             Adresse du proxy, si nécessaire.
         * proxy_port : int
             Port du proxy si nécessaire (par défaut: 1080).
+        * proxy_username : str
+            Utilisateur du proxy, si nécessaire (authentification Basic pour
+            HTTP, utilisateur/mot de passe pour SOCKS5, identifiant seul pour
+            SOCKS4).
+        * proxy_password : str
+            Mot de passe de l'utilisateur du proxy, si nécessaire.
         * remote_dir : str
             Chemin sur le serveur distant où se trouvent les fichiers.
         * known_hosts : str
@@ -90,6 +99,10 @@ class TransferSftpIn(PreAction):
         Adresse du proxy, si nécessaire.
     proxy_port : int
         Port du proxy si nécessaire (par défaut: 1080).
+    proxy_username : str
+        Utilisateur du proxy (None si non défini).
+    proxy_password : str
+        Mot de passe de l'utilisateur du proxy (None si non défini).
     host_key : paramiko.PKey
         Clé attendue du serveur (None si l'identité du serveur n'est pas vérifiée).
     """
@@ -116,6 +129,8 @@ class TransferSftpIn(PreAction):
             self.variables = None
 
         self.proxy_type = asv.utils.parse_proxy_type(options.get('proxy_type'))
+        self.proxy_username, self.proxy_password = \
+            asv.utils.parse_proxy_credentials(options, self.proxy_type)
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
@@ -161,13 +176,14 @@ class TransferSftpIn(PreAction):
             # Check if files already in the local folder (only with defined variables)
             if self.variables is not None:
                 if self._files_already_present(date):
-                    print("  -> Fichiers déjà présents localement.")
+                    logger.info("  -> Fichiers déjà présents localement.")
                     return True
 
             if self.proxy_host:
                 proxy_socket = asv.utils.connect_via_proxy(
                     self.proxy_type, self.proxy_host, self.proxy_port,
-                    self.hostname, self.port)
+                    self.hostname, self.port, username=self.proxy_username,
+                    password=self.proxy_password)
                 transport = paramiko.Transport(proxy_socket)
             else:
                 transport = paramiko.Transport((self.hostname, self.port))
@@ -188,33 +204,34 @@ class TransferSftpIn(PreAction):
             f_exist_dt, f_new_dt = self._get_files(sftp, forecast_datetime, local_path)
 
             if f_exist_dt + f_new_dt == 0:
-                print(f"  -> Pas de fichier disponible pour {forecast_datetime}.")
+                logger.warning(f"  -> Pas de fichier disponible pour "
+                               f"{forecast_datetime}.")
                 return False
 
             forecast_date = date.strftime("%Y%m%d")
             f_exist_d, f_new_d = self._get_files(sftp, forecast_date, local_path)
 
-            print(f"  -> Nombre de fichiers existants : {f_exist_d - f_new_dt}.")
-            print(f"  -> Nombre de fichiers récupérés : {f_new_dt + f_new_d}.")
+            logger.info(f"  -> Nombre de fichiers existants : {f_exist_d - f_new_dt}.")
+            logger.info(f"  -> Nombre de fichiers récupérés : {f_new_dt + f_new_d}.")
 
             return True
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
-            print(f"SFTP PasswordRequiredException {e}")
+            logger.error(f"SFTP PasswordRequiredException {e}")
         except paramiko.ssh_exception.BadAuthenticationType as e:
-            print(f"SFTP BadAuthenticationType {e}")
+            logger.error(f"SFTP BadAuthenticationType {e}")
         except paramiko.ssh_exception.AuthenticationException as e:
-            print(f"SFTP AuthenticationException {e}")
+            logger.error(f"SFTP AuthenticationException {e}")
         except paramiko.ssh_exception.ChannelException as e:
-            print(f"SFTP ChannelException {e}")
+            logger.error(f"SFTP ChannelException {e}")
         except paramiko.ssh_exception.ProxyCommandFailure as e:
-            print(f"SFTP ProxyCommandFailure {e}")
+            logger.error(f"SFTP ProxyCommandFailure {e}")
         except paramiko.ssh_exception.SSHException as e:
-            print(f"SFTP SSHException {e}")
+            logger.error(f"SFTP SSHException {e}")
         except FileNotFoundError as e:
-            print(f"SFTP FileNotFoundError {e}")
+            logger.error(f"SFTP FileNotFoundError {e}")
         except Exception as e:
-            print(f"Le rapatriement des données par SFTP a échoué ({e}).")
+            logger.error(f"Le rapatriement des données par SFTP a échoué ({e}).")
         finally:
             if sftp is not None:
                 sftp.close()

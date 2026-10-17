@@ -1,7 +1,9 @@
 import os
+import re
 
 import pytest
 
+import atmoswing_vigicrues as asv
 import atmoswing_vigicrues.__main__ as main_module
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -34,10 +36,31 @@ def test_main_rejects_invalid_date(config_file):
     assert error.value.code == 2
 
 
-def test_main_reports_invalid_configuration(tmp_path, capsys):
+def test_main_reports_invalid_configuration(tmp_path, caplog):
     ret = main_module.main([f'--config-file={tmp_path / "absent.yaml"}'])
     assert ret == -1
-    assert "La configuration est invalide" in capsys.readouterr().out
+    assert "La configuration est invalide" in caplog.text
+
+
+def test_main_logs_with_timestamp_and_level(config_file, capsys):
+    assert main_module.main([f'--config-file={config_file}']) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines
+    assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} INFO ", lines[0])
+    assert any("Prévision par AtmoSwing Forecaster désactivée" in line
+               for line in lines)
+
+
+def test_unexpected_error_is_logged_with_traceback(config_file, caplog,
+                                                   monkeypatch):
+    def fail():
+        raise ZeroDivisionError("erreur de test")
+
+    monkeypatch.setattr(asv.Controller, '_run_atmoswing', lambda self: fail())
+    assert main_module.main([f'--config-file={config_file}']) == -1
+    assert "erreur inattendue" in caplog.text
+    assert "Traceback" in caplog.text
+    assert "ZeroDivisionError" in caplog.text
 
 
 @pytest.mark.network

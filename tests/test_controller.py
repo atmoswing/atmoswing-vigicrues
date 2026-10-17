@@ -347,14 +347,14 @@ def atmoswing_controller(tmp_path, monkeypatch):
     return build
 
 
-def test_atmoswing_failure_is_reported_once(atmoswing_controller, tmp_path, capsys):
+def test_atmoswing_failure_is_reported_once(atmoswing_controller, tmp_path, caplog):
     (tmp_path / 'AtmoSwingForecaster.log').write_text("ligne du journal\n")
     # Python refuse l'option '-f' : code de retour non nul
     controller = atmoswing_controller(sys.executable)
     with pytest.raises(asv.Error, match="code de retour") as error:
         controller._run_atmoswing()
     assert "Exception" not in str(error.value)
-    assert capsys.readouterr().out.count("ligne du journal") == 1
+    assert caplog.text.count("ligne du journal") == 1
 
 
 def test_atmoswing_exception_is_reported(atmoswing_controller, tmp_path):
@@ -363,10 +363,10 @@ def test_atmoswing_exception_is_reported(atmoswing_controller, tmp_path):
         controller._run_atmoswing()
 
 
-def test_parse_log_file_handles_missing_log(tmp_path, monkeypatch, capsys):
+def test_parse_log_file_handles_missing_log(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
     asv.Controller._parse_log_file()
-    assert "n'a pas été trouvé" in capsys.readouterr().out
+    assert "n'a pas été trouvé" in caplog.text
 
 
 @pytest.mark.parametrize('config_file', sorted(

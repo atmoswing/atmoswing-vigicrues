@@ -1,5 +1,6 @@
 import bz2
 import gzip
+import logging
 import lzma
 import os
 import shutil
@@ -84,14 +85,15 @@ def test_download_cep_with_variables_succeeds(options_with_variables):
 
 
 @pytest.mark.sftp
-def test_do_not_download_if_exists(options_with_variables, capsys):
+def test_do_not_download_if_exists(options_with_variables, caplog):
     action = asv.TransferSftpIn('Get CEP data over SFTP', options_with_variables)
     date = datetime(2023, 4, 13, 12)
     assert action.run(date)
     assert count_files_recursively(options_with_variables) == 4
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    caplog.clear()
     assert action.run(date)
-    captured = capsys.readouterr()
-    assert captured.out == "  -> Fichiers déjà présents localement.\n"
+    assert caplog.messages == ["  -> Fichiers déjà présents localement."]
     shutil.rmtree(options_with_variables['local_dir'])
 
 
@@ -115,7 +117,7 @@ def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypa
     tunnels = []
     transports = []
 
-    def fake_connect_via_proxy(*args):
+    def fake_connect_via_proxy(*args, **kwargs):
         tunnels.append(args)
         return proxy_socket
 
@@ -141,6 +143,26 @@ def test_proxy_tunnel_is_used_for_sftp_connection(options_no_variables, monkeypa
                         int(options_no_variables['port']))]
     assert transports[0].sock is proxy_socket
     assert transports[0].closed
+
+
+def test_proxy_credentials_are_used_for_sftp_connection(options_no_variables,
+                                                        monkeypatch):
+    options_no_variables['proxy_host'] = 'proxy.local'
+    options_no_variables['proxy_port'] = 3128
+    options_no_variables['proxy_username'] = 'utilisateur'
+    options_no_variables['proxy_password'] = 'mot de passe é'
+    credentials = []
+
+    def fake_connect_via_proxy(*args, **kwargs):
+        credentials.append(kwargs)
+        raise asv.Error("arrêt du test")
+
+    monkeypatch.setattr(asv.utils, 'connect_via_proxy', fake_connect_via_proxy)
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+    assert not action.run(datetime(2023, 4, 13, 12))
+    assert credentials == [{'username': 'utilisateur',
+                            'password': 'mot de passe é'}]
 
 
 def test_unknown_proxy_type_is_rejected(options_no_variables):

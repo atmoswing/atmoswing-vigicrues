@@ -1,4 +1,5 @@
 import ftplib
+import logging
 import os
 
 import socks
@@ -6,6 +7,8 @@ import socks
 import atmoswing_vigicrues as asv
 
 from .dissemination import Dissemination
+
+logger = logging.getLogger(__name__)
 
 
 class FtpViaProxy(ftplib.FTP):
@@ -24,19 +27,27 @@ class FtpViaProxy(ftplib.FTP):
         Adresse du proxy.
     proxy_port : int
         Port du proxy.
+    proxy_username : str
+        Utilisateur du proxy, si nécessaire.
+    proxy_password : str
+        Mot de passe de l'utilisateur du proxy, si nécessaire.
     """
 
-    def __init__(self, proxy_type, proxy_host, proxy_port, **kwargs):
+    def __init__(self, proxy_type, proxy_host, proxy_port, proxy_username=None,
+                 proxy_password=None, **kwargs):
         self.proxy_type = proxy_type
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
+        self.proxy_username = proxy_username
+        self.proxy_password = proxy_password
         super().__init__(**kwargs)
 
     def _create_connection(self, host, port):
         return socks.create_connection(
             (host, port), self.timeout, source_address=self.source_address,
             proxy_type=self.proxy_type, proxy_addr=self.proxy_host,
-            proxy_port=self.proxy_port)
+            proxy_port=self.proxy_port, proxy_username=self.proxy_username,
+            proxy_password=self.proxy_password)
 
     def connect(self, host='', port=0, timeout=-999, source_address=None):
         if host != '':
@@ -103,6 +114,10 @@ class TransferFtpOut(Dissemination):
             Adresse du proxy, si nécessaire.
         * proxy_port : int
             Port du proxy si nécessaire (par défaut: 1080).
+        * proxy_username : str
+            Utilisateur du proxy, si nécessaire (authentification Basic).
+        * proxy_password : str
+            Mot de passe de l'utilisateur du proxy, si nécessaire.
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
 
@@ -128,6 +143,10 @@ class TransferFtpOut(Dissemination):
         Adresse du proxy, si nécessaire.
     proxy_port : int
         Port du proxy si nécessaire (par défaut: 1080).
+    proxy_username : str
+        Utilisateur du proxy (None si non défini).
+    proxy_password : str
+        Mot de passe de l'utilisateur du proxy (None si non défini).
     remote_dir : str
         Chemin sur le serveur distant où enregistrer les fichiers.
     """
@@ -163,6 +182,9 @@ class TransferFtpOut(Dissemination):
         else:
             self.proxy_host = None
 
+        self.proxy_username, self.proxy_password = \
+            asv.utils.parse_proxy_credentials(options)
+
         super().__init__()
 
     def run(self, date) -> bool:
@@ -180,12 +202,13 @@ class TransferFtpOut(Dissemination):
             Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         try:
             if self.proxy_host:
-                ftp = FtpViaProxy(self.proxy_type, self.proxy_host, self.proxy_port)
+                ftp = FtpViaProxy(self.proxy_type, self.proxy_host, self.proxy_port,
+                                  self.proxy_username, self.proxy_password)
             else:
                 ftp = ftplib.FTP()
 
@@ -206,11 +229,11 @@ class TransferFtpOut(Dissemination):
                 # If file exists remotely, upload only if it must be replaced
                 if filename in remote_files:
                     if not self._must_replace(file, self._remote_size(ftp, filename)):
-                        print(f"Le fichier {filename} existe déjà sur le serveur "
-                              f"distant.")
+                        logger.info(f"Le fichier {filename} existe déjà sur le serveur "
+                                    f"distant.")
                         continue
-                    print(f"Remplacement du fichier {filename} sur le serveur "
-                          f"distant.")
+                    logger.info(f"Remplacement du fichier {filename} sur le serveur "
+                                f"distant.")
 
                 with open(file, 'rb') as f:
                     ftp.storbinary(f'STOR {filename}', f)
@@ -220,7 +243,7 @@ class TransferFtpOut(Dissemination):
             return True
 
         except Exception as e:
-            print(f"La diffusion FTP a échoué ({e}).")
+            logger.error(f"La diffusion FTP a échoué ({e}).")
 
         if 'ftp' in locals():
             ftp.close()

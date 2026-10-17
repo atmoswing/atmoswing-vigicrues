@@ -9,8 +9,10 @@
 *   Le code de retour vaut 1 lorsque la prévision a été émise mais qu'au moins une post-action ou une dissémination a échoué.
 *   Les dépendances optionnelles (GRIB) sont disponibles via `pip install atmoswing-vigicrues[grib]`.
 *   Ajout de l'option `proxy_type` (`http`, `socks4` ou `socks5` ; par défaut `http`) pour les transferts SFTP (`TransferSftpIn` et `TransferSftpOut`).
+*   Ajout des options `proxy_username` et `proxy_password` pour l'authentification auprès du proxy (transferts SFTP et FTP) : authentification Basic pour un proxy HTTP, utilisateur et mot de passe pour SOCKS5, identifiant seul pour SOCKS4. Un refus d'authentification du proxy HTTP (407) est signalé explicitement.
 *   Ajout de l'option `known_hosts` pour les transferts SFTP : si elle est définie, la clé du serveur est vérifiée avant l'envoi du mot de passe (fichier au format OpenSSH, ex. `ssh-keyscan -p 22 serveur > known_hosts`). Recommandé.
 *   Le fichier de configuration est chargé avec `yaml.safe_load`.
+*   Les messages sont émis via le module `logging` et affichés sur la sortie standard avec l'horodatage et le niveau (ex. `2026-10-16 15:00:00 INFO ...`). Les erreurs inattendues sont accompagnées de leur trace complète, et les avertissements des bibliothèques tierces (ex. paramiko) sont affichés dans le même format. Le journal d'AtmoSwing Forecaster, affiché en cas d'échec, forme un seul message.
 *   Récupération SFTP : les fichiers compressés seuls (ex. `.grb.gz`, hors archive tar) sont désormais décompressés au lieu de faire échouer la récupération, et l'extraction des archives tar utilise le filtre de sécurité `data` lorsqu'il est disponible.
 
 *   Python 3.9 ou supérieur est requis (testé de 3.9 à 3.13).

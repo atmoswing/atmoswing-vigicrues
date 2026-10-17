@@ -43,10 +43,12 @@ def test_proxy_type_is_used_for_sftp_connection(options, forecast_files,
     options['proxy_host'] = 'proxy.local'
     options['proxy_port'] = 1080
     options['proxy_type'] = 'SOCKS5'
+    options['proxy_username'] = 'utilisateur'
+    options['proxy_password'] = 1234
     tunnels = []
 
-    def fake_connect_via_proxy(*args):
-        tunnels.append(args)
+    def fake_connect_via_proxy(*args, **kwargs):
+        tunnels.append((args, kwargs))
         raise asv.Error("arrêt du test")
 
     monkeypatch.setattr(asv.utils, 'connect_via_proxy', fake_connect_via_proxy)
@@ -56,8 +58,9 @@ def test_proxy_type_is_used_for_sftp_connection(options, forecast_files,
     action = asv.TransferSftpOut('Upload nc files over SFTP', options)
     action.feed(forecast_files)
     assert not action.run(datetime(2022, 12, 16, 00))
-    assert tunnels == [('socks5', 'proxy.local', 1080, options['hostname'],
-                        int(options['port']))]
+    assert tunnels == [(('socks5', 'proxy.local', 1080, options['hostname'],
+                         int(options['port'])),
+                        {'username': 'utilisateur', 'password': '1234'})]
 
 
 def test_unknown_proxy_type_is_rejected(options):

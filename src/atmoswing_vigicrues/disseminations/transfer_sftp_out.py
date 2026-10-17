@@ -1,3 +1,4 @@
+import logging
 import os
 
 import paramiko
@@ -5,6 +6,8 @@ import paramiko
 import atmoswing_vigicrues as asv
 
 from .dissemination import Dissemination
+
+logger = logging.getLogger(__name__)
 
 
 class TransferSftpOut(Dissemination):
@@ -37,6 +40,12 @@ class TransferSftpOut(Dissemination):
             Adresse du proxy, si nécessaire.
         * proxy_port : int
             Port du proxy si nécessaire (par défaut: 8080).
+        * proxy_username : str
+            Utilisateur du proxy, si nécessaire (authentification Basic pour
+            HTTP, utilisateur/mot de passe pour SOCKS5, identifiant seul pour
+            SOCKS4).
+        * proxy_password : str
+            Mot de passe de l'utilisateur du proxy, si nécessaire.
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
         * known_hosts : str
@@ -68,6 +77,10 @@ class TransferSftpOut(Dissemination):
         Adresse du proxy, si nécessaire.
     proxy_port : int
         Port du proxy si nécessaire (par défaut: 8080).
+    proxy_username : str
+        Utilisateur du proxy (None si non défini).
+    proxy_password : str
+        Mot de passe de l'utilisateur du proxy (None si non défini).
     remote_dir : str
         Chemin sur le serveur distant où enregistrer les fichiers.
     host_key : paramiko.PKey
@@ -89,6 +102,8 @@ class TransferSftpOut(Dissemination):
         self.remote_dir = options['remote_dir']
 
         self.proxy_type = asv.utils.parse_proxy_type(options.get('proxy_type'))
+        self.proxy_username, self.proxy_password = \
+            asv.utils.parse_proxy_credentials(options, self.proxy_type)
 
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
@@ -128,14 +143,15 @@ class TransferSftpOut(Dissemination):
             Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         try:
             if self.proxy_host:
                 proxy_socket = asv.utils.connect_via_proxy(
                     self.proxy_type, self.proxy_host, self.proxy_port,
-                    self.hostname, self.port)
+                    self.hostname, self.port, username=self.proxy_username,
+                    password=self.proxy_password)
                 transport = paramiko.Transport(proxy_socket)
 
             else:
@@ -165,11 +181,11 @@ class TransferSftpOut(Dissemination):
                     remote_size = None
                 else:
                     if not self._must_replace(file, remote_size):
-                        print(f"Le fichier {filename} existe déjà sur le serveur "
-                              f"distant.")
+                        logger.info(f"Le fichier {filename} existe déjà sur le serveur "
+                                    f"distant.")
                         continue
-                    print(f"Remplacement du fichier {filename} sur le serveur "
-                          f"distant.")
+                    logger.info(f"Remplacement du fichier {filename} sur le serveur "
+                                f"distant.")
 
                 sftp.put(file, filename)
 
@@ -179,21 +195,21 @@ class TransferSftpOut(Dissemination):
             return True
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
-            print(f"SFTP PasswordRequiredException {e}")
+            logger.error(f"SFTP PasswordRequiredException {e}")
         except paramiko.ssh_exception.BadAuthenticationType as e:
-            print(f"SFTP BadAuthenticationType {e}")
+            logger.error(f"SFTP BadAuthenticationType {e}")
         except paramiko.ssh_exception.AuthenticationException as e:
-            print(f"SFTP AuthenticationException {e}")
+            logger.error(f"SFTP AuthenticationException {e}")
         except paramiko.ssh_exception.ChannelException as e:
-            print(f"SFTP ChannelException {e}")
+            logger.error(f"SFTP ChannelException {e}")
         except paramiko.ssh_exception.ProxyCommandFailure as e:
-            print(f"SFTP ProxyCommandFailure {e}")
+            logger.error(f"SFTP ProxyCommandFailure {e}")
         except paramiko.ssh_exception.SSHException as e:
-            print(f"SFTP SSHException {e}")
+            logger.error(f"SFTP SSHException {e}")
         except FileNotFoundError as e:
-            print(f"SFTP FileNotFoundError {e}")
+            logger.error(f"SFTP FileNotFoundError {e}")
         except Exception as e:
-            print(f"La diffusion SFTP a échoué ({e}).")
+            logger.error(f"La diffusion SFTP a échoué ({e}).")
 
         if 'sftp' in locals():
             sftp.close()

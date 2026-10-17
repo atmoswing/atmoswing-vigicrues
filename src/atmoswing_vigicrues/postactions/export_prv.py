@@ -1,4 +1,5 @@
 import datetime
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,8 @@ import numpy as np
 import atmoswing_vigicrues as asv
 
 from .postaction import PostAction
+
+logger = logging.getLogger(__name__)
 
 
 class ExportPrv(PostAction):
@@ -82,7 +85,7 @@ class ExportPrv(PostAction):
             Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         files_count = 0
@@ -118,7 +121,7 @@ class ExportPrv(PostAction):
 
             files_count += 1
 
-        print(f"  -> Nombre de fichiers exportés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers exportés : {files_count}.")
 
         return True
 

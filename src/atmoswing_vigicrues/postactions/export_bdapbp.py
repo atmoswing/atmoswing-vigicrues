@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +8,8 @@ import numpy as np
 import atmoswing_vigicrues as asv
 
 from .postaction import PostAction
+
+logger = logging.getLogger(__name__)
 
 
 class ExportBdApBp(PostAction):
@@ -101,7 +104,7 @@ class ExportBdApBp(PostAction):
             (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         files_count = 0
@@ -146,7 +149,8 @@ class ExportBdApBp(PostAction):
                     nc_file.close()
 
             if self.status != 0:
-                print(f"  -> Erreur {self.status} pour {file.name} : {self.message}")
+                logger.warning(f"  -> Erreur {self.status} pour {file.name} : "
+                               f"{self.message}")
                 errors_count += 1
 
             exported_analogs = "full"
@@ -175,7 +179,7 @@ class ExportBdApBp(PostAction):
 
             files_count += 1
 
-        print(f"  -> Nombre de fichiers exportés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers exportés : {files_count}.")
 
         return errors_count == 0
 

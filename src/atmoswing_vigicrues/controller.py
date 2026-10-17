@@ -1,10 +1,13 @@
 import datetime
 import glob
+import logging
 import subprocess
 import tempfile
 from pathlib import Path
 
 import atmoswing_vigicrues as asv
+
+logger = logging.getLogger(__name__)
 
 
 class Controller:
@@ -82,13 +85,17 @@ class Controller:
             self._run_atmoswing()
             post_actions_ok = self._run_post_actions()
             disseminations_ok = self._run_disseminations()
-        except Exception as e:
-            print("La prévision a échoué.")
-            print(f"Erreur: {e}")
+        except asv.Error as e:
+            logger.error(f"La prévision a échoué. Erreur: {e}")
+            return -1
+        except Exception:
+            # Erreur inattendue : la trace complète est journalisée
+            logger.exception("La prévision a échoué (erreur inattendue).")
             return -1
 
         if not post_actions_ok or not disseminations_ok:
-            print("La prévision a été émise, mais certaines actions ont échoué.")
+            logger.warning("La prévision a été émise, mais certaines actions ont "
+                           "échoué.")
             return 1
 
         return 0
@@ -127,7 +134,7 @@ class Controller:
                 continue
             uses = action.get('uses')
             name = action.get('name') or uses
-            print(f"Chargement de {label} '{name}'")
+            logger.info(f"Chargement de {label} '{name}'")
 
             cls = getattr(asv, str(uses), None)
             if not isinstance(cls, type) or not issubclass(cls, base_class) or \
@@ -171,21 +178,21 @@ class Controller:
         while True:
             success = True
             for action in self.pre_actions:
-                print(f"Exécution de : '{action.type_name}' [{action.name}]")
+                logger.info(f"Exécution de : '{action.type_name}' [{action.name}]")
                 if not action.run(self.date):
                     success = False
                     break
             if success:
-                print("  -> Exécution correcte.")
+                logger.info("  -> Exécution correcte.")
                 return
 
             attempts_hours += attempts_step_hours
             if attempts_hours >= attempts_max_hours:
                 break
-            print("  -> Recul de l'heure de la prévision.")
+            logger.warning("  -> Recul de l'heure de la prévision.")
             self._back_in_time(attempts_step_hours)
 
-        print("  -> Échec de l'exécution.")
+        logger.error("  -> Échec de l'exécution.")
         raise asv.Error("Nombre maximum de tentatives atteint pour les pré-actions.")
 
     def _run_atmoswing(self):
@@ -194,30 +201,30 @@ class Controller:
         """
         run = self.options.get('atmoswing')
         if 'active' in run and run['active'] is False:
-            print("  -> Prévision par AtmoSwing Forecaster désactivée.")
+            logger.info("  -> Prévision par AtmoSwing Forecaster désactivée.")
             return True
 
         name = run['name']
         options = run['with']
         cmd = self._build_atmoswing_cmd(options)
-        print(f"Exécution de : '{name}'")
-        print(f"Prévision pour la date : {self.date.strftime('%Y-%m-%d %H')}")
-        print("Commande: " + ' '.join(cmd))
+        logger.info(f"Exécution de : '{name}'")
+        logger.info(f"Prévision pour la date : {self.date.strftime('%Y-%m-%d %H')}")
+        logger.info("Commande: " + ' '.join(cmd))
 
         try:
             ret = subprocess.run(cmd, capture_output=True)
         except Exception as e:
-            print("  -> Échec de l'exécution.")
+            logger.error("  -> Échec de l'exécution.")
             self._parse_log_file()
             raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}") from e
 
         if ret.returncode != 0:
-            print("  -> Échec de l'exécution.")
+            logger.error("  -> Échec de l'exécution.")
             self._parse_log_file()
             raise asv.Error(f"Erreur de AtmoSwing Forecaster (code de retour "
                             f"{ret.returncode}).")
 
-        print("  -> Exécution correcte.")
+        logger.info("  -> Exécution correcte.")
 
     def _build_atmoswing_cmd(self, options):
         now_str = self.date.strftime("%Y%m%d%H")
@@ -270,17 +277,17 @@ class Controller:
 
         files = self._list_atmoswing_output_files()
         if len(files) == 0:
-            print("  -> Aucun nouveau fichier à traiter en post-action.")
+            logger.info("  -> Aucun nouveau fichier à traiter en post-action.")
             return True
 
         all_ok = True
         for action in self.post_actions:
-            print(f"Exécution de : '{action.type_name}' [{action.name}]")
+            logger.info(f"Exécution de : '{action.type_name}' [{action.name}]")
             action.feed(files, {'forecast_date': self.date})
             if action.run():
-                print("  -> Exécution correcte.")
+                logger.info("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution.")
+                logger.error("  -> Échec de l'exécution.")
                 all_ok = False
 
         return all_ok
@@ -300,15 +307,15 @@ class Controller:
 
         all_ok = True
         for action in self.disseminations:
-            print(f"Exécution de : '{action.type_name}' [{action.name}]")
+            logger.info(f"Exécution de : '{action.type_name}' [{action.name}]")
             local_dir = action.local_dir
             extension = action.extension
             files = self._list_files(local_dir, extension)
             action.feed(files)
             if action.run(self.date):
-                print("  -> Exécution correcte.")
+                logger.info("  -> Exécution correcte.")
             else:
-                print("  -> Échec de l'exécution.")
+                logger.error("  -> Échec de l'exécution.")
                 all_ok = False
 
         return all_ok
@@ -339,9 +346,9 @@ class Controller:
         tmp_dir = Path(tempfile.gettempdir())
         log_file = tmp_dir / "AtmoSwingForecaster.log"
         if not log_file.exists():
-            print(f"  -> Le journal des logs n'a pas été trouvé ({str(log_file)}).")
+            logger.warning(f"  -> Le journal des logs n'a pas été trouvé "
+                           f"({str(log_file)}).")
             return
         with open(str(log_file), errors='replace') as file:
-            for item in file:
-                content = item.replace("\r\n", "").replace("\n", "")
-                print(f"     | {content}")
+            lines = [f"     | {item.rstrip()}" for item in file]
+        logger.error("Journal d'AtmoSwing Forecaster :\n" + "\n".join(lines))
