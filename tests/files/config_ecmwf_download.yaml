@@ -1,0 +1,34 @@
+# Exemple de fichier de configuration : téléchargement direct des prédicteurs du
+# CEP (données ouvertes ECMWF), en remplacement du rapatriement par SFTP.
+# Les fichiers produits (CEP_Z_YYYYMMDDHH00.grb, CEP_R_..., CEP_TCWV_...) sont
+# lus par AtmoSwing (jeu de données Custom_Vigicrues_IFS, au format GRIB2).
+
+atmoswing:
+  name: Forecast now
+  active: False
+  with:
+    atmoswing_path: 'C:\Program Files\AtmoSwing\atmoswing-forecaster.exe'
+    batch_file: 'files/batch_file.xml'
+    output_dir: '__tmp_dir__\output'
+    target: 'now'
+
+pre_actions:
+  - name: Download ECMWF data
+    uses: DownloadEcmwfData
+    with:
+      output_dir: '__data_cache__/CEP'
+      variables: ['z', 'r', 'tcwv']
+      levels:
+        z: [300, 400, 500, 600, 700, 850, 925, 1000]
+        r: [850]
+      domain: [-20, 30, 20, 65]
+      resolution: 0.25
+      lead_time_max: 192
+      time_step: 6
+      run_hours: [0, 12]
+      source: 'ecmwf'
+      attempts_max_hours: 24
+      attempts_step_hours: 6
+      proxies:
+        http: ''
+        https: ''

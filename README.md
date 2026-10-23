@@ -15,7 +15,7 @@ Objectif
 
 Le module a pour but la gestion du flux de la prévision par AtmoSwing. Il permet :
 
-* de télécharger les fichiers de sortie de modèles météo (p. ex. GFS),
+* de télécharger les fichiers de sortie de modèles météo (GFS et CEP/ECMWF, directement depuis les données ouvertes des fournisseurs),
 * de transformer de tels fichiers en un format netCDF générique,
 * d'exécuter les prévisions par AtmoSwing,
 * d'extraire les résultats en d'autres formats (p.ex. json),

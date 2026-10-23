@@ -379,6 +379,9 @@ def test_example_config_files_can_be_loaded(config_file, tmp_path, monkeypatch):
     uses_grib = 'TransformGfsData' in content or 'TransformEcmwfData' in content
     if uses_grib and not asv.preactions.transform_grib.has_toolbox:
         pytest.skip("Nécessite eccodes et atmoswing-toolbox.")
+    if 'DownloadEcmwfData' in content and not (
+            asv.preactions.download_ecmwf.has_ecmwf_opendata and asv.has_eccodes):
+        pytest.skip("Nécessite ecmwf-opendata et eccodes.")
     options = types.SimpleNamespace(config_file=DIR_PATH + '/files/' + config_file)
     asv.Controller(options)
 

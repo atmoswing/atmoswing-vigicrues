@@ -3,46 +3,39 @@
 
 ## Non publié
 
+### Ajouts
+
+*   Pré-action `DownloadEcmwfData` : téléchargement des prédicteurs du CEP depuis les données ouvertes ECMWF (`ecmwf-opendata`), en remplacement du dépôt SFTP. Les champs GRIB2 sont découpés sur le domaine, sans conversion (AtmoSwing lisant les fichiers du CEP en GRIB2 requis), avec reprise des téléchargements interrompus.
+*   Options `proxy_type` (`http`, `socks4`, `socks5`), `proxy_username` et `proxy_password` pour les transferts SFTP et FTP.
+*   Option `known_hosts` pour vérifier la clé du serveur SFTP (recommandé).
+*   Option `timeout` pour le téléchargement des données GFS.
+*   Dépendances optionnelles via `pip install atmoswing-vigicrues[grib]`.
+
 ### Changements
 
-*   Le flux s'interrompt (code de retour -1) lorsque les pré-actions échouent pour toutes les dates tentées, au lieu de lancer AtmoSwing sur une date sans données.
-*   Le code de retour vaut 1 lorsque la prévision a été émise mais qu'au moins une post-action ou une dissémination a échoué.
-*   Les dépendances optionnelles (GRIB) sont disponibles via `pip install atmoswing-vigicrues[grib]`.
-*   Ajout de l'option `proxy_type` (`http`, `socks4` ou `socks5` ; par défaut `http`) pour les transferts SFTP (`TransferSftpIn` et `TransferSftpOut`).
-*   Ajout des options `proxy_username` et `proxy_password` pour l'authentification auprès du proxy (transferts SFTP et FTP) : authentification Basic pour un proxy HTTP, utilisateur et mot de passe pour SOCKS5, identifiant seul pour SOCKS4. Un refus d'authentification du proxy HTTP (407) est signalé explicitement.
-*   Ajout de l'option `known_hosts` pour les transferts SFTP : si elle est définie, la clé du serveur est vérifiée avant l'envoi du mot de passe (fichier au format OpenSSH, ex. `ssh-keyscan -p 22 serveur > known_hosts`). Recommandé.
-*   Le fichier de configuration est chargé avec `yaml.safe_load`.
-*   Les messages sont émis via le module `logging` et affichés sur la sortie standard avec l'horodatage et le niveau (ex. `2026-10-16 15:00:00 INFO ...`). Les erreurs inattendues sont accompagnées de leur trace complète, et les avertissements des bibliothèques tierces (ex. paramiko) sont affichés dans le même format. Le journal d'AtmoSwing Forecaster, affiché en cas d'échec, forme un seul message.
-*   Récupération SFTP : les fichiers compressés seuls (ex. `.grb.gz`, hors archive tar) sont désormais décompressés au lieu de faire échouer la récupération, et l'extraction des archives tar utilise le filtre de sécurité `data` lorsqu'il est disponible.
-
-*   Python 3.9 ou supérieur est requis (testé de 3.9 à 3.13).
-*   Image Docker : l'image de base AtmoSwing Forecaster est épinglée par digest (mise à jour via Dependabot), l'image est vérifiée avant publication, et le paquet `openssh-client` (fournissant `ssh-keyscan`) remplace `ssh`.
-*   Intégration continue : flake8 bloque désormais le build, les tests couvrent Python 3.9 à 3.13 et les distributions sont vérifiées avec `twine check`. La publication sur PyPI utilise le « trusted publishing » (plus de jeton d'API).
+*   Codes de retour : -1 si les pré-actions échouent pour toutes les dates tentées (AtmoSwing n'est plus lancé), 1 si une post-action ou une dissémination échoue.
+*   Messages émis via `logging`, avec horodatage et niveau.
+*   Configuration chargée avec `yaml.safe_load`.
+*   Récupération SFTP : décompression des fichiers `.gz` seuls et extraction sécurisée des archives tar.
+*   Python 3.9 ou supérieur requis.
+*   Image Docker de base épinglée par digest et vérifiée avant publication.
+*   CI : flake8 bloquant, tests de Python 3.9 à 3.13, publication PyPI par « trusted publishing ».
 
 ### Corrections
 
-*   Les dépendances du paquet sont désormais déclarées dans `pyproject.toml` (elles n'étaient pas installées depuis PyPI).
-*   Image Docker : le module n'était plus installé (paquet vide `UNKNOWN`, dû au pip d'Ubuntu 22.04 qui ignore la table `[project]` de `pyproject.toml`).
-*   Image Docker : les transformations GRIB (`TransformGfsData`, `TransformEcmwfData`) ne pouvaient décoder aucun fichier, la bibliothèque eccodes installée par pip chargeant les définitions de la version système désignées par `ECCODES_DEFINITION_PATH`. Ces définitions sont désormais ignorées pour le processus Python uniquement (la variable reste valable pour AtmoSwing Forecaster).
-*   Les erreurs de configuration (action inconnue, option manquante, fichier introuvable) sont signalées par un message explicite (code de retour -1) au lieu d'une trace d'exception, et une action déclarée dans la mauvaise section (ex. un export en pré-action) est refusée.
-*   Une date mal formatée (`-d`) est signalée par un message d'erreur de la ligne de commande.
+*   Les dépendances du paquet n'étaient pas installées depuis PyPI.
+*   Image Docker : le module n'était pas installé et les transformations GRIB ne pouvaient décoder aucun fichier.
+*   Les erreurs de configuration et les dates mal formatées sont signalées par un message explicite.
+*   `python -m atmoswing_vigicrues` transmet le code de retour au système.
+*   Proxys : le transfert FTP ne détourne plus toutes les connexions du processus, la récupération SFTP passe réellement par le proxy HTTP, et les proxys vides de `DownloadGfsData` sont ignorés.
+*   Transferts SFTP/FTP : connexions fermées, échecs signalés sans exception, répertoire FTP vide accepté.
+*   Diffusion : les exports JSON en erreur sont remplacés sur le serveur distant, et une diffusion sans fichier n'est plus un échec.
+*   Export BdApBp : les fichiers en erreur sont régénérés et les codes d'erreur 100 et 110 sont conservés.
+*   Export PRV : les fichiers netCDF sont toujours fermés.
+*   Dates MJD infra-journalières erronées.
+*   Erreurs d'AtmoSwing Forecaster signalées deux fois.
 *   `TransformEcmwfData` s'affichait comme « Transformation données GFS ».
-*   Les transformations GRIB signalent l'absence du paquet `atmoswing-toolbox` à leur création, au lieu d'échouer lors de l'exécution.
-*   Une diffusion sans fichier à transmettre n'est plus considérée comme un échec (code de retour 0 au lieu de 1).
-*   Téléchargement GFS : seuls les proxys renseignés de l'option `proxies` sont utilisés (une valeur vide, ex. `https: ''`, était transmise telle quelle), et la documentation de l'option est corrigée.
-*   `python -m atmoswing_vigicrues` transmet désormais le code de retour au système.
-*   Le transfert FTP via proxy ne remplace plus `socket.socket` pour tout le processus (ce qui faisait passer toutes les connexions suivantes, SFTP ou HTTP, par le proxy FTP).
-*   Le transfert FTP retourne un échec au lieu de lever une exception lorsque la connexion n'a pas pu être établie.
-*   Correction du support des proxys HTTP dans la récupération SFTP (`TransferSftpIn`), qui ne passait pas réellement par le proxy.
-*   La connexion SFTP via proxy HTTP accepte toute réponse 200 du proxy (pas uniquement « Connection established »), applique un délai maximal et ne consomme plus la bannière SSH du serveur.
-*   La connexion SFTP de `TransferSftpIn` est désormais fermée lorsqu'aucun fichier n'est disponible.
-*   Export BdApBp : un fichier contenant une erreur est régénéré lors de l'exécution suivante (il était conservé indéfiniment), les codes d'erreur 100 (fichier absent) et 110 (fichier corrompu) ne sont plus remplacés par 200, et l'export signale un échec lorsqu'un fichier est en erreur.
-*   Export PRV : les fichiers netCDF sont toujours fermés, y compris lorsque l'export existe déjà ou en cas d'erreur.
-*   Conversion des dates MJD : les dates infra-journalières (ex. horaires) enregistrées en float32 par AtmoSwing étaient erronées (calcul en float32 et troncature) ; elles sont désormais arrondies à l'heure.
-*   Les erreurs d'AtmoSwing Forecaster ne sont plus signalées (ni le journal affiché) deux fois, et l'absence du journal ne provoque plus d'exception.
-*   Ajout d'un délai maximal (option `timeout`, 120 s par défaut) pour le téléchargement des données GFS.
-*   Diffusion SFTP/FTP : les exports JSON en erreur déjà présents sur le serveur distant sont désormais remplacés (un export en erreur est toujours transmis, un export réussi remplace une copie distante de taille différente). Les autres fichiers ne sont jamais écrasés.
-*   Diffusion FTP : un répertoire distant vide ne provoque plus d'erreur (certains serveurs répondent par une erreur à la commande NLST), et les messages sont désormais en français.
+*   Les transformations GRIB signalent l'absence d'`atmoswing-toolbox` dès leur création.
 
 
 ## v1.2.0 - 11 Avril 2025

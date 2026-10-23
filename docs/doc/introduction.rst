@@ -20,7 +20,7 @@ Objectif
 
 Le module a pour but la gestion du flux de la prévision par AtmoSwing. Il permet :
 
-* de télécharger les fichiers de sortie de modèles météo (p. ex. GFS),
+* de télécharger les fichiers de sortie de modèles météo (GFS et CEP/ECMWF, directement depuis les données ouvertes des fournisseurs),
 * de transformer de tels fichiers en un format netCDF générique,
 * d'exécuter les prévisions par AtmoSwing,
 * d'extraire les résultats en d'autres formats (p.ex. json),
@@ -100,6 +100,18 @@ Un exemple de fichier de configuration est présenté ci-dessous :
             http: ''
             https: ''
 
+      - name: Download ECMWF data
+        uses: DownloadEcmwfData
+        active: True
+        with:
+          output_dir: 'D:\atmoswing\cep'
+          variables: ['z', 'r', 'tcwv']
+          levels:
+            z: [300, 400, 500, 600, 700, 850, 925, 1000]
+            r: [850]
+          domain: [-20, 30, 20, 65]
+          lead_time_max: 192
+
     post_actions:
       - name: Export BdApBp
         uses: ExportBdApBp
@@ -167,6 +179,6 @@ Structure
 Le schéma ci-dessous présente la structure des classes principales du module.
 
 .. currentmodule:: atmoswing_vigicrues
-.. inheritance-diagram:: Controller PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData PostAction ExportBdApBp ExportPrv Dissemination TransferSftpOut TransferFtpOut
+.. inheritance-diagram:: Controller PreAction TransferSftpIn DownloadGfsData DownloadEcmwfData TransformGfsData TransformEcmwfData PostAction ExportBdApBp ExportPrv Dissemination TransferSftpOut TransferFtpOut
    :parts: 1
 
