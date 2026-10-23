@@ -10,6 +10,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Trusted publishing : PyPI authentifie le workflow via un jeton OIDC
+    # (éditeur configuré sur PyPI pour atmoswing/atmoswing-vigicrues et ce fichier)
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,5 +31,3 @@ jobs:
           twine check --strict dist/*
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}

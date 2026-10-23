@@ -17,7 +17,7 @@
 
 *   Python 3.9 ou supérieur est requis (testé de 3.9 à 3.13).
 *   Image Docker : l'image de base AtmoSwing Forecaster est épinglée par digest (mise à jour via Dependabot), l'image est vérifiée avant publication, et le paquet `openssh-client` (fournissant `ssh-keyscan`) remplace `ssh`.
-*   Intégration continue : flake8 bloque désormais le build, les tests couvrent Python 3.9 à 3.13 et les distributions sont vérifiées avec `twine check`.
+*   Intégration continue : flake8 bloque désormais le build, les tests couvrent Python 3.9 à 3.13 et les distributions sont vérifiées avec `twine check`. La publication sur PyPI utilise le « trusted publishing » (plus de jeton d'API).
 
 ### Corrections
 
