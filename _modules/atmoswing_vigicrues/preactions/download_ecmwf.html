@@ -1,0 +1,600 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>atmoswing_vigicrues.preactions.download_ecmwf &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            AtmoSwing Vigicrues
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/module.html">Composants</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">AtmoSwing Vigicrues</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">atmoswing_vigicrues.preactions.download_ecmwf</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for atmoswing_vigicrues.preactions.download_ecmwf</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreAction</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecmwf.opendata</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">has_ecmwf_opendata</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">has_ecmwf_opendata</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Variables disponibles : (paramètre des données ouvertes, type de niveau)</span>
+<span class="n">VARIABLES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'z'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'z'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'gh'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'gh'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'t'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'t'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'r'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'r'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'q'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'w'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'w'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'u'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'u'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'v'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'v'</span><span class="p">,</span> <span class="s1">'pl'</span><span class="p">),</span>
+    <span class="s1">'tcwv'</span><span class="p">:</span> <span class="p">(</span><span class="s1">'tcwv'</span><span class="p">,</span> <span class="s1">'sfc'</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">RESOLUTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="mf">0.25</span><span class="p">:</span> <span class="s1">'0p25'</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">:</span> <span class="s1">'0p1'</span><span class="p">}</span>
+
+<span class="c1"># Les échéances sont horaires jusqu'à 144 h (pas de 3 h), puis par pas de 6 h</span>
+<span class="n">LEAD_TIME_3H_MAX</span> <span class="o">=</span> <span class="mi">144</span>
+
+<span class="c1"># Échéance maximale des runs de 00 h et 12 h</span>
+<span class="n">LEAD_TIME_MAX</span> <span class="o">=</span> <span class="mi">360</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_IgnoreConnectionLimitNotice</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Ignore l'avertissement générique du client sur la limite de connexions</span>
+<span class="sd">    simultanées au portail, émis à chaque exécution.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"To ensure the stability"</span><span class="p">)</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'ecmwf.opendata.utils'</span><span class="p">)</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">_IgnoreConnectionLimitNotice</span><span class="p">())</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_TimeoutAdapter</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">HTTPAdapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Adaptateur requests appliquant un délai maximal par défaut aux requêtes."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'timeout'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">'timeout'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DownloadEcmwfData">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.DownloadEcmwfData">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DownloadEcmwfData</span><span class="p">(</span><span class="n">PreAction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes</span>
+<span class="sd">    (open data), à l'aide du client officiel 'ecmwf-opendata'.</span>
+
+<span class="sd">    Les champs GRIB2 des données ouvertes sont découpés sur le domaine demandé</span>
+<span class="sd">    (sans autre modification) et enregistrés, un fichier par variable et par run :</span>
+<span class="sd">    '&lt;prefix&gt;_&lt;VARIABLE&gt;_&lt;YYYYMMDDHH&gt;00.grb', dans l'arborescence YYYY/MM/DD du</span>
+<span class="sd">    répertoire cible. Ces fichiers sont lus par le jeu de données</span>
+<span class="sd">    'Custom_Vigicrues_IFS' d'AtmoSwing (version lisant les fichiers du CEP au</span>
+<span class="sd">    format GRIB2).</span>
+
+<span class="sd">    Un fichier n'est écrit qu'une fois complet : les fichiers déjà présents sont</span>
+<span class="sd">    ignorés, et une exécution interrompue reprend avec les variables manquantes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Le nom de l'action</span>
+<span class="sd">    options: dict</span>
+<span class="sd">        Un dictionnaire contenant les options de l'action. Les champs possibles sont:</span>
+
+<span class="sd">        * output_dir : str</span>
+<span class="sd">            Répertoire cible pour l'enregistrement des fichiers.</span>
+<span class="sd">        * variables : list</span>
+<span class="sd">            Variables à télécharger : 'z' (géopotentiel), 'r' (humidité relative),</span>
+<span class="sd">            'tcwv' (eau précipitable), ainsi que 'gh', 't', 'q', 'w', 'u' et 'v'.</span>
+<span class="sd">            Valeur par défaut : ['z', 'r', 'tcwv']</span>
+<span class="sd">        * levels : list ou dict</span>
+<span class="sd">            Niveaux de pression (hPa) des variables en altitude. Une liste</span>
+<span class="sd">            s'applique à toutes les variables ; un dictionnaire permet de</span>
+<span class="sd">            définir les niveaux par variable (ex. {'z': [500, 1000], 'r': [850]}).</span>
+<span class="sd">            Valeur par défaut : [300, 400, 500, 600, 700, 850, 925, 1000]</span>
+<span class="sd">        * domain : list</span>
+<span class="sd">            Domaine à extraire : [lon. ouest, lon. est, lat. sud, lat. nord], en</span>
+<span class="sd">            degrés, aligné sur la grille.</span>
+<span class="sd">            Valeur par défaut : [-20, 30, 20, 65]</span>
+<span class="sd">        * resolution : float</span>
+<span class="sd">            Résolution spatiale des données (0.25 ou 0.1).</span>
+<span class="sd">            Valeur par défaut : 0.25</span>
+<span class="sd">        * lead_time_max : int</span>
+<span class="sd">            Échéance maximale de la prévision en heures (360 au maximum).</span>
+<span class="sd">            Valeur par défaut : 192</span>
+<span class="sd">        * time_step : int</span>
+<span class="sd">            Pas de temps des échéances en heures (3 ou un multiple de 6 ; au-delà</span>
+<span class="sd">            de 144 h, seules les échéances multiples de 6 h existent).</span>
+<span class="sd">            Valeur par défaut : 6</span>
+<span class="sd">        * run_hours : list</span>
+<span class="sd">            Heures des runs à télécharger. Pour une autre heure, l'action échoue</span>
+<span class="sd">            et la date de la prévision est reculée.</span>
+<span class="sd">            Valeur par défaut : [0, 12]</span>
+<span class="sd">        * prefix : str</span>
+<span class="sd">            Préfixe des fichiers produits.</span>
+<span class="sd">            Valeur par défaut : 'CEP'</span>
+<span class="sd">        * source : str</span>
+<span class="sd">            Serveur des données : 'ecmwf', 'aws', 'azure', 'google' ou une URL.</span>
+<span class="sd">            Valeur par défaut : 'ecmwf'</span>
+<span class="sd">        * proxies : dict</span>
+<span class="sd">            Les proxys à utiliser (si nécessaire), par protocole, au format de la</span>
+<span class="sd">            bibliothèque requests. Exemple :</span>
+<span class="sd">            {'http': 'http://user:pass@proxy:3128', 'https': 'http://proxy:3128'}</span>
+<span class="sd">        * maximum_retries : int</span>
+<span class="sd">            Nombre maximal de tentatives par requête en cas d'erreur réseau.</span>
+<span class="sd">            Valeur par défaut : 3</span>
+<span class="sd">        * retry_after : int</span>
+<span class="sd">            Délai (en secondes) entre deux tentatives.</span>
+<span class="sd">            Valeur par défaut : 30</span>
+<span class="sd">        * timeout : float</span>
+<span class="sd">            Délai maximal d'attente du serveur (en secondes) pour chaque requête.</span>
+<span class="sd">            Valeur par défaut : 120</span>
+<span class="sd">        * attempts_max_hours : int</span>
+<span class="sd">            Décalage temporel autorisé pour rechercher d'anciens fichiers</span>
+<span class="sd">        * attempts_step_hours : int</span>
+<span class="sd">            Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de l'action</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l'action</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Répertoire cible pour l'enregistrement des fichiers.</span>
+<span class="sd">    variables : list</span>
+<span class="sd">        Variables à télécharger (en minuscules).</span>
+<span class="sd">    levels : dict</span>
+<span class="sd">        Niveaux de pression par variable en altitude.</span>
+<span class="sd">    domain : list</span>
+<span class="sd">        Domaine à extraire : [lon. ouest, lon. est, lat. sud, lat. nord].</span>
+<span class="sd">    resolution : float</span>
+<span class="sd">        Résolution spatiale des données.</span>
+<span class="sd">    steps : list</span>
+<span class="sd">        Échéances à télécharger (en heures).</span>
+<span class="sd">    run_hours : list</span>
+<span class="sd">        Heures des runs à télécharger.</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">        Préfixe des fichiers produits.</span>
+<span class="sd">    source : str</span>
+<span class="sd">        Serveur des données.</span>
+<span class="sd">    proxies : dict</span>
+<span class="sd">        Les proxys à utiliser, par protocole (None si aucun proxy n'est défini).</span>
+<span class="sd">    maximum_retries : int</span>
+<span class="sd">        Nombre maximal de tentatives par requête.</span>
+<span class="sd">    retry_after : int</span>
+<span class="sd">        Délai (en secondes) entre deux tentatives.</span>
+<span class="sd">    timeout : float</span>
+<span class="sd">        Délai maximal d'attente du serveur (en secondes) pour chaque requête.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_ecmwf_opendata</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"Le paquet ecmwf-opendata est requis pour cette "</span>
+                              <span class="s2">"action."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">asv</span><span class="o">.</span><span class="n">has_eccodes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"Le paquet eccodes est requis pour cette action."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">type_name</span> <span class="o">=</span> <span class="s2">"Téléchargement CEP"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'output_dir'</span><span class="p">]</span>
+        <span class="n">asv</span><span class="o">.</span><span class="n">check_dir_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_attempts_attributes</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span>
+                          <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'variables'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="s1">'z'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">,</span> <span class="s1">'tcwv'</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VARIABLES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"La variable CEP '</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2">' n'est pas supportée "</span>
+                                <span class="sa">f</span><span class="s2">"(options : </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">VARIABLES</span><span class="p">)</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_levels</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'levels'</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'resolution'</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.25</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESOLUTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"La résolution fournie pour le CEP ne correspond pas "</span>
+                            <span class="s2">"aux options disponibles (0.25, 0.1)."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'domain'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">65</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_domain</span><span class="p">()</span>
+
+        <span class="n">lead_time_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lead_time_max'</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">192</span><span class="p">)</span>
+        <span class="n">time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'time_step'</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lead_time_max</span> <span class="o">&gt;</span> <span class="n">LEAD_TIME_MAX</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"L'échéance maximale du CEP ne peut dépasser "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">LEAD_TIME_MAX</span><span class="si">}</span><span class="s2"> h."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">time_step</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">time_step</span> <span class="o">%</span> <span class="mi">6</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le pas de temps du CEP doit valoir 3 h ou un multiple "</span>
+                            <span class="s2">"de 6 h."</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">step</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lead_time_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+                      <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;=</span> <span class="n">LEAD_TIME_3H_MAX</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">%</span> <span class="mi">6</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'run_hours'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'prefix'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'CEP'</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'source'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'ecmwf'</span>
+
+        <span class="c1"># Seuls les proxys renseignés sont conservés (les valeurs vides sont ignorées)</span>
+        <span class="n">proxies</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'proxies'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxies</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">proxies</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span><span class="p">}</span> <span class="ow">or</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maximum_retries</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'maximum_retries'</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retry_after</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'retry_after'</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'timeout'</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">120</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DownloadEcmwfData.run">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.DownloadEcmwfData.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Exécute l'action.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        date: datetime.datetime</span>
+<span class="sd">            Date d'émission de la prévision.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">date</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DownloadEcmwfData.download">
+<a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.DownloadEcmwfData.download">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Télécharge les prévisions du CEP pour une date d'émission de la prévision.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        date: datetime.datetime</span>
+<span class="sd">            Date d'émission de la prévision.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Pas de run CEP téléchargé à </span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2"> h "</span>
+                           <span class="sa">f</span><span class="s2">"(runs : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">date_msg</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'</span><span class="si">%d</span><span class="s1">/%m/%Y %Hh'</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Téléchargement des prévisions du : </span><span class="si">{</span><span class="n">date_msg</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">files_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">continue</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_download_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Le téléchargement de '</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2">' (CEP) a "</span>
+                             <span class="sa">f</span><span class="s2">"échoué (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">files_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Nombre de fichiers téléchargés : </span><span class="si">{</span><span class="n">files_count</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y%m</span><span class="si">%d</span><span class="s1">%H'</span><span class="p">)</span><span class="si">}</span><span class="s2">00.grb"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_download_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Télécharge une variable, puis l'enregistre sur le domaine.</span>
+<span class="sd">        Le fichier cible n'est créé qu'une fois complet.</span>
+<span class="sd">        """</span>
+        <span class="n">param</span><span class="p">,</span> <span class="n">levtype</span> <span class="o">=</span> <span class="n">VARIABLES</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'date'</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y%m</span><span class="si">%d</span><span class="s1">'</span><span class="p">),</span>
+            <span class="s1">'time'</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+            <span class="s1">'stream'</span><span class="p">:</span> <span class="s1">'oper'</span><span class="p">,</span>
+            <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'fc'</span><span class="p">,</span>
+            <span class="s1">'step'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
+            <span class="s1">'param'</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+            <span class="s1">'levtype'</span><span class="p">:</span> <span class="n">levtype</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">levtype</span> <span class="o">==</span> <span class="s1">'pl'</span><span class="p">:</span>
+            <span class="n">request</span><span class="p">[</span><span class="s1">'levelist'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
+            <span class="n">expected</span> <span class="o">*=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">variable</span><span class="p">])</span>
+
+        <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">'.part'</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s1">'download.grib2'</span>
+                <span class="c1"># Les barres de progression et messages affichés par le client</span>
+                <span class="c1"># sont ignorés (journal des exécutions planifiées)</span>
+                <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()),</span> \
+                        <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_client</span><span class="p">()</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="n">crop_grib</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> champs reçus sur </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> attendus"</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tmp_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">tmp_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+                <span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                <span class="n">resol</span><span class="o">=</span><span class="n">RESOLUTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">],</span>
+                <span class="n">maximum_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maximum_retries</span><span class="p">,</span>
+                <span class="n">retry_after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">retry_after</span><span class="p">)</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">session</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">:</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">proxies</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'http://'</span><span class="p">,</span> <span class="s1">'https://'</span><span class="p">):</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">_TimeoutAdapter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">levels</span><span class="p">):</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">700</span><span class="p">,</span> <span class="mi">850</span><span class="p">,</span> <span class="mi">925</span><span class="p">,</span> <span class="mi">1000</span><span class="p">]</span>
+        <span class="n">pl_variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="k">if</span> <span class="n">VARIABLES</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'pl'</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">levels</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pl_variables</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Les niveaux ne sont pas définis pour les "</span>
+                                <span class="sa">f</span><span class="s2">"variables CEP </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">lev</span><span class="p">)</span> <span class="k">for</span> <span class="n">lev</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pl_variables</span><span class="p">}</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">lev</span><span class="p">)</span> <span class="k">for</span> <span class="n">lev</span> <span class="ow">in</span> <span class="n">levels</span> <span class="ow">or</span> <span class="n">default</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">levels</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pl_variables</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le domaine CEP doit être défini par 4 valeurs."</span><span class="p">)</span>
+        <span class="n">lon_min</span><span class="p">,</span> <span class="n">lon_max</span><span class="p">,</span> <span class="n">lat_min</span><span class="p">,</span> <span class="n">lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span>
+        <span class="k">if</span> <span class="n">lon_min</span> <span class="o">&gt;=</span> <span class="n">lon_max</span> <span class="ow">or</span> <span class="n">lat_min</span> <span class="o">&gt;=</span> <span class="n">lat_max</span> <span class="ow">or</span> <span class="n">lat_min</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">90</span> <span class="ow">or</span> <span class="n">lat_max</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Le domaine CEP </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="si">}</span><span class="s2"> n'est pas valide "</span>
+                            <span class="sa">f</span><span class="s2">"([lon. ouest, lon. est, lat. sud, lat. nord])."</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_multiple</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Les limites du domaine CEP doivent être des "</span>
+                                <span class="sa">f</span><span class="s2">"multiples de la résolution (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_multiple</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">step</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ratio</span> <span class="o">-</span> <span class="nb">round</span><span class="p">(</span><span class="n">ratio</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">crop_grib</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Découpe les champs d'un fichier GRIB (grille régulière lat/lon) sur un domaine,</span>
+<span class="sd">    sans changer de format : les métadonnées et la compression des champs</span>
+<span class="sd">    d'origine sont conservées.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source: str or Path</span>
+<span class="sd">        Le fichier GRIB d'origine (GRIB2 des données ouvertes).</span>
+<span class="sd">    target: str or Path</span>
+<span class="sd">        Le fichier GRIB à créer.</span>
+<span class="sd">    domain: list</span>
+<span class="sd">        Domaine à extraire : [lon. ouest, lon. est, lat. sud, lat. nord].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Le nombre de champs enregistrés.</span>
+<span class="sd">    """</span>
+    <span class="n">eccodes</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">eccodes</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_grib_new_from_file</span><span class="p">(</span><span class="n">f_in</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">handle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">values</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">_crop_field</span><span class="p">(</span><span class="n">eccodes</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_clone</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_set_grid</span><span class="p">(</span><span class="n">eccodes</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+                    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set_values</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_write</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">f_out</span><span class="p">)</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_release</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_release</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_crop_field</span><span class="p">(</span><span class="n">eccodes</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'gridType'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'regular_ll'</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Seules les grilles régulières lat/lon sont supportées."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'iScansNegatively'</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Les grilles parcourues d'est en ouest ne sont pas "</span>
+                        <span class="s2">"supportées."</span><span class="p">)</span>
+
+    <span class="n">ni</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'Ni'</span><span class="p">)</span>
+    <span class="n">nj</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'Nj'</span><span class="p">)</span>
+    <span class="n">di</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get_double</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'iDirectionIncrementInDegrees'</span><span class="p">)</span>
+    <span class="n">dj</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get_double</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'jDirectionIncrementInDegrees'</span><span class="p">)</span>
+    <span class="n">lat_first</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get_double</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'latitudeOfFirstGridPointInDegrees'</span><span class="p">)</span>
+    <span class="n">lon_first</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get_double</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'longitudeOfFirstGridPointInDegrees'</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get_values</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nj</span><span class="p">,</span> <span class="n">ni</span><span class="p">)</span>
+
+    <span class="c1"># Lignes ordonnées du nord au sud</span>
+    <span class="n">lat_north</span> <span class="o">=</span> <span class="n">lat_first</span>
+    <span class="k">if</span> <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_get</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s1">'jScansPositively'</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">lat_north</span> <span class="o">=</span> <span class="n">lat_first</span> <span class="o">+</span> <span class="p">(</span><span class="n">nj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">dj</span>
+
+    <span class="n">lon_min</span><span class="p">,</span> <span class="n">lon_max</span><span class="p">,</span> <span class="n">lat_min</span><span class="p">,</span> <span class="n">lat_max</span> <span class="o">=</span> <span class="n">domain</span>
+    <span class="n">lats</span> <span class="o">=</span> <span class="n">lat_max</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">lat_max</span> <span class="o">-</span> <span class="n">lat_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">dj</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">dj</span>
+    <span class="n">lons</span> <span class="o">=</span> <span class="n">lon_min</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">lon_max</span> <span class="o">-</span> <span class="n">lon_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">di</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">di</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">((</span><span class="n">lat_north</span> <span class="o">-</span> <span class="n">lats</span><span class="p">)</span> <span class="o">/</span> <span class="n">dj</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">rows</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">nj</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le domaine CEP dépasse la grille des données."</span><span class="p">)</span>
+
+    <span class="n">offsets</span> <span class="o">=</span> <span class="p">(</span><span class="n">lons</span> <span class="o">-</span> <span class="n">lon_first</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span> <span class="o">/</span> <span class="n">di</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">offsets</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">is_global</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ni</span> <span class="o">*</span> <span class="n">di</span> <span class="o">-</span> <span class="mi">360</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+    <span class="k">if</span> <span class="n">is_global</span><span class="p">:</span>
+        <span class="n">cols</span> <span class="o">%=</span> <span class="n">ni</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offsets</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">offsets</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-6</span> <span class="ow">or</span> <span class="n">cols</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">ni</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le domaine CEP n'est pas aligné sur la grille des données."</span><span class="p">)</span>
+
+    <span class="n">grid</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'Ni'</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lons</span><span class="p">),</span>
+        <span class="s1">'Nj'</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lats</span><span class="p">),</span>
+        <span class="s1">'lat_first'</span><span class="p">:</span> <span class="n">lat_max</span><span class="p">,</span>
+        <span class="s1">'lat_last'</span><span class="p">:</span> <span class="n">lats</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s1">'lon_first'</span><span class="p">:</span> <span class="n">lon_min</span><span class="p">,</span>
+        <span class="s1">'lon_last'</span><span class="p">:</span> <span class="n">lons</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s1">'di'</span><span class="p">:</span> <span class="n">di</span><span class="p">,</span>
+        <span class="s1">'dj'</span><span class="p">:</span> <span class="n">dj</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)],</span> <span class="n">grid</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_grid</span><span class="p">(</span><span class="n">eccodes</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+    <span class="c1"># Les longitudes GRIB2 sont positives (0 à 360°)</span>
+    <span class="n">lon_first</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'lon_first'</span><span class="p">]</span> <span class="o">%</span> <span class="mi">360</span>
+    <span class="n">lon_last</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'lon_last'</span><span class="p">]</span> <span class="o">%</span> <span class="mi">360</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'Ni'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'Ni'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'Nj'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'Nj'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'latitudeOfFirstGridPointInDegrees'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'lat_first'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'longitudeOfFirstGridPointInDegrees'</span><span class="p">,</span> <span class="n">lon_first</span><span class="p">)</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'latitudeOfLastGridPointInDegrees'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'lat_last'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'longitudeOfLastGridPointInDegrees'</span><span class="p">,</span> <span class="n">lon_last</span><span class="p">)</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'iDirectionIncrementInDegrees'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'di'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'jDirectionIncrementInDegrees'</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="s1">'dj'</span><span class="p">])</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'iScansNegatively'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">eccodes</span><span class="o">.</span><span class="n">codes_set</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">'jScansPositively'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Terranum.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

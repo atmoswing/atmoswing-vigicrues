@@ -7,15 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>atmoswing_vigicrues.disseminations.dissemination &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=8d563738"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -71,17 +71,32 @@
            <div itemprop="articleBody">
              
   <h1>Source code for atmoswing_vigicrues.disseminations.dissemination</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
 <div class="viewcode-block" id="Dissemination">
 <a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.Dissemination">[docs]</a>
-<span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dissemination</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dissemination</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
+<span class="sd">    type_name : str</span>
+<span class="sd">        Le nom du type de l'action (défini par les classes dérivées).</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Le nom de l'action (défini par les classes dérivées).</span>
+<span class="sd">    local_dir : str</span>
+<span class="sd">        Répertoire local contenant les fichiers à diffuser (défini par les classes</span>
+<span class="sd">        dérivées).</span>
+<span class="sd">    extension : str</span>
+<span class="sd">        Extension des fichiers à diffuser (défini par les classes dérivées).</span>
 <span class="sd">    _file_paths : list</span>
 <span class="sd">        Chemins des fichiers à diffuser.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span> <span class="o">=</span> <span class="p">[]</span>
@@ -89,21 +104,22 @@
 <div class="viewcode-block" id="Dissemination.feed">
 <a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.Dissemination.feed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">feed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Transmission des fichiers à diffuser</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        file_paths : list</span>
 <span class="sd">            Chemins des fichiers à diffuser.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span> <span class="o">=</span> <span class="n">file_paths</span></div>
 
 
 <div class="viewcode-block" id="Dissemination.run">
 <a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.Dissemination.run">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécution de la diffusion.</span>
 
 <span class="sd">        Parameters</span>
@@ -115,9 +131,48 @@
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
 <span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
-</div>
+<span class="sd">        """</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_must_replace</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">remote_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Détermine si un fichier déjà présent sur le serveur distant doit être</span>
+<span class="sd">        remplacé.</span>
+
+<span class="sd">        Seuls les exports JSON (comportant un champ 'status') sont concernés :</span>
+
+<span class="sd">        * un export en erreur (statut non nul) est toujours transmis, afin que le</span>
+<span class="sd">          serveur dispose de la dernière tentative ;</span>
+<span class="sd">        * un export réussi (statut 0) remplace la copie distante si sa taille</span>
+<span class="sd">          diffère : un export réussi n'étant jamais régénéré, une copie distante</span>
+<span class="sd">          différente est une ancienne version en erreur.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : str</span>
+<span class="sd">            Chemin du fichier local.</span>
+<span class="sd">        remote_size : int or None</span>
+<span class="sd">            Taille du fichier distant (None si elle n'a pas pu être déterminée).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) si le fichier distant doit être remplacé, faux (False)</span>
+<span class="sd">            autrement.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">'.json'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'utf-8'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'status'</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">remote_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">remote_size</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span></div>
 
 </pre></div>
 

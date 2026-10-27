@@ -1,0 +1,10 @@
+<map id="inheritanceabf66e071a" name="inheritanceabf66e071a">
+<area shape="rect" id="node1" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,80,77,105"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="125,80,209,105"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="257,5,420,31"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="269,55,409,80"/>
+<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="283,104,394,129"/>
+<area shape="rect" id="node7" title="Classe de base pour la transformation de prévisions GRIB en fichiers netcdf." alt="" coords="266,153,411,179"/>
+<area shape="rect" id="node6" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="468,128,631,153"/>
+<area shape="rect" id="node8" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="479,177,619,203"/>
+</map>

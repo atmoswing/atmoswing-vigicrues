@@ -7,15 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>atmoswing_vigicrues.disseminations.transfer_ftp_out &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=8d563738"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -71,28 +71,107 @@
            <div itemprop="articleBody">
              
   <h1>Source code for atmoswing_vigicrues.disseminations.transfer_ftp_out</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">ftplib</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ftplib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">socks</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.dissemination</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dissemination</span>
 
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FtpViaProxy</span><span class="p">(</span><span class="n">ftplib</span><span class="o">.</span><span class="n">FTP</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Client FTP dont les connexions (contrôle et données) passent par un proxy.</span>
+
+<span class="sd">    Seules les connexions de cette instance sont concernées : le module socket</span>
+<span class="sd">    n'est pas modifié. Seul le mode passif est supporté, le mode actif nécessitant</span>
+<span class="sd">    une connexion entrante depuis le serveur.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    proxy_type : int</span>
+<span class="sd">        Type de proxy (socks.HTTP, socks.SOCKS4 ou socks.SOCKS5).</span>
+<span class="sd">    proxy_host : str</span>
+<span class="sd">        Adresse du proxy.</span>
+<span class="sd">    proxy_port : int</span>
+<span class="sd">        Port du proxy.</span>
+<span class="sd">    proxy_username : str</span>
+<span class="sd">        Utilisateur du proxy, si nécessaire.</span>
+<span class="sd">    proxy_password : str</span>
+<span class="sd">        Mot de passe de l'utilisateur du proxy, si nécessaire.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy_type</span><span class="p">,</span> <span class="n">proxy_host</span><span class="p">,</span> <span class="n">proxy_port</span><span class="p">,</span> <span class="n">proxy_username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">proxy_password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_type</span> <span class="o">=</span> <span class="n">proxy_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="n">proxy_host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="n">proxy_port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_username</span> <span class="o">=</span> <span class="n">proxy_username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_password</span> <span class="o">=</span> <span class="n">proxy_password</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">socks</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">source_address</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">source_address</span><span class="p">,</span>
+            <span class="n">proxy_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_type</span><span class="p">,</span> <span class="n">proxy_addr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span>
+            <span class="n">proxy_port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">,</span> <span class="n">proxy_username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_username</span><span class="p">,</span>
+            <span class="n">proxy_password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_password</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=-</span><span class="mi">999</span><span class="p">,</span> <span class="n">source_address</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">host</span> <span class="o">!=</span> <span class="s1">''</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="k">if</span> <span class="n">port</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="k">if</span> <span class="n">timeout</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">999</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="k">if</span> <span class="n">source_address</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_address</span> <span class="o">=</span> <span class="n">source_address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_connection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">family</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">makefile</span><span class="p">(</span><span class="s1">'r'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">welcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getresp</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">welcome</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">ntransfercmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">rest</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">passiveserver</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le mode FTP actif n'est pas supporté via un proxy."</span><span class="p">)</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makepasv</span><span class="p">()</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_connection</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sendcmd</span><span class="p">(</span><span class="sa">f</span><span class="s2">"REST </span><span class="si">{</span><span class="n">rest</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sendcmd</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="c1"># Certains serveurs envoient une réponse 200 avant la réponse 150</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'2'</span><span class="p">:</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getresp</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">'1'</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">error_reply</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'150'</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">parse150</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conn</span><span class="p">,</span> <span class="n">size</span>
+
 
 <div class="viewcode-block" id="TransferFtpOut">
 <a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransferFtpOut">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TransferFtpOut</span><span class="p">(</span><span class="n">Dissemination</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Transfer des résultats par FTP.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
-<span class="sd">        Le nom de l&#39;action</span>
+<span class="sd">        Le nom de l'action</span>
 <span class="sd">    options: dict</span>
-<span class="sd">        Un dictionnaire contenant les options de l&#39;action. Les champs possibles sont:</span>
+<span class="sd">        Un dictionnaire contenant les options de l'action. Les champs possibles sont:</span>
 
 <span class="sd">        * local_dir : str</span>
 <span class="sd">            Répertoire local contenant les fichiers à exporter.</span>
@@ -105,20 +184,24 @@
 <span class="sd">        * username : str</span>
 <span class="sd">            Utilisateur ayant un accès au serveur.</span>
 <span class="sd">        * password : str</span>
-<span class="sd">            Mot de passe de l&#39;utilisateur sur le serveur.</span>
+<span class="sd">            Mot de passe de l'utilisateur sur le serveur.</span>
 <span class="sd">        * proxy_host : str</span>
 <span class="sd">            Adresse du proxy, si nécessaire.</span>
 <span class="sd">        * proxy_port : int</span>
 <span class="sd">            Port du proxy si nécessaire (par défaut: 1080).</span>
+<span class="sd">        * proxy_username : str</span>
+<span class="sd">            Utilisateur du proxy, si nécessaire (authentification Basic).</span>
+<span class="sd">        * proxy_password : str</span>
+<span class="sd">            Mot de passe de l'utilisateur du proxy, si nécessaire.</span>
 <span class="sd">        * remote_dir : str</span>
 <span class="sd">            Chemin sur le serveur distant où enregistrer les fichiers.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    type_name : str</span>
-<span class="sd">        Le nom du type de l&#39;action.</span>
+<span class="sd">        Le nom du type de l'action.</span>
 <span class="sd">    name : str</span>
-<span class="sd">        Le nom de l&#39;action.</span>
+<span class="sd">        Le nom de l'action.</span>
 <span class="sd">    local_dir : str</span>
 <span class="sd">        Répertoire local contenant les fichiers à exporter.</span>
 <span class="sd">    extension : str</span>
@@ -130,52 +213,59 @@
 <span class="sd">    username : str</span>
 <span class="sd">        Utilisateur ayant un accès au serveur.</span>
 <span class="sd">    password : str</span>
-<span class="sd">        Mot de passe de l&#39;utilisateur sur le serveur.</span>
+<span class="sd">        Mot de passe de l'utilisateur sur le serveur.</span>
 <span class="sd">    proxy_host : str</span>
 <span class="sd">        Adresse du proxy, si nécessaire.</span>
 <span class="sd">    proxy_port : int</span>
 <span class="sd">        Port du proxy si nécessaire (par défaut: 1080).</span>
+<span class="sd">    proxy_username : str</span>
+<span class="sd">        Utilisateur du proxy (None si non défini).</span>
+<span class="sd">    proxy_password : str</span>
+<span class="sd">        Mot de passe de l'utilisateur du proxy (None si non défini).</span>
 <span class="sd">    remote_dir : str</span>
 <span class="sd">        Chemin sur le serveur distant où enregistrer les fichiers.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialisation de l&#39;instance TransferFtp</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">type_name</span> <span class="o">=</span> <span class="s2">&quot;Transfert FTP&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Initialisation de l'instance TransferFtp</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type_name</span> <span class="o">=</span> <span class="s2">"Transfert FTP"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">local_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;local_dir&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extension</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;extension&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;hostname&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;remote_dir&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'local_dir'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extension</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'extension'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'hostname'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'port'</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'password'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'remote_dir'</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="s1">&#39;proxy_host&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">'proxy_host'</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy_host'</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'proxy_host'</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">proxy_type</span> <span class="o">=</span> <span class="n">socks</span><span class="o">.</span><span class="n">HTTP</span>
-            <span class="k">if</span> <span class="s1">&#39;proxy_port&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span>
-                        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">'proxy_port'</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy_port'</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span>
+                        <span class="n">options</span><span class="p">[</span><span class="s1">'proxy_port'</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy_port'</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy_port'</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'proxy_port'</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Le port du proxy doit être une chaîne de &quot;</span>
-                                    <span class="s2">&quot;caractères ou un entier.&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le port du proxy doit être une chaîne de "</span>
+                                    <span class="s2">"caractères ou un entier."</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span> <span class="o">=</span> <span class="mi">1080</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_password</span> <span class="o">=</span> \
+            <span class="n">asv</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">parse_proxy_credentials</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="TransferFtpOut.run">
 <a class="viewcode-back" href="../../../api/module.html#atmoswing_vigicrues.TransferFtpOut.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécution de la diffusion par FTP.</span>
 
 <span class="sd">        Parameters</span>
@@ -187,61 +277,79 @@
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
 <span class="sd">            Vrai (True) en cas de succès, faux (False) autrement.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Aucun fichier à traiter&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Aucun fichier à traiter"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">:</span>
-                <span class="n">socks</span><span class="o">.</span><span class="n">set_default_proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">)</span>
-                <span class="n">socket</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="n">socks</span><span class="o">.</span><span class="n">socksocket</span>  <span class="c1"># Override the default socket</span>
+                <span class="n">ftp</span> <span class="o">=</span> <span class="n">FtpViaProxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_port</span><span class="p">,</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">proxy_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy_password</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ftp</span> <span class="o">=</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">FTP</span><span class="p">()</span>
 
-            <span class="c1"># Connect to FTP</span>
-            <span class="n">ftp</span> <span class="o">=</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">FTP</span><span class="p">()</span>
             <span class="n">ftp</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
             <span class="n">ftp</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remote_dir</span><span class="p">,</span> <span class="n">ftp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y&#39;</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%m&#39;</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Directories created/changed successfully&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y'</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%m'</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chdir_or_mkdir</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'</span><span class="si">%d</span><span class="s1">'</span><span class="p">),</span> <span class="n">ftp</span><span class="p">)</span>
+            <span class="n">ftp</span><span class="o">.</span><span class="n">voidcmd</span><span class="p">(</span><span class="s1">'TYPE I'</span><span class="p">)</span>  <span class="c1"># Requis par la commande SIZE</span>
+            <span class="n">remote_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_remote_files</span><span class="p">(</span><span class="n">ftp</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_paths</span><span class="p">:</span>
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
                 <span class="n">asv</span><span class="o">.</span><span class="n">check_file_exists</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
-                <span class="c1"># If file exists remotely, do not upload</span>
-                <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ftp</span><span class="o">.</span><span class="n">nlst</span><span class="p">():</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> already exists on the server. &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;Skipping upload.&quot;</span><span class="p">)</span>
-                    <span class="k">continue</span>
+                <span class="c1"># If file exists remotely, upload only if it must be replaced</span>
+                <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">remote_files</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_must_replace</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_size</span><span class="p">(</span><span class="n">ftp</span><span class="p">,</span> <span class="n">filename</span><span class="p">)):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Le fichier </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> existe déjà sur le serveur "</span>
+                                    <span class="sa">f</span><span class="s2">"distant."</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Remplacement du fichier </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> sur le serveur "</span>
+                                <span class="sa">f</span><span class="s2">"distant."</span><span class="p">)</span>
 
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                    <span class="n">ftp</span><span class="o">.</span><span class="n">storbinary</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;STOR </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> uploaded successfully&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">ftp</span><span class="o">.</span><span class="n">storbinary</span><span class="p">(</span><span class="sa">f</span><span class="s1">'STOR </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
             <span class="n">ftp</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
 
             <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;La diffusion FTP a échoué (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"La diffusion FTP a échoué (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s1">&#39;ftp&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
-            <span class="n">ftp</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">'ftp'</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+            <span class="n">ftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="kc">False</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_list_remote_files</span><span class="p">(</span><span class="n">ftp</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">ftp</span><span class="o">.</span><span class="n">nlst</span><span class="p">())</span>
+        <span class="k">except</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">error_perm</span><span class="p">:</span>
+            <span class="c1"># Certains serveurs répondent par une erreur pour un répertoire vide</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remote_size</span><span class="p">(</span><span class="n">ftp</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ftp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">all_errors</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_chdir_or_mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">ftp</span><span class="p">):</span>
         <span class="n">current_remote_dir</span> <span class="o">=</span> <span class="n">ftp</span><span class="o">.</span><span class="n">pwd</span><span class="p">()</span>
 
         <span class="c1"># If the path does not end with a slash, add one</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">current_remote_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
-            <span class="n">current_remote_dir</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">current_remote_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'/'</span><span class="p">):</span>
+            <span class="n">current_remote_dir</span> <span class="o">+=</span> <span class="s1">'/'</span>
 
         <span class="n">current_remote_dir</span> <span class="o">+=</span> <span class="n">dir_path</span>
 

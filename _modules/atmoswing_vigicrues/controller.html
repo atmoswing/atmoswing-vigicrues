@@ -7,15 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>atmoswing_vigicrues.controller &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=8d563738"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -73,18 +73,20 @@
   <h1>Source code for atmoswing_vigicrues.controller</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
 
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="Controller">
 <a class="viewcode-back" href="../../api/module.html#atmoswing_vigicrues.Controller">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Controller</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues.</span>
 
 <span class="sd">    Parameters</span>
@@ -96,46 +98,42 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    options : instance de la classe Options</span>
-<span class="sd">        Options de la prévision combinant les arguments passés lors de l&#39;utilisation en</span>
+<span class="sd">        Options de la prévision combinant les arguments passés lors de l'utilisation en</span>
 <span class="sd">        lignes de commandes et les options du fichier de configuration.</span>
 <span class="sd">    time_increment : int</span>
-<span class="sd">        Incrément de temps en heures pour l&#39;émission de la prévision</span>
+<span class="sd">        Incrément de temps en heures pour l'émission de la prévision</span>
 <span class="sd">        (par défaut 6 heures).</span>
 <span class="sd">    date : datetime.datetime</span>
 <span class="sd">        Date de la prévision.</span>
-<span class="sd">    existing_files : list</span>
-<span class="sd">        Liste des fichiers de prévision d&#39;AtmoSwing Forecaster déjà existants pour</span>
-<span class="sd">        l&#39;échéance en cours.</span>
 <span class="sd">    pre_actions : list</span>
 <span class="sd">        Liste des actions préalables à la prévision.</span>
 <span class="sd">    post_actions : list</span>
 <span class="sd">        Liste des actions postérieures à la prévision.</span>
 <span class="sd">    disseminations : list</span>
 <span class="sd">        Liste des actions de dissémination.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_options</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialisation de l&#39;instance Controller</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Initialisation de l'instance Controller</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">cli_options</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="mi">6</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cli_options</span><span class="p">,</span> <span class="s1">&#39;time_increment&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cli_options</span><span class="p">,</span> <span class="s1">'time_increment'</span><span class="p">)</span> <span class="ow">and</span> \
                 <span class="n">cli_options</span><span class="o">.</span><span class="n">time_increment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">=</span> <span class="n">cli_options</span><span class="o">.</span><span class="n">time_increment</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">existing_files</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_register_pre_actions</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_register_post_actions</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_register_disseminations</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_actions</span><span class="p">(</span>
+            <span class="s1">'pre_actions'</span><span class="p">,</span> <span class="n">asv</span><span class="o">.</span><span class="n">PreAction</span><span class="p">,</span> <span class="s2">"la pré-action"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_actions</span><span class="p">(</span>
+            <span class="s1">'post_actions'</span><span class="p">,</span> <span class="n">asv</span><span class="o">.</span><span class="n">PostAction</span><span class="p">,</span> <span class="s2">"la post-action"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_actions</span><span class="p">(</span>
+            <span class="s1">'disseminations'</span><span class="p">,</span> <span class="n">asv</span><span class="o">.</span><span class="n">Dissemination</span><span class="p">,</span> <span class="s2">"la dissémination"</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Controller.run">
 <a class="viewcode-back" href="../../api/module.html#atmoswing_vigicrues.Controller.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécution du flux de la prévision et du postprocessing.</span>
 
 <span class="sd">        Parameters</span>
@@ -146,8 +144,13 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        int</span>
-<span class="sd">            Le code de retour (0 en cas de succès)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Le code de retour :</span>
+
+<span class="sd">            * 0 : succès.</span>
+<span class="sd">            * 1 : la prévision a été émise, mais au moins une post-action ou une</span>
+<span class="sd">              dissémination a échoué.</span>
+<span class="sd">            * -1 : échec de la prévision (pré-actions, AtmoSwing ou exception).</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">date</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">date</span>
@@ -156,75 +159,91 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_run_pre_actions</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">existing_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_atmoswing_output_files</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_run_atmoswing</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_post_actions</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_disseminations</span><span class="p">()</span>
+            <span class="n">post_actions_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_post_actions</span><span class="p">()</span>
+            <span class="n">disseminations_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_disseminations</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;La prévision a échoué.&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Erreur: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"La prévision a échoué. Erreur: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;La prévision a échoué.&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Erreur: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Erreur inattendue : la trace complète est journalisée</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"La prévision a échoué (erreur inattendue)."</span><span class="p">)</span>
             <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">post_actions_ok</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">disseminations_ok</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"La prévision a été émise, mais certaines actions ont "</span>
+                           <span class="s2">"échoué."</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="mi">0</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_register_pre_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Enregistre les actions préalables à la prévision</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s1">&#39;pre_actions&#39;</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pre_actions&#39;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="s1">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]:</span>
-                    <span class="k">continue</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-                <span class="n">module</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">]</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chargement de la pre-action &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L&#39;action </span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2"> est inconnue.&quot;</span><span class="p">)</span>
-                <span class="n">fct</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fct</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;with&#39;</span><span class="p">]))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base_class</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Instancie les actions actives d'une section du fichier de configuration.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_register_post_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Enregistre les actions postérieures à la prévision</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s1">&#39;post_actions&#39;</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;post_actions&#39;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="s1">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]:</span>
-                    <span class="k">continue</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-                <span class="n">module</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">]</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chargement de la post-action &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L&#39;action </span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2"> est inconnue.&quot;</span><span class="p">)</span>
-                <span class="n">fct</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fct</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;with&#39;</span><span class="p">]))</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            La section du fichier de configuration ('pre_actions', 'post_actions'</span>
+<span class="sd">            ou 'disseminations').</span>
+<span class="sd">        base_class : type</span>
+<span class="sd">            La classe de base dont les actions de cette section doivent hériter.</span>
+<span class="sd">        label : str</span>
+<span class="sd">            Le libellé du type d'action, pour les messages.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_register_disseminations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Enregistre les actions préalables à la prévision</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s1">&#39;disseminations&#39;</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;disseminations&#39;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="s1">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]:</span>
-                    <span class="k">continue</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-                <span class="n">module</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">]</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chargement de la disseminations &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L&#39;action </span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2"> est inconnue.&quot;</span><span class="p">)</span>
-                <span class="n">fct</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;atmoswing_vigicrues&#39;</span><span class="p">),</span> <span class="n">module</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fct</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">action</span><span class="p">[</span><span class="s1">&#39;with&#39;</span><span class="p">]))</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Les actions instanciées.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        asv.ConfigError</span>
+<span class="sd">            Si une action est inconnue, n'est pas du bon type, ou si une option</span>
+<span class="sd">            requise n'est pas définie.</span>
+<span class="sd">        """</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">actions</span>
+
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'active'</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">uses</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'uses'</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uses</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Chargement de </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+            <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">asv</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">uses</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">base_class</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="bp">cls</span> <span class="ow">is</span> <span class="n">base_class</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"L'action '</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">' est inconnue en tant que </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> "</span>
+                         <span class="sa">f</span><span class="s2">"('</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">')."</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'with'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}))</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"L'option </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> n'est pas définie pour </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> "</span>
+                               <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">return</span> <span class="n">actions</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_pre_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécute les opérations préalables à la prévision par AtmoSwing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+<span class="sd">        En cas d'échec d'une pré-action, la date de la prévision est reculée de</span>
+<span class="sd">        'attempts_step_hours' et l'ensemble des pré-actions est relancé, jusqu'à</span>
+<span class="sd">        un recul maximal de 'attempts_max_hours'.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        asv.Error</span>
+<span class="sd">            Si les pré-actions échouent pour toutes les dates tentées.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="n">attempts_max_hours</span> <span class="o">=</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">24</span>
@@ -234,133 +253,155 @@
             <span class="n">attempts_step_hours</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">attempts_step_hours</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">attempts_step_hours</span><span class="p">)</span>
 
         <span class="n">attempts_hours</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">attempts_hours</span> <span class="o">&lt;</span> <span class="n">attempts_max_hours</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exécution de : &#39;</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">&#39; [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exécution de : '</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">' [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">action</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
-                    <span class="n">attempts_hours</span> <span class="o">+=</span> <span class="n">attempts_step_hours</span>
                     <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="k">break</span>
             <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Exécution correcte.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Exécution correcte."</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">attempts_hours</span> <span class="o">+=</span> <span class="n">attempts_step_hours</span>
+            <span class="k">if</span> <span class="n">attempts_hours</span> <span class="o">&gt;=</span> <span class="n">attempts_max_hours</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Recul de l&#39;heure de la prévision.&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_back_in_time</span><span class="p">(</span><span class="n">attempts_step_hours</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Échec de l&#39;exécution.&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Nombre maximum de tentatives atteint pour la pré-action.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"  -&gt; Recul de l'heure de la prévision."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_back_in_time</span><span class="p">(</span><span class="n">attempts_step_hours</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Nombre maximum de tentatives atteint pour les pré-actions."</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_atmoswing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Exécution d&#39;AtmoSwing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atmoswing&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;active&#39;</span> <span class="ow">in</span> <span class="n">run</span> <span class="ow">and</span> <span class="n">run</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Prévision par AtmoSwing Forecaster désactivée.&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Exécution d'AtmoSwing.</span>
+<span class="sd">        """</span>
+        <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'atmoswing'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">'active'</span> <span class="ow">in</span> <span class="n">run</span> <span class="ow">and</span> <span class="n">run</span><span class="p">[</span><span class="s1">'active'</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Prévision par AtmoSwing Forecaster désactivée."</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-        <span class="n">name</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-        <span class="n">options</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s1">&#39;with&#39;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s1">'with'</span><span class="p">]</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_atmoswing_cmd</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exécution de : &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Prévision pour la date : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Commande: &quot;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exécution de : '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Prévision pour la date : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Commande: "</span> <span class="o">+</span> <span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Échec de l&#39;exécution.&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">()</span>
-                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Erreur de AtmoSwing Forecaster.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Exécution correcte.&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Échec de l&#39;exécution.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">()</span>
-            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception de AtmoSwing Forecaster: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exception de AtmoSwing Forecaster: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Erreur de AtmoSwing Forecaster (code de retour "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ret</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Exécution correcte."</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_atmoswing_cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-        <span class="n">now_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H&quot;</span><span class="p">)</span>
+        <span class="n">now_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y%m</span><span class="si">%d</span><span class="s2">%H"</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">if</span> <span class="s1">&#39;atmoswing_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;atmoswing_path&#39;</span><span class="p">]:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;atmoswing-forecaster&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">'atmoswing_path'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">'atmoswing_path'</span><span class="p">]:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"atmoswing-forecaster"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;atmoswing_path&#39;</span><span class="p">])</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'atmoswing_path'</span><span class="p">])</span>
 
-        <span class="k">if</span> <span class="s1">&#39;batch_file&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;batch_file&#39;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Option &#39;batch_file&#39; non fournie.&quot;</span><span class="p">)</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">)</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;batch_file&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">'batch_file'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">'batch_file'</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Option 'batch_file' non fournie."</span><span class="p">)</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"-f"</span><span class="p">)</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'batch_file'</span><span class="p">])</span>
 
-        <span class="k">if</span> <span class="s1">&#39;target&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;now&#39;</span><span class="p">:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--forecast-date=</span><span class="si">{</span><span class="n">now_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;past&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s1">&#39;target_nb_days&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target_nb_days&#39;</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Option &#39;target_nb_days&#39; non fournie.&quot;</span><span class="p">)</span>
-                <span class="n">nb_days</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target_nb_days&#39;</span><span class="p">]</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--forecast-past=</span><span class="si">{</span><span class="n">nb_days</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;date&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s1">&#39;target_date&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target_date&#39;</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">&quot;Option &#39;target_date&#39; non fournie.&quot;</span><span class="p">)</span>
-                <span class="n">date</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;target_date&#39;</span><span class="p">]</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--forecast-date=</span><span class="si">{</span><span class="n">date</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">'target'</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'now'</span><span class="p">:</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--forecast-date=</span><span class="si">{</span><span class="n">now_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'past'</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">'target_nb_days'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target_nb_days'</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Option 'target_nb_days' non fournie."</span><span class="p">)</span>
+                <span class="n">nb_days</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target_nb_days'</span><span class="p">]</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--forecast-past=</span><span class="si">{</span><span class="n">nb_days</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'date'</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">'target_date'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target_date'</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Option 'target_date' non fournie."</span><span class="p">)</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">'target_date'</span><span class="p">]</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--forecast-date=</span><span class="si">{</span><span class="n">date</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--forecast-date=</span><span class="si">{</span><span class="n">now_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--forecast-date=</span><span class="si">{</span><span class="n">now_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s1">&#39;proxy&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">]:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--proxy=</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;proxy_user&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_user&#39;</span><span class="p">]:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--proxy-user=</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;proxy_user&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">'proxy'</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">options</span><span class="p">[</span><span class="s1">'proxy'</span><span class="p">]:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--proxy=</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">'proxy_user'</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">options</span><span class="p">[</span><span class="s1">'proxy_user'</span><span class="p">]:</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--proxy-user=</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="s1">'proxy_user'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">cmd</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_run_post_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_post_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécute les opérations postérieures à la prévision par AtmoSwing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) si toutes les post-actions ont réussi, faux (False) autrement.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
 
         <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_atmoswing_output_files</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Aucun nouveau fichier à traiter en post-action.&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Aucun nouveau fichier à traiter en post-action."</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
 
+        <span class="n">all_ok</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_actions</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exécution de : &#39;</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">&#39; [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-            <span class="n">action</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;forecast_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">})</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exécution de : '</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">' [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="p">{</span><span class="s1">'forecast_date'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">})</span>
             <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">run</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Exécution correcte.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Exécution correcte."</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Échec de l&#39;exécution.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
+                <span class="n">all_ok</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_run_disseminations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">all_ok</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_disseminations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Exécute les opérations de diffusion.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Vrai (True) si toutes les disséminations ont réussi, faux (False)</span>
+<span class="sd">            autrement.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">all_ok</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">disseminations</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exécution de : &#39;</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">&#39; [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exécution de : '</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2">' [</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
             <span class="n">local_dir</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">local_dir</span>
             <span class="n">extension</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">extension</span>
             <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_files</span><span class="p">(</span><span class="n">local_dir</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
             <span class="n">action</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Exécution correcte.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"  -&gt; Exécution correcte."</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; Échec de l&#39;exécution.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
+                <span class="n">all_ok</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">all_ok</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fix_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H&quot;</span><span class="p">)</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H"</span><span class="p">)</span>
         <span class="n">hour</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span>
         <span class="n">hour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span> <span class="o">*</span> <span class="p">(</span><span class="n">hour</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_increment</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">)</span>
@@ -369,30 +410,26 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">time_increment</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_list_atmoswing_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atmoswing&#39;</span><span class="p">)[</span><span class="s1">&#39;with&#39;</span><span class="p">][</span><span class="s1">&#39;output_dir&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_files</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">_%H&#39;</span><span class="p">)</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'atmoswing'</span><span class="p">)[</span><span class="s1">'with'</span><span class="p">][</span><span class="s1">'output_dir'</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_files</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">'.nc'</span><span class="p">,</span> <span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">_%H'</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_files_for_post_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_atmoswing_output_files</span><span class="p">()</span>
-        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">existing_files</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">files</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_list_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_dir</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">_%H&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_list_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_dir</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">_%H'</span><span class="p">):</span>
         <span class="n">local_dir</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="n">local_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
-        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">local_dir</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}{</span><span class="sa">f</span><span class="s1">&#39;.*</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s1">&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">local_dir</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}{</span><span class="sa">f</span><span class="s1">'.*</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s1">'</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">files</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_log_file</span><span class="p">():</span>
         <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
-        <span class="n">log_file</span> <span class="o">=</span> <span class="n">tmp_dir</span> <span class="o">/</span> <span class="s2">&quot;AtmoSwingForecaster.log&quot;</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="n">tmp_dir</span> <span class="o">/</span> <span class="s2">"AtmoSwingForecaster.log"</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">log_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  -&gt; Le journal des logs n&#39;a pas été trouvé (</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">))</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">content</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     | </span><span class="si">{</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Le journal des logs n'a pas été trouvé "</span>
+                           <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'replace'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"     | </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Journal d'AtmoSwing Forecaster :</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span></div>
 
 </pre></div>
 

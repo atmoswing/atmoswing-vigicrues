@@ -8,15 +8,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Composants &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=8d563738"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -51,7 +51,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.options"><code class="docutils literal notranslate"><span class="pre">Controller.options</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.time_increment"><code class="docutils literal notranslate"><span class="pre">Controller.time_increment</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.date"><code class="docutils literal notranslate"><span class="pre">Controller.date</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.existing_files"><code class="docutils literal notranslate"><span class="pre">Controller.existing_files</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.pre_actions"><code class="docutils literal notranslate"><span class="pre">Controller.pre_actions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.post_actions"><code class="docutils literal notranslate"><span class="pre">Controller.post_actions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.Controller.disseminations"><code class="docutils literal notranslate"><span class="pre">Controller.disseminations</span></code></a></li>
@@ -71,6 +70,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#telechargement-gfs">Téléchargement GFS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.DownloadGfsData"><code class="docutils literal notranslate"><span class="pre">DownloadGfsData</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#telechargement-cep">Téléchargement CEP</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#atmoswing_vigicrues.DownloadEcmwfData"><code class="docutils literal notranslate"><span class="pre">DownloadEcmwfData</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#transformation-donnees-gfs">Transformation données GFS</a><ul>
@@ -147,7 +150,7 @@
 <h2>Controller<a class="headerlink" href="#controller" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.Controller">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">Controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cli_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/controller.html#Controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Controller" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">Controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cli_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/controller.html#Controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Controller" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues.</p>
 <dl class="field-list simple">
@@ -187,18 +190,6 @@ lignes de commandes et les options du fichier de configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>datetime.datetime</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.Controller.existing_files">
-<span class="sig-name descname"><span class="pre">existing_files</span></span><a class="headerlink" href="#atmoswing_vigicrues.Controller.existing_files" title="Link to this definition"></a></dt>
-<dd><p>Liste des fichiers de prévision d’AtmoSwing Forecaster déjà existants pour
-l’échéance en cours.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -245,7 +236,14 @@ l’échéance en cours.</p>
 <dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – La date de la prévision (par défaut, la date actuelle est utilisée).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Le code de retour (0 en cas de succès)</p>
+<dd class="field-even"><p><p>Le code de retour :</p>
+<ul class="simple">
+<li><p>0 : succès.</p></li>
+<li><p>1 : la prévision a été émise, mais au moins une post-action ou une
+dissémination a échoué.</p></li>
+<li><p>-1 : échec de la prévision (pré-actions, AtmoSwing ou exception).</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
@@ -258,23 +256,68 @@ l’échéance en cours.</p>
 </section>
 <section id="pre-actions">
 <h2>Pre-actions<a class="headerlink" href="#pre-actions" title="Link to this heading"></a></h2>
-<div class="graphviz"><img src="../_images/inheritance-a83c4fda5d2bf8c3241c40db90c9d765d53bce40.png" alt="Inheritance diagram of PreAction, TransferSftpIn, DownloadGfsData, TransformGfsData, TransformEcmwfData" usemap="#inheritance7ffdb19609" class="inheritance graphviz" /></div>
-<map id="inheritance7ffdb19609" name="inheritance7ffdb19609">
-<area shape="rect" id="node1" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="149,5,289,31"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="5,80,89,105"/>
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="163,55,274,80"/>
-<area shape="rect" id="node4" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP en fichier netcdf." alt="" coords="137,104,300,129"/>
-<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="149,153,289,179"/>
+<div class="graphviz"><img src="../_images/inheritance-4bd3bf3ff81ef69027a2f85d54fab91658061545.png" alt="Inheritance diagram of PreAction, TransferSftpIn, DownloadGfsData, DownloadEcmwfData, TransformGfsData, TransformEcmwfData" usemap="#inheritanceabf66e071a" class="inheritance graphviz" /></div>
+<map id="inheritanceabf66e071a" name="inheritanceabf66e071a">
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="125,80,209,105"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="257,5,420,31"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="269,55,409,80"/>
+<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="283,104,394,129"/>
+<area shape="rect" id="node6" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="468,128,631,153"/>
+<area shape="rect" id="node8" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="479,177,619,203"/>
 </map><section id="classe-de-base-des-pre-actions">
 <h3>Classe de base des pré-actions<a class="headerlink" href="#classe-de-base-des-pre-actions" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PreAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PreAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Classe de base pour les opérations nécessaires avant l’exécution des prévisions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.PreAction.type_name" title="Link to this definition"></a></dt>
+<dd><p>Le nom du type de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.PreAction.name" title="Link to this definition"></a></dt>
+<dd><p>Le nom de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.attempts_max_hours">
+<span class="sig-name descname"><span class="pre">attempts_max_hours</span></span><a class="headerlink" href="#atmoswing_vigicrues.PreAction.attempts_max_hours" title="Link to this definition"></a></dt>
+<dd><p>Décalage temporel autorisé pour rechercher d’anciens fichiers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.attempts_step_hours">
+<span class="sig-name descname"><span class="pre">attempts_step_hours</span></span><a class="headerlink" href="#atmoswing_vigicrues.PreAction.attempts_step_hours" title="Link to this definition"></a></dt>
+<dd><p>Pas de temps auquel décrémenter la date pour rechercher d’anciens fichiers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.PreAction.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction.run" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/preaction.html#PreAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PreAction.run" title="Link to this definition"></a></dt>
 <dd><p>Exécution de la pre-action.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -296,7 +339,7 @@ l’échéance en cours.</p>
 <h3>Transfert SFTP<a class="headerlink" href="#transfert-sftp" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpIn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transfer_sftp_in.html#TransferSftpIn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpIn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transfer_sftp_in.html#TransferSftpIn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Récupération des prévisions des modèles météo par SFTP.</p>
 <dl class="field-list simple">
@@ -341,6 +384,12 @@ l’échéance en cours.</p>
 </dl>
 </li>
 <li><dl class="simple">
+<dt>proxy_type<span class="classifier">str</span></dt><dd><p>Type de proxy : ‘http’ (méthode CONNECT), ‘socks4’ ou ‘socks5’
+(par défaut: ‘http’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>proxy_host<span class="classifier">str</span></dt><dd><p>Adresse du proxy, si nécessaire.</p>
 </dd>
 </dl>
@@ -351,7 +400,26 @@ l’échéance en cours.</p>
 </dl>
 </li>
 <li><dl class="simple">
+<dt>proxy_username<span class="classifier">str</span></dt><dd><p>Utilisateur du proxy, si nécessaire (authentification Basic pour
+HTTP, utilisateur/mot de passe pour SOCKS5, identifiant seul pour
+SOCKS4).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_password<span class="classifier">str</span></dt><dd><p>Mot de passe de l’utilisateur du proxy, si nécessaire.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>remote_dir<span class="classifier">str</span></dt><dd><p>Chemin sur le serveur distant où se trouvent les fichiers.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>known_hosts<span class="classifier">str</span></dt><dd><p>Fichier known_hosts (format OpenSSH, ex. produit par ‘ssh-keyscan’)
+contenant la clé du serveur. Si défini, l’identité du serveur est
+vérifiée avant l’envoi du mot de passe (recommandé).</p>
 </dd>
 </dl>
 </li>
@@ -481,6 +549,17 @@ l’échéance en cours.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn.proxy_type">
+<span class="sig-name descname"><span class="pre">proxy_type</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn.proxy_type" title="Link to this definition"></a></dt>
+<dd><p>Type de proxy (‘http’, ‘socks4’ ou ‘socks5’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn.proxy_host">
 <span class="sig-name descname"><span class="pre">proxy_host</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn.proxy_host" title="Link to this definition"></a></dt>
 <dd><p>Adresse du proxy, si nécessaire.</p>
@@ -498,6 +577,39 @@ l’échéance en cours.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn.proxy_username">
+<span class="sig-name descname"><span class="pre">proxy_username</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn.proxy_username" title="Link to this definition"></a></dt>
+<dd><p>Utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn.proxy_password">
+<span class="sig-name descname"><span class="pre">proxy_password</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn.proxy_password" title="Link to this definition"></a></dt>
+<dd><p>Mot de passe de l’utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpIn.host_key">
+<span class="sig-name descname"><span class="pre">host_key</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpIn.host_key" title="Link to this definition"></a></dt>
+<dd><p>Clé attendue du serveur (None si l’identité du serveur n’est pas vérifiée).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>paramiko.PKey</p>
 </dd>
 </dl>
 </dd></dl>
@@ -526,7 +638,7 @@ l’échéance en cours.</p>
 <h3>Téléchargement GFS<a class="headerlink" href="#telechargement-gfs" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadGfsData">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">DownloadGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_gfs.html#DownloadGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadGfsData" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">DownloadGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_gfs.html#DownloadGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadGfsData" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
 <p>Téléchargement des prévisions émises par GFS.</p>
 <dl class="field-list simple">
@@ -572,12 +684,9 @@ Valeur par défaut : 0.25</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>proxy_host<span class="classifier">str</span></dt><dd><p>L’adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>proxy_user<span class="classifier">str</span></dt><dd><p>L’utilisateur et le mot de passe pour le proxy. Format : username:password</p>
+<dt>proxies<span class="classifier">dict</span></dt><dd><p>Les proxys à utiliser (si nécessaire), par protocole, au format de la
+bibliothèque requests. Exemple :
+{‘http’: ‘<a class="reference external" href="http://user:pass&#64;proxy:3128">http://user:pass&#64;proxy:3128</a>’, ‘https’: ‘<a class="reference external" href="http://proxy:3128">http://proxy:3128</a>’}</p>
 </dd>
 </dl>
 </li>
@@ -602,6 +711,12 @@ Valeur par défaut : 6</p>
 <li><dl class="simple">
 <dt>time_step_back<span class="classifier">int</span></dt><dd><p>Nombre de pas de temps autorisé pour rechercher d’anciens fichiers
 Valeur par défaut : 4</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>timeout<span class="classifier">float</span></dt><dd><p>Délai maximal d’attente du serveur (en secondes) pour chaque requête.
+Valeur par défaut : 120</p>
 </dd>
 </dl>
 </li>
@@ -701,10 +816,10 @@ Valeur par défaut : 4</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadGfsData.proxies">
 <span class="sig-name descname"><span class="pre">proxies</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadGfsData.proxies" title="Link to this definition"></a></dt>
-<dd><p>Les informations de connexion au proxy.</p>
+<dd><p>Les proxys à utiliser, par protocole (None si aucun proxy n’est défini).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -727,6 +842,17 @@ Valeur par défaut : 4</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadGfsData.timeout">
+<span class="sig-name descname"><span class="pre">timeout</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadGfsData.timeout" title="Link to this definition"></a></dt>
+<dd><p>Délai maximal d’attente du serveur (en secondes) pour chaque requête.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -768,13 +894,22 @@ Valeur par défaut : 4</p>
 </dd></dl>
 
 </section>
-<section id="transformation-donnees-gfs">
-<h3>Transformation données GFS<a class="headerlink" href="#transformation-donnees-gfs" title="Link to this heading"></a></h3>
+<section id="telechargement-cep">
+<h3>Téléchargement CEP<a class="headerlink" href="#telechargement-cep" title="Link to this heading"></a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_gfs.html#TransformGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">DownloadEcmwfData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_ecmwf.html#DownloadEcmwfData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
-<p>Transforme les prévisions émises par GFS en fichier netcdf.</p>
+<p>Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes
+(open data), à l’aide du client officiel ‘ecmwf-opendata’.</p>
+<p>Les champs GRIB2 des données ouvertes sont découpés sur le domaine demandé
+(sans autre modification) et enregistrés, un fichier par variable et par run :
+‘&lt;prefix&gt;_&lt;VARIABLE&gt;_&lt;YYYYMMDDHH&gt;00.grb’, dans l’arborescence YYYY/MM/DD du
+répertoire cible. Ces fichiers sont lus par le jeu de données
+‘Custom_Vigicrues_IFS’ d’AtmoSwing (version lisant les fichiers du CEP au
+format GRIB2).</p>
+<p>Un fichier n’est écrit qu’une fois complet : les fichiers déjà présents sont
+ignorés, et une exécution interrompue reprend avec les variables manquantes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -782,17 +917,102 @@ Valeur par défaut : 4</p>
 <li><p><strong>options</strong> (<em>dict</em>) – <p>Un dictionnaire contenant les options de l’action. Les champs possibles sont:</p>
 <ul>
 <li><dl class="simple">
-<dt>output_dir<span class="classifier">str</span></dt><dd><p>Chemin cible pour l’enregistrement des fichiers.</p>
+<dt>output_dir<span class="classifier">str</span></dt><dd><p>Répertoire cible pour l’enregistrement des fichiers.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>date_format<span class="classifier">str</span></dt><dd><p>Format pour l’écriture des dates cibles. Défaut: “%d-%m-%Y”</p>
+<dt>variables<span class="classifier">list</span></dt><dd><p>Variables à télécharger : ‘z’ (géopotentiel), ‘r’ (humidité relative),
+‘tcwv’ (eau précipitable), ainsi que ‘gh’, ‘t’, ‘q’, ‘w’, ‘u’ et ‘v’.
+Valeur par défaut : [‘z’, ‘r’, ‘tcwv’]</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>variables<span class="classifier">list</span></dt><dd><p>Les variables météorologiques à convertir.</p>
+<dt>levels<span class="classifier">list ou dict</span></dt><dd><p>Niveaux de pression (hPa) des variables en altitude. Une liste
+s’applique à toutes les variables ; un dictionnaire permet de
+définir les niveaux par variable (ex. {‘z’: [500, 1000], ‘r’: [850]}).
+Valeur par défaut : [300, 400, 500, 600, 700, 850, 925, 1000]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>domain<span class="classifier">list</span></dt><dd><p>Domaine à extraire : [lon. ouest, lon. est, lat. sud, lat. nord], en
+degrés, aligné sur la grille.
+Valeur par défaut : [-20, 30, 20, 65]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>resolution<span class="classifier">float</span></dt><dd><p>Résolution spatiale des données (0.25 ou 0.1).
+Valeur par défaut : 0.25</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>lead_time_max<span class="classifier">int</span></dt><dd><p>Échéance maximale de la prévision en heures (360 au maximum).
+Valeur par défaut : 192</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>time_step<span class="classifier">int</span></dt><dd><p>Pas de temps des échéances en heures (3 ou un multiple de 6 ; au-delà
+de 144 h, seules les échéances multiples de 6 h existent).
+Valeur par défaut : 6</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>run_hours<span class="classifier">list</span></dt><dd><p>Heures des runs à télécharger. Pour une autre heure, l’action échoue
+et la date de la prévision est reculée.
+Valeur par défaut : [0, 12]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>prefix<span class="classifier">str</span></dt><dd><p>Préfixe des fichiers produits.
+Valeur par défaut : ‘CEP’</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>source<span class="classifier">str</span></dt><dd><p>Serveur des données : ‘ecmwf’, ‘aws’, ‘azure’, ‘google’ ou une URL.
+Valeur par défaut : ‘ecmwf’</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxies<span class="classifier">dict</span></dt><dd><p>Les proxys à utiliser (si nécessaire), par protocole, au format de la
+bibliothèque requests. Exemple :
+{‘http’: ‘<a class="reference external" href="http://user:pass&#64;proxy:3128">http://user:pass&#64;proxy:3128</a>’, ‘https’: ‘<a class="reference external" href="http://proxy:3128">http://proxy:3128</a>’}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>maximum_retries<span class="classifier">int</span></dt><dd><p>Nombre maximal de tentatives par requête en cas d’erreur réseau.
+Valeur par défaut : 3</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>retry_after<span class="classifier">int</span></dt><dd><p>Délai (en secondes) entre deux tentatives.
+Valeur par défaut : 30</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>timeout<span class="classifier">float</span></dt><dd><p>Délai maximal d’attente du serveur (en secondes) pour chaque requête.
+Valeur par défaut : 120</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>attempts_max_hours<span class="classifier">int</span></dt><dd><p>Décalage temporel autorisé pour rechercher d’anciens fichiers</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>attempts_step_hours<span class="classifier">int</span></dt><dd><p>Pas de temps auquel décrémenter la date pour rechercher d’anciens fichiers</p>
 </dd>
 </dl>
 </li>
@@ -802,9 +1022,9 @@ Valeur par défaut : 4</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.type_name">
-<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.type_name" title="Link to this definition"></a></dt>
-<dd><p>Le nom du type de l’action.</p>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.type_name" title="Link to this definition"></a></dt>
+<dd><p>Le nom du type de l’action</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -813,9 +1033,9 @@ Valeur par défaut : 4</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.name" title="Link to this definition"></a></dt>
-<dd><p>Le nom de l’action.</p>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.name" title="Link to this definition"></a></dt>
+<dd><p>Le nom de l’action</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -824,9 +1044,9 @@ Valeur par défaut : 4</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.input_dir">
-<span class="sig-name descname"><span class="pre">input_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.input_dir" title="Link to this definition"></a></dt>
-<dd><p>Le chemin vers le répertoire contenant les fichiers à traiter.</p>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.output_dir">
+<span class="sig-name descname"><span class="pre">output_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.output_dir" title="Link to this definition"></a></dt>
+<dd><p>Répertoire cible pour l’enregistrement des fichiers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -835,20 +1055,9 @@ Valeur par défaut : 4</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.output_dir">
-<span class="sig-name descname"><span class="pre">output_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.output_dir" title="Link to this definition"></a></dt>
-<dd><p>Le chemin vers le répertoire où seront enregistrés les fichiers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.variables">
-<span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.variables" title="Link to this definition"></a></dt>
-<dd><p>Les variables météorologiques à convertir.</p>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.variables">
+<span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.variables" title="Link to this definition"></a></dt>
+<dd><p>Variables à télécharger (en minuscules).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
@@ -856,9 +1065,147 @@ Valeur par défaut : 4</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.levels">
+<span class="sig-name descname"><span class="pre">levels</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.levels" title="Link to this definition"></a></dt>
+<dd><p>Niveaux de pression par variable en altitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.domain">
+<span class="sig-name descname"><span class="pre">domain</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.domain" title="Link to this definition"></a></dt>
+<dd><p>Domaine à extraire : [lon. ouest, lon. est, lat. sud, lat. nord].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.resolution">
+<span class="sig-name descname"><span class="pre">resolution</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.resolution" title="Link to this definition"></a></dt>
+<dd><p>Résolution spatiale des données.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.steps" title="Link to this definition"></a></dt>
+<dd><p>Échéances à télécharger (en heures).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.run_hours">
+<span class="sig-name descname"><span class="pre">run_hours</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.run_hours" title="Link to this definition"></a></dt>
+<dd><p>Heures des runs à télécharger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.prefix">
+<span class="sig-name descname"><span class="pre">prefix</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.prefix" title="Link to this definition"></a></dt>
+<dd><p>Préfixe des fichiers produits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.source">
+<span class="sig-name descname"><span class="pre">source</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.source" title="Link to this definition"></a></dt>
+<dd><p>Serveur des données.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.proxies">
+<span class="sig-name descname"><span class="pre">proxies</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.proxies" title="Link to this definition"></a></dt>
+<dd><p>Les proxys à utiliser, par protocole (None si aucun proxy n’est défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.maximum_retries">
+<span class="sig-name descname"><span class="pre">maximum_retries</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.maximum_retries" title="Link to this definition"></a></dt>
+<dd><p>Nombre maximal de tentatives par requête.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.retry_after">
+<span class="sig-name descname"><span class="pre">retry_after</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.retry_after" title="Link to this definition"></a></dt>
+<dd><p>Délai (en secondes) entre deux tentatives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.timeout">
+<span class="sig-name descname"><span class="pre">timeout</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.timeout" title="Link to this definition"></a></dt>
+<dd><p>Délai maximal d’attente du serveur (en secondes) pour chaque requête.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_gfs.html#TransformGfsData.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.run" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_ecmwf.html#DownloadEcmwfData.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.download" title="Link to this definition"></a></dt>
+<dd><p>Télécharge les prévisions du CEP pour une date d’émission de la prévision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/download_ecmwf.html#DownloadEcmwfData.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.run" title="Link to this definition"></a></dt>
 <dd><p>Exécute l’action.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -873,22 +1220,27 @@ Valeur par défaut : 4</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_gfs.html#TransformGfsData.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.transform" title="Link to this definition"></a></dt>
-<dd><p>Transforme les prévisions de GFS pour une date d’émission de la prévision.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
 </dd></dl>
+
+</section>
+<section id="transformation-donnees-gfs">
+<h3>Transformation données GFS<a class="headerlink" href="#transformation-donnees-gfs" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformGfsData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_gfs.html#TransformGfsData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformGribData</span></code></p>
+<p>Transforme les prévisions émises par GFS en fichier netcdf.</p>
+<p>Fichiers traités : ‘&lt;YYYYMMDDHH&gt;.NWS_GFS.&lt;variable&gt;.&lt;échéance&gt;.grib2’.
+Voir TransformGribData pour les options.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.dataset_tag">
+<span class="sig-name descname"><span class="pre">dataset_tag</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NWS_GFS'</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.dataset_tag" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformGfsData.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Transformation</span> <span class="pre">données</span> <span class="pre">GFS'</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformGfsData.type_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -897,123 +1249,20 @@ Valeur par défaut : 4</p>
 <h3>Transformation données CEP<a class="headerlink" href="#transformation-donnees-cep" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformEcmwfData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_ecmwf.html#TransformEcmwfData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PreAction" title="atmoswing_vigicrues.preactions.preaction.PreAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreAction</span></code></a></p>
-<p>Transforme les prévisions émises par le CEP en fichier netcdf.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Le nom de l’action</p></li>
-<li><p><strong>options</strong> (<em>dict</em>) – <p>Un dictionnaire contenant les options de l’action. Les champs possibles sont:</p>
-<ul>
-<li><dl class="simple">
-<dt>output_dir<span class="classifier">str</span></dt><dd><p>Chemin cible pour l’enregistrement des fichiers.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>date_format<span class="classifier">str</span></dt><dd><p>Format pour l’écriture des dates cibles. Défaut: “%d-%m-%Y”</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>variables<span class="classifier">list</span></dt><dd><p>Les variables météorologiques à convertir.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</p></li>
-</ul>
-</dd>
-</dl>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransformEcmwfData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_ecmwf.html#TransformEcmwfData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformGribData</span></code></p>
+<p>Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf.</p>
+<p>Fichiers traités : ‘CEP_&lt;variable&gt;_&lt;YYYYMMDDHH&gt;00.grb’.
+Voir TransformGribData pour les options.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.dataset_tag">
+<span class="sig-name descname"><span class="pre">dataset_tag</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ECMWF_IFS'</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.dataset_tag" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.type_name">
-<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.type_name" title="Link to this definition"></a></dt>
-<dd><p>Le nom du type de l’action.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.name" title="Link to this definition"></a></dt>
-<dd><p>Le nom de l’action.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.input_dir">
-<span class="sig-name descname"><span class="pre">input_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.input_dir" title="Link to this definition"></a></dt>
-<dd><p>Le chemin vers le répertoire contenant les fichiers à traiter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.output_dir">
-<span class="sig-name descname"><span class="pre">output_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.output_dir" title="Link to this definition"></a></dt>
-<dd><p>Le chemin vers le répertoire où seront enregistrés les fichiers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.variables">
-<span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.variables" title="Link to this definition"></a></dt>
-<dd><p>Les variables météorologiques à convertir.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_ecmwf.html#TransformEcmwfData.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.run" title="Link to this definition"></a></dt>
-<dd><p>Exécute l’action.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="atmoswing_vigicrues.TransformEcmwfData.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/preactions/transform_ecmwf.html#TransformEcmwfData.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.transform" title="Link to this definition"></a></dt>
-<dd><p>Transforme les prévisions de l’ECMWF pour une date d’émission de la prévision.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date d’émission de la prévision.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">type_name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Transformation</span> <span class="pre">données</span> <span class="pre">CEP'</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransformEcmwfData.type_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1021,18 +1270,40 @@ Valeur par défaut : 4</p>
 </section>
 <section id="post-actions">
 <h2>Post-actions<a class="headerlink" href="#post-actions" title="Link to this heading"></a></h2>
-<div class="graphviz"><img src="../_images/inheritance-cb0d0a3a20bcc1e572d110a3eb2f2089df48d8ec.png" alt="Inheritance diagram of PostAction, ExportBdApBp, ExportPrv" usemap="#inheritanced33a11fe45" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-13ce81e660ab4c8e7b4962f3e9f0f8ea71720dfa.png" alt="Inheritance diagram of PostAction, ExportBdApBp, ExportPrv" usemap="#inheritanced33a11fe45" class="inheritance graphviz" /></div>
 <map id="inheritanced33a11fe45" name="inheritanced33a11fe45">
-<area shape="rect" id="node1" href="#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="144,5,259,31"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="5,31,96,56"/>
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="159,55,244,80"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="125,31,216,56"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="264,5,379,31"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="279,55,364,80"/>
 </map><section id="classe-de-base-des-post-actions">
 <h3>Classe de base des post-actions<a class="headerlink" href="#classe-de-base-des-post-actions" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PostAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">PostAction</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Classe de base pour les opérations de traitement des résultats d’AtmoSwing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.PostAction.type_name" title="Link to this definition"></a></dt>
+<dd><p>Le nom du type de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.PostAction.name" title="Link to this definition"></a></dt>
+<dd><p>Le nom de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction._file_paths">
 <span class="sig-name descname"><span class="pre">_file_paths</span></span><a class="headerlink" href="#atmoswing_vigicrues.PostAction._file_paths" title="Link to this definition"></a></dt>
@@ -1071,7 +1342,7 @@ Valeur par défaut : 4</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.PostAction.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction.run" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/postaction.html#PostAction.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.PostAction.run" title="Link to this definition"></a></dt>
 <dd><p>Exécution du traitement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1090,7 +1361,7 @@ Valeur par défaut : 4</p>
 <h3>Export BdApBp<a class="headerlink" href="#export-bdapbp" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.ExportBdApBp">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportBdApBp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_bdapbp.html#ExportBdApBp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportBdApBp" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportBdApBp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_bdapbp.html#ExportBdApBp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportBdApBp" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PostAction" title="atmoswing_vigicrues.postactions.postaction.PostAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></a></p>
 <p>Export des prévisions au format Json de la BdApBp.</p>
 <dl class="field-list simple">
@@ -1224,9 +1495,11 @@ Valeur par défaut : 4</p>
 <li><p>110 : Fichier netcdf corrompu.</p></li>
 <li><p>200 : Erreur lors du traitement fichier netcdf.</p></li>
 </ul>
+<p>Un fichier déjà exporté n’est pas régénéré, sauf s’il contient une erreur.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Vrai (True) en cas de succès, faux (False) autrement.</p>
+<dd class="field-odd"><p>Vrai (True) si tous les fichiers ont été exportés sans erreur, faux
+(False) autrement.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -1241,7 +1514,7 @@ Valeur par défaut : 4</p>
 <h3>Export PRV<a class="headerlink" href="#export-prv" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.ExportPrv">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportPrv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_prv.html#ExportPrv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportPrv" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">ExportPrv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/postactions/export_prv.html#ExportPrv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.ExportPrv" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.PostAction" title="atmoswing_vigicrues.postactions.postaction.PostAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostAction</span></code></a></p>
 <p>Export des prévisions au format PRV du logiciel Scores.</p>
 <dl class="field-list simple">
@@ -1363,18 +1636,63 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 </section>
 <section id="dissemination">
 <h2>Dissemination<a class="headerlink" href="#dissemination" title="Link to this heading"></a></h2>
-<div class="graphviz"><img src="../_images/inheritance-cd55a00d3f55bc90a00aa55f44a3faf90244966e.png" alt="Inheritance diagram of Dissemination, TransferSftpOut, TransferFtpOut" usemap="#inheritance54a5557647" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-697f3ccc320b8c682593cfad82cef907ad0bdad8.png" alt="Inheritance diagram of Dissemination, TransferSftpOut, TransferFtpOut" usemap="#inheritance54a5557647" class="inheritance graphviz" /></div>
 <map id="inheritance54a5557647" name="inheritance54a5557647">
-<area shape="rect" id="node1" href="#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="5,31,121,56"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="171,5,290,31"/>
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="169,55,292,80"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="125,31,241,56"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="291,5,410,31"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="289,55,412,80"/>
 </map><section id="classe-de-base-des-disseminations">
 <h3>Classe de base des disséminations<a class="headerlink" href="#classe-de-base-des-disseminations" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">Dissemination</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">Dissemination</span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Classe de base pour les opérations de diffusion des résultats d’AtmoSwing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.type_name">
+<span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.type_name" title="Link to this definition"></a></dt>
+<dd><p>Le nom du type de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.name" title="Link to this definition"></a></dt>
+<dd><p>Le nom de l’action (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.local_dir">
+<span class="sig-name descname"><span class="pre">local_dir</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.local_dir" title="Link to this definition"></a></dt>
+<dd><p>Répertoire local contenant les fichiers à diffuser (défini par les classes
+dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.extension">
+<span class="sig-name descname"><span class="pre">extension</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.extension" title="Link to this definition"></a></dt>
+<dd><p>Extension des fichiers à diffuser (défini par les classes dérivées).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination._file_paths">
 <span class="sig-name descname"><span class="pre">_file_paths</span></span><a class="headerlink" href="#atmoswing_vigicrues.Dissemination._file_paths" title="Link to this definition"></a></dt>
@@ -1399,7 +1717,7 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.Dissemination.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.run" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/dissemination.html#Dissemination.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.Dissemination.run" title="Link to this definition"></a></dt>
 <dd><p>Exécution de la diffusion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1421,7 +1739,7 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <h3>Transfert SFTP<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_sftp_out.html#TransferSftpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferSftpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_sftp_out.html#TransferSftpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.Dissemination" title="atmoswing_vigicrues.disseminations.dissemination.Dissemination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dissemination</span></code></a></p>
 <p>Transfer des résultats par SFTP.</p>
 <dl class="field-list simple">
@@ -1461,17 +1779,42 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 </dl>
 </li>
 <li><dl class="simple">
+<dt>proxy_type<span class="classifier">str</span></dt><dd><p>Type de proxy : ‘http’ (méthode CONNECT), ‘socks4’ ou ‘socks5’
+(par défaut: ‘http’).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>proxy_host<span class="classifier">str</span></dt><dd><p>Adresse du proxy, si nécessaire.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>proxy_port<span class="classifier">int</span></dt><dd><p>Port du proxy si nécessaire (par défaut: 1080).</p>
+<dt>proxy_port<span class="classifier">int</span></dt><dd><p>Port du proxy si nécessaire (par défaut: 8080).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_username<span class="classifier">str</span></dt><dd><p>Utilisateur du proxy, si nécessaire (authentification Basic pour
+HTTP, utilisateur/mot de passe pour SOCKS5, identifiant seul pour
+SOCKS4).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_password<span class="classifier">str</span></dt><dd><p>Mot de passe de l’utilisateur du proxy, si nécessaire.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
 <dt>remote_dir<span class="classifier">str</span></dt><dd><p>Chemin sur le serveur distant où enregistrer les fichiers.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>known_hosts<span class="classifier">str</span></dt><dd><p>Fichier known_hosts (format OpenSSH, ex. produit par ‘ssh-keyscan’)
+contenant la clé du serveur. Si défini, l’identité du serveur est
+vérifiée avant l’envoi du mot de passe (recommandé).</p>
 </dd>
 </dl>
 </li>
@@ -1569,6 +1912,17 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.proxy_type">
+<span class="sig-name descname"><span class="pre">proxy_type</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.proxy_type" title="Link to this definition"></a></dt>
+<dd><p>Type de proxy (‘http’, ‘socks4’ ou ‘socks5’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.proxy_host">
 <span class="sig-name descname"><span class="pre">proxy_host</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.proxy_host" title="Link to this definition"></a></dt>
 <dd><p>Adresse du proxy, si nécessaire.</p>
@@ -1582,10 +1936,32 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.proxy_port">
 <span class="sig-name descname"><span class="pre">proxy_port</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.proxy_port" title="Link to this definition"></a></dt>
-<dd><p>Port du proxy si nécessaire (par défaut: 1080).</p>
+<dd><p>Port du proxy si nécessaire (par défaut: 8080).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.proxy_username">
+<span class="sig-name descname"><span class="pre">proxy_username</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.proxy_username" title="Link to this definition"></a></dt>
+<dd><p>Utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.proxy_password">
+<span class="sig-name descname"><span class="pre">proxy_password</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.proxy_password" title="Link to this definition"></a></dt>
+<dd><p>Mot de passe de l’utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1597,6 +1973,17 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferSftpOut.host_key">
+<span class="sig-name descname"><span class="pre">host_key</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferSftpOut.host_key" title="Link to this definition"></a></dt>
+<dd><p>Clé attendue du serveur (None si l’identité du serveur n’est pas vérifiée).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>paramiko.PKey</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1625,7 +2012,7 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <h3>Transfert FTP<a class="headerlink" href="#transfert-ftp" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferFtpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_ftp_out.html#TransferFtpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">atmoswing_vigicrues.</span></span><span class="sig-name descname"><span class="pre">TransferFtpOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/atmoswing_vigicrues/disseminations/transfer_ftp_out.html#TransferFtpOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#atmoswing_vigicrues.Dissemination" title="atmoswing_vigicrues.disseminations.dissemination.Dissemination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dissemination</span></code></a></p>
 <p>Transfer des résultats par FTP.</p>
 <dl class="field-list simple">
@@ -1671,6 +2058,16 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 </li>
 <li><dl class="simple">
 <dt>proxy_port<span class="classifier">int</span></dt><dd><p>Port du proxy si nécessaire (par défaut: 1080).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_username<span class="classifier">str</span></dt><dd><p>Utilisateur du proxy, si nécessaire (authentification Basic).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>proxy_password<span class="classifier">str</span></dt><dd><p>Mot de passe de l’utilisateur du proxy, si nécessaire.</p>
 </dd>
 </dl>
 </li>
@@ -1790,6 +2187,28 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.proxy_username">
+<span class="sig-name descname"><span class="pre">proxy_username</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.proxy_username" title="Link to this definition"></a></dt>
+<dd><p>Utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.TransferFtpOut.proxy_password">
+<span class="sig-name descname"><span class="pre">proxy_password</span></span><a class="headerlink" href="#atmoswing_vigicrues.TransferFtpOut.proxy_password" title="Link to this definition"></a></dt>
+<dd><p>Mot de passe de l’utilisateur du proxy (None si non défini).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
