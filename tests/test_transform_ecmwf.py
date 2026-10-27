@@ -12,8 +12,9 @@ import atmoswing_vigicrues as asv
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-def has_required_packages() -> bool:
-    return asv.has_netcdf and asv.has_eccodes
+pytestmark = pytest.mark.skipif(
+    not asv.preactions.transform_grib.has_toolbox,
+    reason="Nécessite netCDF4, eccodes et atmoswing-toolbox.")
 
 
 @pytest.fixture
@@ -37,8 +38,6 @@ def count_files_recursively(options):
 
 
 def test_transform_ecmwf_fails_if_files_not_found(options):
-    if not has_required_packages():
-        return
     action = asv.TransformEcmwfData('Transform ECMWF data', options)
     date = datetime.now(timezone.utc)
     assert action.transform(date) is False
@@ -46,8 +45,6 @@ def test_transform_ecmwf_fails_if_files_not_found(options):
 
 
 def test_eccodes_import():
-    if not has_required_packages():
-        return
     file = Path(DIR_PATH) / 'files' / 'ecmwf-grib2' / '2023' / '02' / '02'
     file = file / 'CEP_Z_202302020000.grb'
     assert file.exists()
@@ -58,8 +55,6 @@ def test_eccodes_import():
 
 
 def test_transform_ecmwf_succeeds(options):
-    if not has_required_packages():
-        return
     action = asv.TransformEcmwfData('Transform ECMWF data', options)
     date = datetime(2023, 2, 2, 0)
     assert action.transform(date)

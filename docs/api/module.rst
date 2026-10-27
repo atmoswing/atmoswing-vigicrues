@@ -15,7 +15,7 @@ Controller
 Pre-actions
 -----------
 
-.. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData TransformGfsData TransformEcmwfData
+.. inheritance-diagram:: PreAction TransferSftpIn DownloadGfsData DownloadEcmwfData TransformGfsData TransformEcmwfData
    :parts: 1
 
 
@@ -39,6 +39,14 @@ Téléchargement GFS
 ~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: DownloadGfsData
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Téléchargement CEP
+~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: DownloadEcmwfData
    :members:
    :undoc-members:
    :show-inheritance:

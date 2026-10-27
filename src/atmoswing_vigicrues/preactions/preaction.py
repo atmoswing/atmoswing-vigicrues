@@ -1,11 +1,23 @@
-class PreAction:
+from abc import ABC, abstractmethod
+
+
+class PreAction(ABC):
     """
     Classe de base pour les opérations nécessaires avant l'exécution des prévisions.
+
+    Attributes
+    ----------
+    type_name : str
+        Le nom du type de l'action (défini par les classes dérivées).
+    name : str
+        Le nom de l'action (défini par les classes dérivées).
+    attempts_max_hours : int
+        Décalage temporel autorisé pour rechercher d'anciens fichiers.
+    attempts_step_hours : int
+        Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers.
     """
 
-    def __init__(self):
-        pass
-
+    @abstractmethod
     def run(self, date) -> bool:
         """
         Exécution de la pre-action.
@@ -20,7 +32,6 @@ class PreAction:
         bool
             Vrai (True) en cas de succès, faux (False) autrement.
         """
-        raise NotImplementedError
 
     def _set_attempts_attributes(self, options):
         if 'attempts_max_hours' in options:

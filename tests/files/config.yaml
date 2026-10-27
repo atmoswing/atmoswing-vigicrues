@@ -58,7 +58,10 @@ disseminations:
   - name: Transfer SFTP
     uses: TransferSftpOut
     with:
+      local_dir: '/tmp'
+      extension: '.json'
       hostname: '127.0.0.1'
+      port: 22
       username: 'username'
       password: 'secret'
       remote_dir: 'public'

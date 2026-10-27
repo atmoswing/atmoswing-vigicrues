@@ -1,9 +1,24 @@
-class Dissemination:
+import json
+import os
+from abc import ABC, abstractmethod
+from pathlib import Path
+
+
+class Dissemination(ABC):
     """
     Classe de base pour les opérations de diffusion des résultats d'AtmoSwing.
 
     Attributes
     ----------
+    type_name : str
+        Le nom du type de l'action (défini par les classes dérivées).
+    name : str
+        Le nom de l'action (défini par les classes dérivées).
+    local_dir : str
+        Répertoire local contenant les fichiers à diffuser (défini par les classes
+        dérivées).
+    extension : str
+        Extension des fichiers à diffuser (défini par les classes dérivées).
     _file_paths : list
         Chemins des fichiers à diffuser.
     """
@@ -22,6 +37,7 @@ class Dissemination:
         """
         self._file_paths = file_paths
 
+    @abstractmethod
     def run(self, date) -> bool:
         """
         Exécution de la diffusion.
@@ -36,4 +52,43 @@ class Dissemination:
         bool
             Vrai (True) en cas de succès, faux (False) autrement.
         """
-        raise NotImplementedError
+
+    @staticmethod
+    def _must_replace(file_path, remote_size):
+        """
+        Détermine si un fichier déjà présent sur le serveur distant doit être
+        remplacé.
+
+        Seuls les exports JSON (comportant un champ 'status') sont concernés :
+
+        * un export en erreur (statut non nul) est toujours transmis, afin que le
+          serveur dispose de la dernière tentative ;
+        * un export réussi (statut 0) remplace la copie distante si sa taille
+          diffère : un export réussi n'étant jamais régénéré, une copie distante
+          différente est une ancienne version en erreur.
+
+        Parameters
+        ----------
+        file_path : str
+            Chemin du fichier local.
+        remote_size : int or None
+            Taille du fichier distant (None si elle n'a pas pu être déterminée).
+
+        Returns
+        -------
+        bool
+            Vrai (True) si le fichier distant doit être remplacé, faux (False)
+            autrement.
+        """
+        if Path(file_path).suffix.lower() != '.json':
+            return False
+        try:
+            with open(file_path, encoding='utf-8') as f:
+                status = json.load(f).get('status')
+        except (OSError, ValueError, AttributeError):
+            return False
+        if status is None:
+            return False
+        if status != 0:
+            return True
+        return remote_size is None or remote_size != os.path.getsize(file_path)

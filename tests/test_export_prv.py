@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import types
 
+import netCDF4
 import pytest
 
 import atmoswing_vigicrues as asv
@@ -69,4 +70,30 @@ def test_export_prv_runs_multi_time_steps(options):
     export.feed(files, metadata)
     export.run()
     assert count_files_recursively(options) == 4
+    shutil.rmtree(options['output_dir'])
+
+
+@pytest.mark.parametrize('combine', [True, False])
+def test_export_prv_closes_netcdf_files(options, forecast_files, metadata,
+                                        monkeypatch, combine):
+    options['combine_stations_in_one_file'] = combine
+    opened = []
+
+    # Fonction plutôt que sous-classe de netCDF4.Dataset : sous Python 3.14, la
+    # destruction d'une sous-classe locale provoque une erreur de segmentation.
+    def tracked_dataset(*args, **kwargs):
+        nc_file = netCDF4.Dataset(*args, **kwargs)
+        opened.append(nc_file)
+        return nc_file
+
+    monkeypatch.setattr(asv, 'Dataset', tracked_dataset)
+
+    # Le second passage ignore les fichiers déjà exportés
+    for _ in range(2):
+        export = asv.ExportPrv('Export PRV', options)
+        export.feed(forecast_files, metadata)
+        export.run()
+
+    assert len(opened) == 2 * len(forecast_files)
+    assert not any(nc_file.isopen() for nc_file in opened)
     shutil.rmtree(options['output_dir'])

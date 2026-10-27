@@ -42,12 +42,60 @@ def count_files_recursively(options):
 def test_export_bdapbp_reports_if_files_not_found(options, metadata):
     export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(['/wrong/path'], metadata)
-    export.run()
+    assert export.run() is False
     assert count_files_recursively(options) == 1
     file_path = options['output_dir'] + '/2022/10/01/path.json'
     with open(file_path) as f:
         data = json.load(f)
-        assert data['status'] == 200
+        assert data['status'] == 100
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_reports_corrupted_files(options, metadata, tmp_path):
+    corrupted_file = tmp_path / '2022-10-01_00.corrupted.nc'
+    corrupted_file.write_bytes(b"pas un fichier netcdf")
+    export = asv.ExportBdApBp('Export BdApBp', options)
+    export.feed([str(corrupted_file)], metadata)
+    assert export.run() is False
+    file_path = options['output_dir'] + '/2022/10/01/2022-10-01_00.corrupted.json'
+    with open(file_path) as f:
+        data = json.load(f)
+        assert data['status'] == 110
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_regenerates_files_with_errors(options, forecast_files,
+                                                     metadata):
+    forecast_files.sort()
+    forecast_files = [forecast_files[0]]
+    file_path = options['output_dir'] + \
+        '/2022/10/01/2022-10-01_00.PC-AZ4o.Alpes_bernoises_est.json'
+    os.makedirs(os.path.dirname(file_path))
+    with open(file_path, 'w') as f:
+        json.dump({'status': 200}, f)
+
+    export = asv.ExportBdApBp('Export BdApBp', options)
+    export.feed(forecast_files, metadata)
+    assert export.run() is True
+    with open(file_path) as f:
+        assert json.load(f)['status'] == 0
+    shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_keeps_successful_exports(options, forecast_files, metadata):
+    forecast_files.sort()
+    forecast_files = [forecast_files[0]]
+    file_path = options['output_dir'] + \
+        '/2022/10/01/2022-10-01_00.PC-AZ4o.Alpes_bernoises_est.json'
+    os.makedirs(os.path.dirname(file_path))
+    with open(file_path, 'w') as f:
+        json.dump({'status': 0, 'marker': 'existant'}, f)
+
+    export = asv.ExportBdApBp('Export BdApBp', options)
+    export.feed(forecast_files, metadata)
+    assert export.run() is True
+    with open(file_path) as f:
+        assert json.load(f)['marker'] == 'existant'
     shutil.rmtree(options['output_dir'])
 
 
@@ -59,7 +107,7 @@ def forecast_files():
 def test_export_bdapbp_runs(options, forecast_files, metadata):
     export = asv.ExportBdApBp('Export BdApBp', options)
     export.feed(forecast_files, metadata)
-    export.run()
+    assert export.run() is True
     assert count_files_recursively(options) == 3
 
     created_files = [

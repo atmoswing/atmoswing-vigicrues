@@ -1,4 +1,5 @@
 import datetime
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,8 @@ import numpy as np
 import atmoswing_vigicrues as asv
 
 from .postaction import PostAction
+
+logger = logging.getLogger(__name__)
 
 
 class ExportPrv(PostAction):
@@ -82,44 +85,43 @@ class ExportPrv(PostAction):
             Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         files_count = 0
         for file in self._file_paths:
-            nc_file = asv.Dataset(file, 'r', format='NETCDF4')
-            station_ids = self._extract_station_ids(nc_file)
-            header_comments = self._create_header_comments(nc_file)
-            if self.combine_stations_in_one_file:
-                file_path = self._build_file_path(file)
-                if file_path.exists():
-                    continue
-
-                header_data = self._create_header_data(nc_file, station_ids)
-                content = self._create_content(nc_file, station_ids)
-                full_content = f"{header_comments}{header_data}{content}"
-
-                with open(file_path, 'w', encoding="utf-8", newline='\r\n') as outfile:
-                    outfile.write(full_content)
-            else:
-                for station_id in station_ids:
-                    file_path = self._build_file_path(file, station_id)
+            with asv.Dataset(file, 'r', format='NETCDF4') as nc_file:
+                station_ids = self._extract_station_ids(nc_file)
+                header_comments = self._create_header_comments(nc_file)
+                if self.combine_stations_in_one_file:
+                    file_path = self._build_file_path(file)
                     if file_path.exists():
                         continue
 
-                    header_data = self._create_header_data(nc_file, station_id)
-                    content = self._create_content(nc_file, station_id)
+                    header_data = self._create_header_data(nc_file, station_ids)
+                    content = self._create_content(nc_file, station_ids)
                     full_content = f"{header_comments}{header_data}{content}"
 
                     with open(file_path, 'w', encoding="utf-8", newline='\r\n') \
                             as outfile:
                         outfile.write(full_content)
+                else:
+                    for station_id in station_ids:
+                        file_path = self._build_file_path(file, station_id)
+                        if file_path.exists():
+                            continue
 
-            nc_file.close()
+                        header_data = self._create_header_data(nc_file, station_id)
+                        content = self._create_content(nc_file, station_id)
+                        full_content = f"{header_comments}{header_data}{content}"
+
+                        with open(file_path, 'w', encoding="utf-8",
+                                  newline='\r\n') as outfile:
+                            outfile.write(full_content)
 
             files_count += 1
 
-        print(f"  -> Nombre de fichiers exportés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers exportés : {files_count}.")
 
         return True
 
@@ -235,8 +237,8 @@ class ExportPrv(PostAction):
 
     def _get_time_format(self, target_dates):
         assert len(target_dates) > 1
-        time_step = target_dates[1].astype(datetime.datetime) - \
-                    target_dates[0].astype(datetime.datetime)
+        time_step = (target_dates[1].astype(datetime.datetime)
+                     - target_dates[0].astype(datetime.datetime))
         time_step = time_step.total_seconds()
         show_hour = time_step < 24 * 3600
         time_format_target = self.date_format

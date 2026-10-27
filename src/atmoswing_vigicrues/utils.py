@@ -1,9 +1,20 @@
+import base64
 import datetime
+import os
+import socket
 from pathlib import Path
 
 import numpy as np
+import paramiko
+import socks
 
 import atmoswing_vigicrues as asv
+
+PROXY_TYPES = {
+    'http': None,
+    'socks4': socks.SOCKS4,
+    'socks5': socks.SOCKS5,
+}
 
 
 def file_exists(path):
@@ -25,8 +36,7 @@ def file_exists(path):
     >>> file_exists(R'C:\\Users\\username\\Documents\\file.txt')
     True
     """
-    if type(path) == str:
-        path = Path(path)
+    path = Path(path)
     if not path.exists():
         return False
     if not path.is_file():
@@ -54,8 +64,7 @@ def check_file_exists(path):
     --------
     >>> check_file_exists(R'C:\\Users\\username\\Documents\\file.txt')
     """
-    if type(path) == str:
-        path = Path(path)
+    path = Path(path)
     if not path.exists():
         raise asv.FilePathError(path)
     if not path.is_file():
@@ -91,6 +100,31 @@ def check_dir_exists(path, create=False):
             raise asv.Error(f"Le répertoire '{path}' n'a pas été trouvé.")
 
 
+def use_builtin_eccodes_definitions():
+    """
+    Ignore, pour le processus Python uniquement, les définitions désignées par
+    ECCODES_DEFINITION_PATH lorsque la bibliothèque eccodes utilisée embarque ses
+    propres définitions (paquet pip 'eccodeslib').
+
+    L'image AtmoSwing Forecaster définit ECCODES_DEFINITION_PATH pour la version
+    système d'eccodes, plus ancienne : la bibliothèque embarquée chargerait alors
+    des définitions incompatibles et ne pourrait décoder aucun fichier GRIB. La
+    variable d'environnement n'est pas modifiée, afin de rester valable pour
+    AtmoSwing Forecaster (exécuté en sous-processus).
+    """
+    env_paths = os.environ.get('ECCODES_DEFINITION_PATH')
+    if not env_paths:
+        return
+    try:
+        import eccodes
+        current = eccodes.codes_definition_path().split(':')
+        builtin = [p for p in current if p not in env_paths.split(':')]
+        if builtin:
+            eccodes.codes_set_definitions_path(':'.join(builtin))
+    except Exception:
+        pass
+
+
 def build_date_dir_structure(base, date):
     """
     Construit la structure de répertoires pour une date donnée.
@@ -121,97 +155,239 @@ def build_date_dir_structure(base, date):
     return base
 
 
-def jd_to_date(jd):
+def load_host_key(known_hosts, hostname, port=22):
     """
-    Transforme un nombre de jour julien en date (année, mois, jour).
-    De https://gist.github.com/jiffyclub/1294443
+    Charge la clé publique attendue d'un serveur SSH depuis un fichier known_hosts
+    (format OpenSSH, ex. produit par 'ssh-keyscan').
 
     Parameters
     ----------
-    jd: float
-        Le nombre de jour julien.
+    known_hosts: str or Path
+        Le chemin du fichier known_hosts.
+    hostname: str
+        L'adresse du serveur.
+    port: int
+        Le port du serveur.
 
     Returns
     -------
-    year: int
-        L'année.
-    month: int
-        Le mois.
-    day: int
-        Le jour.
+    paramiko.PKey
+        La clé attendue du serveur.
 
-    Examples
-    --------
-    >>> jd_to_date(2460096.5)
-    (2023, 6, 1)
+    Raises
+    ------
+    asv.Error
+        Si le fichier ne contient aucune clé pour ce serveur.
     """
-    jd = jd + 0.5
-
-    f, i = np.modf(jd)
-    i = i.astype(int)
-
-    a = np.trunc((i - 1867216.25) / 36524.25)
-    b = np.zeros(len(jd))
-
-    idx = tuple([i > 2299160])
-    b[idx] = i[idx] + 1 + a[idx] - np.trunc(a[idx] / 4.)
-    idx = tuple([i <= 2299160])
-    b[idx] = i[idx]
-
-    c = b + 1524
-    d = np.trunc((c - 122.1) / 365.25)
-    e = np.trunc(365.25 * d)
-    g = np.trunc((c - e) / 30.6001)
-
-    day = c - e + f - np.trunc(30.6001 * g)
-
-    month = np.zeros(len(jd))
-    month[g < 13.5] = g[g < 13.5] - 1
-    month[g >= 13.5] = g[g >= 13.5] - 13
-    month = month.astype(int)
-
-    year = np.zeros(len(jd))
-    year[month > 2.5] = d[month > 2.5] - 4716
-    year[month <= 2.5] = d[month <= 2.5] - 4715
-    year = year.astype(int)
-
-    return year, month, day
+    check_file_exists(known_hosts)
+    host_keys = paramiko.HostKeys(str(known_hosts))
+    entry = hostname if int(port) == 22 else f"[{hostname}]:{port}"
+    keys = host_keys.lookup(entry)
+    if not keys:
+        raise asv.Error(f"Aucune clé pour le serveur '{entry}' dans le fichier "
+                        f"'{known_hosts}'.")
+    return keys[next(iter(keys))]
 
 
-def days_to_hours_mins(days):
+def parse_proxy_type(value):
     """
-    Transforme un nombre de jours en heures et minutes.
+    Contrôle et normalise le type de proxy.
 
     Parameters
     ----------
-    days: float
-        Le nombre de jours.
+    value: str or None
+        Le type de proxy ('http', 'socks4' ou 'socks5'). Une valeur vide
+        correspond à 'http'.
 
     Returns
     -------
-    hour: int
-        L'heure.
-    minute: int
-        La minute.
+    str
+        Le type de proxy en minuscules.
 
-    Examples
-    --------
-    >>> days_to_hours_mins(0.5)
-    (12, 0)
+    Raises
+    ------
+    asv.Error
+        Si le type de proxy n'est pas supporté.
     """
-    hours = days * 24.
-    hours, hour = np.modf(hours)
+    if not value:
+        return 'http'
+    proxy_type = str(value).strip().lower()
+    if proxy_type not in PROXY_TYPES:
+        raise asv.Error(f"Le type de proxy '{value}' n'est pas supporté "
+                        f"(options : {', '.join(PROXY_TYPES)}).")
+    return proxy_type
 
-    minutes = hours * 60.
-    _, minute = np.modf(minutes)
 
-    return hour.astype(int), minute.astype(int)
+def parse_proxy_credentials(options, proxy_type='http'):
+    """
+    Lit les identifiants du proxy ('proxy_username' et 'proxy_password').
+
+    Parameters
+    ----------
+    options: dict
+        Les options de l'action.
+    proxy_type: str
+        Le type de proxy ('http', 'socks4' ou 'socks5').
+
+    Returns
+    -------
+    tuple
+        L'utilisateur et le mot de passe (None lorsqu'ils ne sont pas définis).
+
+    Raises
+    ------
+    asv.Error
+        Si les identifiants sont incomplets ou non supportés par le type de proxy.
+    """
+    username = options.get('proxy_username')
+    password = options.get('proxy_password')
+    username = None if username is None or username == '' else str(username)
+    password = None if password is None or password == '' else str(password)
+
+    if proxy_type == 'socks4':
+        # SOCKS4 ne transmet qu'un identifiant utilisateur
+        if password is not None:
+            raise asv.Error("Le proxy SOCKS4 ne supporte pas de mot de passe "
+                            "('proxy_password').")
+    elif password is not None and username is None:
+        raise asv.Error("L'option 'proxy_username' doit être définie avec "
+                        "'proxy_password'.")
+    elif username is not None and password is None:
+        raise asv.Error("L'option 'proxy_password' doit être définie avec "
+                        "'proxy_username'.")
+
+    return username, password
+
+
+def connect_via_proxy(proxy_type, proxy_host, proxy_port, target_host, target_port,
+                      timeout=30, username=None, password=None):
+    """
+    Ouvre une connexion TCP vers un serveur distant au travers d'un proxy.
+
+    Parameters
+    ----------
+    proxy_type: str
+        Le type de proxy ('http', 'socks4' ou 'socks5').
+    proxy_host: str
+        L'adresse du proxy.
+    proxy_port: int
+        Le port du proxy.
+    target_host: str
+        L'adresse du serveur distant.
+    target_port: int
+        Le port du serveur distant.
+    timeout: float
+        Le délai maximal (en secondes) pour l'établissement de la connexion.
+    username: str
+        L'utilisateur du proxy, si nécessaire (identifiant pour SOCKS4).
+    password: str
+        Le mot de passe de l'utilisateur du proxy, si nécessaire.
+
+    Returns
+    -------
+    socket.socket
+        Le socket connecté au serveur distant au travers du proxy.
+    """
+    proxy_type = parse_proxy_type(proxy_type)
+    if proxy_type == 'http':
+        return connect_via_http_proxy(proxy_host, proxy_port, target_host,
+                                      target_port, timeout, username, password)
+
+    try:
+        sock = socks.create_connection(
+            (target_host, target_port), timeout,
+            proxy_type=PROXY_TYPES[proxy_type], proxy_addr=proxy_host,
+            proxy_port=proxy_port, proxy_rdns=True,
+            proxy_username=username, proxy_password=password)
+    except socks.ProxyError as e:
+        raise asv.Error(f"Échec de la connexion via le proxy ({e}).") from e
+    sock.settimeout(None)
+    return sock
+
+
+def connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port,
+                           timeout=30, username=None, password=None):
+    """
+    Ouvre un tunnel TCP vers un serveur distant au travers d'un proxy HTTP
+    (méthode CONNECT).
+
+    Parameters
+    ----------
+    proxy_host: str
+        L'adresse du proxy.
+    proxy_port: int
+        Le port du proxy.
+    target_host: str
+        L'adresse du serveur distant.
+    target_port: int
+        Le port du serveur distant.
+    timeout: float
+        Le délai maximal (en secondes) pour l'établissement du tunnel.
+    username: str
+        L'utilisateur du proxy, si nécessaire (authentification Basic).
+    password: str
+        Le mot de passe de l'utilisateur du proxy, si nécessaire.
+
+    Returns
+    -------
+    socket.socket
+        Le socket connecté au serveur distant au travers du proxy.
+
+    Raises
+    ------
+    asv.Error
+        Si le proxy refuse ou interrompt la connexion.
+    """
+    sock = socket.create_connection((proxy_host, proxy_port), timeout=timeout)
+    try:
+        request = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\n"
+                   f"Host: {target_host}:{target_port}\r\n")
+        if username is not None:
+            credentials = base64.b64encode(
+                f"{username}:{password or ''}".encode('utf-8')).decode('ascii')
+            request += f"Proxy-Authorization: Basic {credentials}\r\n"
+        request += "\r\n"
+        sock.sendall(request.encode())
+
+        # Lecture octet par octet jusqu'à la fin des en-têtes, afin de ne pas
+        # consommer les données envoyées par le serveur distant (ex. bannière SSH).
+        response = b""
+        while not response.endswith(b"\r\n\r\n"):
+            byte = sock.recv(1)
+            if not byte:
+                raise asv.Error("Le proxy a fermé la connexion.")
+            response += byte
+            if len(response) > 16384:
+                raise asv.Error("Réponse du proxy trop longue.")
+
+        status_line = response.split(b"\r\n", 1)[0].decode(errors='replace')
+        status = status_line.split()
+        if len(status) >= 2 and status[1] == '407':
+            raise asv.Error(f"Le proxy requiert une authentification valide "
+                            f"('proxy_username', 'proxy_password') ({status_line}).")
+        if len(status) < 2 or status[1] != '200':
+            raise asv.Error(f"Échec de la connexion via le proxy ({status_line}).")
+
+        sock.settimeout(None)
+        return sock
+
+    except BaseException:
+        sock.close()
+        raise
+
+
+MJD_EPOCH = np.datetime64('1858-11-17T00:00:00', 's')
 
 
 def mjd_to_datetime(mjd):
     """
-    Transforme un tableau de nombre de jour julien modifié (MJD) en date
-    (année, mois, jour, heure, minute).
+    Transforme un tableau de nombre de jour julien modifié (MJD) en date, arrondie
+    à l'heure la plus proche.
+
+    AtmoSwing enregistre les dates en float32, dont la précision n'est que
+    d'environ 5.6 minutes autour de MJD 60000 : une date horaire (ex. 1/24 jour)
+    n'est donc pas représentée exactement. Les dates d'AtmoSwing étant toujours
+    des heures pleines, l'arrondi à l'heure restitue la date exacte.
 
     Parameters
     ----------
@@ -228,21 +404,8 @@ def mjd_to_datetime(mjd):
     >>> mjd_to_datetime(np.array([59215.5, 59216.5]))
     array(['2021-01-01T12:00:00', '2021-01-02T12:00:00'], dtype='datetime64[s]')
     """
-    jd = mjd + 2400000.5
-    year, month, day = jd_to_date(jd)
-
-    frac_days, day = np.modf(day)
-    day = day.astype(int)
-
-    hour, minute = days_to_hours_mins(frac_days)
-
-    date = np.empty(len(mjd), dtype='datetime64[s]')
-
-    for idx, _ in enumerate(year):
-        date[idx] = datetime.datetime(year[idx], month[idx], day[idx],
-                                      hour[idx], minute[idx], 0, 0)
-
-    return date
+    hours = np.round(np.asarray(mjd, dtype=np.float64) * 24).astype(np.int64)
+    return MJD_EPOCH + hours.astype('timedelta64[h]')
 
 
 def build_cumulative_frequency(size):

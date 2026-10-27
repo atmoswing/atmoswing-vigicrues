@@ -26,16 +26,22 @@ from .postactions.postaction import PostAction
 from .postactions.export_bdapbp import ExportBdApBp
 from .postactions.export_prv import ExportPrv
 from .preactions.preaction import PreAction
+from .preactions.download_ecmwf import DownloadEcmwfData
 from .preactions.download_gfs import DownloadGfsData
 from .preactions.transfer_sftp_in import TransferSftpIn
 from .preactions.transform_ecmwf import TransformEcmwfData
 from .preactions.transform_gfs import TransformGfsData
 from .utils import (build_date_dir_structure, check_dir_exists,
-                    check_file_exists, file_exists)
+                    check_file_exists, file_exists,
+                    use_builtin_eccodes_definitions)
+
+if has_eccodes:
+    use_builtin_eccodes_definitions()
 
 __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
            'Controller', 'Options', 'ExportBdApBp', 'ExportPrv', 'TransferSftpOut',
-           'DownloadGfsData', 'TransformGfsData', 'TransformEcmwfData', 'file_exists',
+           'DownloadGfsData', 'DownloadEcmwfData', 'TransformGfsData',
+           'TransformEcmwfData', 'file_exists',
            'check_file_exists', 'check_dir_exists', 'build_date_dir_structure',
            'Dataset', 'eccodes', 'TransferSftpIn', 'PreAction', 'PostAction',
            'Dissemination', 'TransferFtpOut')

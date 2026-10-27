@@ -1,11 +1,13 @@
+import logging
 import os
-import socket
-import ssl
+
 import paramiko
 
 import atmoswing_vigicrues as asv
 
 from .dissemination import Dissemination
+
+logger = logging.getLogger(__name__)
 
 
 class TransferSftpOut(Dissemination):
@@ -31,12 +33,25 @@ class TransferSftpOut(Dissemination):
             Utilisateur ayant un accès au serveur.
         * password : str
             Mot de passe de l'utilisateur sur le serveur.
+        * proxy_type : str
+            Type de proxy : 'http' (méthode CONNECT), 'socks4' ou 'socks5'
+            (par défaut: 'http').
         * proxy_host : str
             Adresse du proxy, si nécessaire.
         * proxy_port : int
-            Port du proxy si nécessaire (par défaut: 1080).
+            Port du proxy si nécessaire (par défaut: 8080).
+        * proxy_username : str
+            Utilisateur du proxy, si nécessaire (authentification Basic pour
+            HTTP, utilisateur/mot de passe pour SOCKS5, identifiant seul pour
+            SOCKS4).
+        * proxy_password : str
+            Mot de passe de l'utilisateur du proxy, si nécessaire.
         * remote_dir : str
             Chemin sur le serveur distant où enregistrer les fichiers.
+        * known_hosts : str
+            Fichier known_hosts (format OpenSSH, ex. produit par 'ssh-keyscan')
+            contenant la clé du serveur. Si défini, l'identité du serveur est
+            vérifiée avant l'envoi du mot de passe (recommandé).
 
     Attributes
     ----------
@@ -56,12 +71,20 @@ class TransferSftpOut(Dissemination):
         Utilisateur ayant un accès au serveur.
     password : str
         Mot de passe de l'utilisateur sur le serveur.
+    proxy_type : str
+        Type de proxy ('http', 'socks4' ou 'socks5').
     proxy_host : str
         Adresse du proxy, si nécessaire.
     proxy_port : int
-        Port du proxy si nécessaire (par défaut: 1080).
+        Port du proxy si nécessaire (par défaut: 8080).
+    proxy_username : str
+        Utilisateur du proxy (None si non défini).
+    proxy_password : str
+        Mot de passe de l'utilisateur du proxy (None si non défini).
     remote_dir : str
         Chemin sur le serveur distant où enregistrer les fichiers.
+    host_key : paramiko.PKey
+        Clé attendue du serveur (None si l'identité du serveur n'est pas vérifiée).
     """
 
     def __init__(self, name, options):
@@ -78,6 +101,10 @@ class TransferSftpOut(Dissemination):
         self.password = options['password']
         self.remote_dir = options['remote_dir']
 
+        self.proxy_type = asv.utils.parse_proxy_type(options.get('proxy_type'))
+        self.proxy_username, self.proxy_password = \
+            asv.utils.parse_proxy_credentials(options, self.proxy_type)
+
         if 'proxy_host' in options and len(options['proxy_host']) > 0:
             self.proxy_host = options['proxy_host']
             if 'proxy_port' in options:
@@ -93,6 +120,11 @@ class TransferSftpOut(Dissemination):
                 self.proxy_port = 8080
         else:
             self.proxy_host = None
+
+        self.host_key = None
+        if options.get('known_hosts'):
+            self.host_key = asv.utils.load_host_key(
+                options['known_hosts'], self.hostname, self.port)
 
         super().__init__()
 
@@ -111,21 +143,24 @@ class TransferSftpOut(Dissemination):
             Vrai (True) en cas de succès, faux (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
-            return False
+            logger.info("  -> Aucun fichier à traiter")
+            return True
 
         try:
             if self.proxy_host:
-                proxy_socket = self._connect_via_http_proxy(
-                    self.proxy_host, self.proxy_port, self.hostname, self.port)
+                proxy_socket = asv.utils.connect_via_proxy(
+                    self.proxy_type, self.proxy_host, self.proxy_port,
+                    self.hostname, self.port, username=self.proxy_username,
+                    password=self.proxy_password)
                 transport = paramiko.Transport(proxy_socket)
 
             else:
                 # Create a transport object for the SFTP connection
                 transport = paramiko.Transport((self.hostname, self.port))
 
-            # Authenticate with the SFTP server
-            transport.connect(username=self.username, password=self.password)
+            # Verify the server key (if defined) and authenticate
+            transport.connect(hostkey=self.host_key, username=self.username,
+                              password=self.password)
 
             # Create SFTP client
             sftp = paramiko.SFTPClient.from_transport(transport)
@@ -139,13 +174,18 @@ class TransferSftpOut(Dissemination):
                 filename = os.path.basename(file)
                 asv.check_file_exists(file)
 
-                # If file exists remotely, do not upload
+                # If file exists remotely, upload only if it must be replaced
                 try:
-                    sftp.stat(filename)
-                    print(f"Le fichier {filename} existe déjà sur le serveur distant.")
-                    continue
+                    remote_size = sftp.stat(filename).st_size
                 except FileNotFoundError:
-                    pass
+                    remote_size = None
+                else:
+                    if not self._must_replace(file, remote_size):
+                        logger.info(f"Le fichier {filename} existe déjà sur le serveur "
+                                    f"distant.")
+                        continue
+                    logger.info(f"Remplacement du fichier {filename} sur le serveur "
+                                f"distant.")
 
                 sftp.put(file, filename)
 
@@ -155,21 +195,21 @@ class TransferSftpOut(Dissemination):
             return True
 
         except paramiko.ssh_exception.PasswordRequiredException as e:
-            print(f"SFTP PasswordRequiredException {e}")
+            logger.error(f"SFTP PasswordRequiredException {e}")
         except paramiko.ssh_exception.BadAuthenticationType as e:
-            print(f"SFTP BadAuthenticationType {e}")
+            logger.error(f"SFTP BadAuthenticationType {e}")
         except paramiko.ssh_exception.AuthenticationException as e:
-            print(f"SFTP AuthenticationException {e}")
+            logger.error(f"SFTP AuthenticationException {e}")
         except paramiko.ssh_exception.ChannelException as e:
-            print(f"SFTP ChannelException {e}")
+            logger.error(f"SFTP ChannelException {e}")
         except paramiko.ssh_exception.ProxyCommandFailure as e:
-            print(f"SFTP ProxyCommandFailure {e}")
+            logger.error(f"SFTP ProxyCommandFailure {e}")
         except paramiko.ssh_exception.SSHException as e:
-            print(f"SFTP SSHException {e}")
+            logger.error(f"SFTP SSHException {e}")
         except FileNotFoundError as e:
-            print(f"SFTP FileNotFoundError {e}")
+            logger.error(f"SFTP FileNotFoundError {e}")
         except Exception as e:
-            print(f"La diffusion SFTP a échoué ({e}).")
+            logger.error(f"La diffusion SFTP a échoué ({e}).")
 
         if 'sftp' in locals():
             sftp.close()
@@ -177,20 +217,6 @@ class TransferSftpOut(Dissemination):
             transport.close()
 
         return False
-
-    @staticmethod
-    def _connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port):
-        sock = socket.create_connection((proxy_host, proxy_port))
-        connect_str = (f"CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: "
-                       f"{target_host}:{target_port}\r\n\r\n")
-        sock.sendall(connect_str.encode())
-
-        # Wait for HTTP 200 connection established
-        response = sock.recv(4096).decode()
-        if "200 connection established" not in response.lower():
-            raise Exception(f"Failed to connect via proxy. Response:\n{response}")
-
-        return sock
 
     @staticmethod
     def _chdir_or_mkdir(dir_path, sftp):

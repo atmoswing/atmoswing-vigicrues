@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 
 import requests
@@ -6,6 +7,8 @@ import requests
 import atmoswing_vigicrues as asv
 
 from .preaction import PreAction
+
+logger = logging.getLogger(__name__)
 
 CLEAN_HTML = re.compile('<.*?>')
 
@@ -39,10 +42,10 @@ class DownloadGfsData(PreAction):
             Résolution spatiale des données.
             Options: 0.25, 0.50, 1
             Valeur par défaut : 0.25
-        * proxy_host : str
-            L'adresse du proxy (si nécessaire). Format : proxy_ip:proxy_port
-        * proxy_user : str
-            L'utilisateur et le mot de passe pour le proxy. Format : username:password
+        * proxies : dict
+            Les proxys à utiliser (si nécessaire), par protocole, au format de la
+            bibliothèque requests. Exemple :
+            {'http': 'http://user:pass@proxy:3128', 'https': 'http://proxy:3128'}
         * attempts_max_hours : int
             Décalage temporel autorisé pour rechercher d'anciens fichiers
         * attempts_step_hours : int
@@ -55,6 +58,9 @@ class DownloadGfsData(PreAction):
         * time_step_back : int
             Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
             Valeur par défaut : 4
+        * timeout : float
+            Délai maximal d'attente du serveur (en secondes) pour chaque requête.
+            Valeur par défaut : 120
 
     Attributes
     ----------
@@ -74,12 +80,14 @@ class DownloadGfsData(PreAction):
         Domaine à télécharger (coordonnées géographiques).
     resolution : float
         Résolution spatiale des données.
-    proxies : list
-        Les informations de connexion au proxy.
+    proxies : dict
+        Les proxys à utiliser, par protocole (None si aucun proxy n'est défini).
     time_increment : int
         Pas de temps auquel décrémenter la date pour rechercher d'anciens fichiers
     time_step_back : int
         Nombre de pas de temps autorisé pour rechercher d'anciens fichiers
+    timeout : float
+        Délai maximal d'attente du serveur (en secondes) pour chaque requête.
     """
 
     def __init__(self, name, options):
@@ -122,18 +130,14 @@ class DownloadGfsData(PreAction):
             elif resolution == 1:
                 self.resolution = '1p00'
             else:
-                raise ValueError("La résolution fournie pour GFS ne correspond pas"
+                raise ValueError("La résolution fournie pour GFS ne correspond pas "
                                  "aux options disponibles (0.25, 0.5, 1).")
         else:
             self.resolution = '0p25'
 
-        self.proxies = None
-        if 'proxies' in options and options['proxies']:
-            proxies = options['proxies']
-            for key in proxies:
-                if proxies[key]:
-                    self.proxies = proxies
-                    continue
+        # Seuls les proxys renseignés sont conservés (les valeurs vides sont ignorées)
+        proxies = options.get('proxies') or {}
+        self.proxies = {key: value for key, value in proxies.items() if value} or None
 
         # Télécharge également les 4 pas de temps précédents (pas de temps de 6 h)
         if 'time_increment' in options:
@@ -145,6 +149,8 @@ class DownloadGfsData(PreAction):
             self.time_step_back = options['time_step_back']
         else:
             self.time_step_back = 4
+
+        self.timeout = options.get('timeout') or 120
 
         super().__init__()
 
@@ -192,7 +198,7 @@ class DownloadGfsData(PreAction):
             )
 
             date_msg = date_ref.strftime('%d/%m/%Y %Hh')
-            print(f"  -> Téléchargement des prévisions du : {date_msg}.")
+            logger.info(f"  -> Téléchargement des prévisions du : {date_msg}.")
             forecast_date, forecast_hour = self._format_forecast_date(date_ref)
 
             for lead_time in range(0, self.lead_time_max + 1, 6):
@@ -216,27 +222,26 @@ class DownloadGfsData(PreAction):
                         continue
 
                     try:
-                        if self.proxies:
-                            r = requests.get(url, proxies=self.proxies)
-                        else:
-                            r = requests.get(url)
+                        r = requests.get(url, proxies=self.proxies,
+                                         timeout=self.timeout)
                     except requests.exceptions.RequestException as e:
-                        print(f"  -> {e}")
-                        print("  -> Le téléchargement de GFS a échoué.")
+                        logger.error(f"  -> {e}")
+                        logger.error("  -> Le téléchargement de GFS a échoué.")
                         return False
                     except Exception:
-                        print("  -> Le téléchargement de GFS a échoué.")
+                        logger.error("  -> Le téléchargement de GFS a échoué.")
                         return False
 
                     if r.status_code == 200:
-                        open(file_path, 'wb').write(r.content)
+                        with open(file_path, 'wb') as f:
+                            f.write(r.content)
                         files_count += 1
                     else:
                         clean_text = re.sub(CLEAN_HTML, '', r.text)
-                        print(f"  -> {clean_text}")
+                        logger.error(f"  -> {clean_text}")
                         return False
 
-        print(f"  -> Nombre de fichiers téléchargés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers téléchargés : {files_count}.")
 
         return True
 

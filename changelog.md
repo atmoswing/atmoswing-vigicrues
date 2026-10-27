@@ -1,6 +1,49 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.3.0 - 27 Octobre 2026
+
+### Changements incompatibles
+
+*   Codes de retour modifiés (voir « Changements ») : les scripts de supervision testant le code de retour doivent être adaptés.
+*   Python 3.9 ou supérieur requis.
+*   Configuration chargée avec `yaml.safe_load` : les balises YAML propres à Python (ex. `!!python/...`) ne sont plus acceptées.
+
+### Ajouts
+
+*   Pré-action `DownloadEcmwfData` : téléchargement des prédicteurs du CEP depuis les données ouvertes ECMWF (`ecmwf-opendata`), en remplacement du dépôt SFTP. Les champs GRIB2 sont découpés sur le domaine, sans conversion, avec reprise des téléchargements interrompus. Seules les prévisions de 00h et 12h sont téléchargées par défaut (celles utilisées par le jeu de données `Custom_Vigicrues_IFS`).
+*   `DownloadEcmwfData` nécessite une version récente d'AtmoSwing Forecaster, définissant les codes GRIB2 des variables IFS (déjà incluse dans l'image Docker).
+*   Options `proxy_type` (`http`, `socks4`, `socks5`), `proxy_username` et `proxy_password` pour les transferts SFTP et FTP.
+*   Option `known_hosts` pour vérifier la clé du serveur SFTP (recommandé).
+*   Option `timeout` pour le téléchargement des données GFS.
+*   Dépendances optionnelles via `pip install atmoswing-vigicrues[grib]`.
+
+### Changements
+
+*   Codes de retour : -1 si les pré-actions échouent pour toutes les dates tentées (AtmoSwing n'est plus lancé), 1 si une post-action ou une dissémination échoue.
+*   Messages émis via `logging`, avec horodatage et niveau.
+*   Récupération SFTP : décompression des fichiers compressés seuls (`.gz`, `.bz2`, `.xz`) et extraction sécurisée des archives tar.
+*   Paquet décrit uniquement par `pyproject.toml` (`setup.py` et `setup.cfg` supprimés).
+*   Image Docker basée sur AtmoSwing Forecaster v3.1.0 (Ubuntu 26.04, Python 3.14), épinglée par digest et vérifiée avant publication. Le module y est installé dans un environnement virtuel (`/opt/venv`).
+*   CI : flake8 bloquant, tests de Python 3.9 à 3.15, publication PyPI par « trusted publishing ».
+
+### Corrections
+
+*   Les dépendances du paquet n'étaient pas installées depuis PyPI.
+*   Image Docker : le module n'était pas installé et les transformations GRIB ne pouvaient décoder aucun fichier.
+*   Les erreurs de configuration et les dates mal formatées sont signalées par un message explicite.
+*   `python -m atmoswing_vigicrues` transmet le code de retour au système.
+*   Proxys : le transfert FTP ne détourne plus toutes les connexions du processus, la récupération SFTP passe réellement par le proxy HTTP, et les proxys vides de `DownloadGfsData` sont ignorés.
+*   Transferts SFTP/FTP : connexions fermées, échecs signalés sans exception, répertoire FTP vide accepté.
+*   Diffusion : les exports JSON en erreur sont remplacés sur le serveur distant, et une diffusion sans fichier n'est plus un échec.
+*   Export BdApBp : les fichiers en erreur sont régénérés et les codes d'erreur 100 et 110 sont conservés.
+*   Export PRV : les fichiers netCDF sont toujours fermés.
+*   Dates MJD infra-journalières erronées.
+*   Erreurs d'AtmoSwing Forecaster signalées deux fois.
+*   `TransformEcmwfData` s'affichait comme « Transformation données GFS ».
+*   Les transformations GRIB signalent l'absence d'`atmoswing-toolbox` dès leur création.
+
+
 ## v1.2.0 - 11 Avril 2025
 
 ### Corrections

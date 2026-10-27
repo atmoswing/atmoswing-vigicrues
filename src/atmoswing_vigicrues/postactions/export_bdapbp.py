@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +8,8 @@ import numpy as np
 import atmoswing_vigicrues as asv
 
 from .postaction import PostAction
+
+logger = logging.getLogger(__name__)
 
 
 class ExportBdApBp(PostAction):
@@ -92,26 +95,33 @@ class ExportBdApBp(PostAction):
         * 110 : Fichier netcdf corrompu.
         * 200 : Erreur lors du traitement fichier netcdf.
 
+        Un fichier déjà exporté n'est pas régénéré, sauf s'il contient une erreur.
+
         Returns
         -------
         bool
-            Vrai (True) en cas de succès, faux (False) autrement.
+            Vrai (True) si tous les fichiers ont été exportés sans erreur, faux
+            (False) autrement.
         """
         if not self._file_paths:
-            print("  -> Aucun fichier à traiter")
+            logger.info("  -> Aucun fichier à traiter")
             return True
 
         files_count = 0
+        errors_count = 0
         for file in self._file_paths:
             file = Path(file)
 
             # Nom du fichier
             file_path = self._build_file_path(file)
-            if file_path.exists():
+            if self._already_exported(file_path):
                 continue
 
             self._reset_status()
             nc_file = None
+            metadata = None
+            data = None
+            statistics = None
 
             if not asv.file_exists(file):
                 self.status = 100
@@ -124,15 +134,24 @@ class ExportBdApBp(PostAction):
                     self.message = "Fichier netcdf corrompu."
 
             try:
-                metadata = self._create_metadata_block(nc_file)
-                data = self._create_data_block(nc_file)
-                statistics = self._create_statistics_block(nc_file)
+                if nc_file is not None:
+                    metadata = self._create_metadata_block(nc_file)
+                    data = self._create_data_block(nc_file)
+                    statistics = self._create_statistics_block(nc_file)
             except Exception:
                 metadata = None
                 data = None
                 statistics = None
                 self.status = 200
                 self.message = "Erreur lors du traitement fichier netcdf."
+            finally:
+                if nc_file is not None:
+                    nc_file.close()
+
+            if self.status != 0:
+                logger.warning(f"  -> Erreur {self.status} pour {file.name} : "
+                               f"{self.message}")
+                errors_count += 1
 
             exported_analogs = "full"
             if self.number_analogs > 0:
@@ -158,14 +177,25 @@ class ExportBdApBp(PostAction):
                 else:
                     json.dump(data, outfile, ensure_ascii=False)
 
-            if nc_file:
-                nc_file.close()
-
             files_count += 1
 
-        print(f"  -> Nombre de fichiers exportés : {files_count}.")
+        logger.info(f"  -> Nombre de fichiers exportés : {files_count}.")
 
-        return True
+        return errors_count == 0
+
+    @staticmethod
+    def _already_exported(file_path):
+        """
+        Contrôle si un fichier a déjà été exporté avec succès (statut 0). Un fichier
+        illisible ou contenant une erreur doit être régénéré.
+        """
+        if not file_path.exists():
+            return False
+        try:
+            with open(file_path, encoding="utf-8") as f:
+                return json.load(f).get('status') == 0
+        except (OSError, ValueError, AttributeError):
+            return False
 
     def _create_metadata_block(self, nc_file):
         block = {
@@ -321,8 +351,8 @@ class ExportBdApBp(PostAction):
     @staticmethod
     def _get_time_format(target_dates):
         assert len(target_dates) > 1
-        time_step = target_dates[1].astype(datetime.datetime) - \
-                    target_dates[0].astype(datetime.datetime)
+        time_step = (target_dates[1].astype(datetime.datetime)
+                     - target_dates[0].astype(datetime.datetime))
         time_step = time_step.total_seconds()
         show_hour = time_step < 24 * 3600
         time_format_target = "%Y%m%d"
@@ -331,18 +361,6 @@ class ExportBdApBp(PostAction):
             time_format_target = "%Y%m%d%H"
             time_format_analogs = "%Y-%m-%d %H"
         return time_format_analogs, time_format_target
-
-    @staticmethod
-    def _to_str_dict(var):
-        var = var.flatten()
-        new_list = [str(x) for x in var]
-        return dict(enumerate(new_list))
-
-    @staticmethod
-    def _to_int_dict(var):
-        var = var.flatten()
-        new_list = [int(x) for x in var]
-        return dict(enumerate(new_list))
 
     def _reset_status(self):
         self.status = 0
