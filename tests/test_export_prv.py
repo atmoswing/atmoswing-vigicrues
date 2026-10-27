@@ -79,12 +79,14 @@ def test_export_prv_closes_netcdf_files(options, forecast_files, metadata,
     options['combine_stations_in_one_file'] = combine
     opened = []
 
-    class TrackedDataset(netCDF4.Dataset):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            opened.append(self)
+    # Fonction plutôt que sous-classe de netCDF4.Dataset : sous Python 3.14, la
+    # destruction d'une sous-classe locale provoque une erreur de segmentation.
+    def tracked_dataset(*args, **kwargs):
+        nc_file = netCDF4.Dataset(*args, **kwargs)
+        opened.append(nc_file)
+        return nc_file
 
-    monkeypatch.setattr(asv, 'Dataset', TrackedDataset)
+    monkeypatch.setattr(asv, 'Dataset', tracked_dataset)
 
     # Le second passage ignore les fichiers déjà exportés
     for _ in range(2):

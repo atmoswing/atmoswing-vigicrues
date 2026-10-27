@@ -1,11 +1,18 @@
 # Changelog AtmoSwing-vigicrues
 
 
-## Non publié
+## v1.3.0 - 27 Octobre 2026
+
+### Changements incompatibles
+
+*   Codes de retour modifiés (voir « Changements ») : les scripts de supervision testant le code de retour doivent être adaptés.
+*   Python 3.9 ou supérieur requis.
+*   Configuration chargée avec `yaml.safe_load` : les balises YAML propres à Python (ex. `!!python/...`) ne sont plus acceptées.
 
 ### Ajouts
 
-*   Pré-action `DownloadEcmwfData` : téléchargement des prédicteurs du CEP depuis les données ouvertes ECMWF (`ecmwf-opendata`), en remplacement du dépôt SFTP. Les champs GRIB2 sont découpés sur le domaine, sans conversion (AtmoSwing lisant les fichiers du CEP en GRIB2 requis), avec reprise des téléchargements interrompus.
+*   Pré-action `DownloadEcmwfData` : téléchargement des prédicteurs du CEP depuis les données ouvertes ECMWF (`ecmwf-opendata`), en remplacement du dépôt SFTP. Les champs GRIB2 sont découpés sur le domaine, sans conversion, avec reprise des téléchargements interrompus. Seules les prévisions de 00h et 12h sont téléchargées par défaut (celles utilisées par le jeu de données `Custom_Vigicrues_IFS`).
+*   `DownloadEcmwfData` nécessite une version récente d'AtmoSwing Forecaster, définissant les codes GRIB2 des variables IFS (déjà incluse dans l'image Docker).
 *   Options `proxy_type` (`http`, `socks4`, `socks5`), `proxy_username` et `proxy_password` pour les transferts SFTP et FTP.
 *   Option `known_hosts` pour vérifier la clé du serveur SFTP (recommandé).
 *   Option `timeout` pour le téléchargement des données GFS.
@@ -15,11 +22,10 @@
 
 *   Codes de retour : -1 si les pré-actions échouent pour toutes les dates tentées (AtmoSwing n'est plus lancé), 1 si une post-action ou une dissémination échoue.
 *   Messages émis via `logging`, avec horodatage et niveau.
-*   Configuration chargée avec `yaml.safe_load`.
-*   Récupération SFTP : décompression des fichiers `.gz` seuls et extraction sécurisée des archives tar.
-*   Python 3.9 ou supérieur requis.
-*   Image Docker de base épinglée par digest et vérifiée avant publication.
-*   CI : flake8 bloquant, tests de Python 3.9 à 3.13, publication PyPI par « trusted publishing ».
+*   Récupération SFTP : décompression des fichiers compressés seuls (`.gz`, `.bz2`, `.xz`) et extraction sécurisée des archives tar.
+*   Paquet décrit uniquement par `pyproject.toml` (`setup.py` et `setup.cfg` supprimés).
+*   Image Docker basée sur AtmoSwing Forecaster v3.1.0 (Ubuntu 26.04, Python 3.14), épinglée par digest et vérifiée avant publication. Le module y est installé dans un environnement virtuel (`/opt/venv`).
+*   CI : flake8 bloquant, tests de Python 3.9 à 3.15, publication PyPI par « trusted publishing ».
 
 ### Corrections
 

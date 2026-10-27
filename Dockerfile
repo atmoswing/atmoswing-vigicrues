@@ -4,9 +4,9 @@
 # Steps ordered from the less frequently changed to the more frequently
 # changed to ensure the build cache is reused.
 
-# AtmoSwing Forecaster (branche main, Ubuntu 22.04), épinglée par digest pour des
+# AtmoSwing Forecaster v3.1.0 (Ubuntu 26.04), épinglée par digest pour des
 # builds reproductibles. Mise à jour du digest : Dependabot (.github/dependabot.yml).
-FROM atmoswing/forecaster:main@sha256:9428fbb9e262615fd352dfa0dfe0214536e4e65ad1e30e0b1d60ce869ec66063
+FROM atmoswing/forecaster:v3.1.0@sha256:1d075cbc5e7a008c164070184cdb5e17aa9b2099a7f3039294f48e4d3b8ba71d
 
 WORKDIR /app
 
@@ -17,11 +17,14 @@ RUN apt-get update \
         libeccodes0 \
         netcdf-bin \
         openssh-client \
-        python3-pip \
+        python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Le pip d'Ubuntu 22.04 (22.0) ignore la table [project] de pyproject.toml et
-# installe un paquet vide nommé 'UNKNOWN' : une version récente est requise.
+# Le Python du système est géré par apt (PEP 668) : le module est installé dans un
+# environnement virtuel, placé en tête du PATH.
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN python3 -m pip install --no-cache-dir --upgrade pip
 
 # Python dependencies (layer reused as long as the requirements do not change)
