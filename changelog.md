@@ -1,6 +1,13 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## v1.3.1 - 30 Octobre 2026
+
+### Ajouts
+
+*   `DownloadEcmwfData` : complète le run précédent s'il manque (ex. après une panne), car AtmoSwing y lit les premières échéances d'une prévision. Option `previous_runs` (par défaut 1, 0 pour désactiver). Un échec sur ce run est seulement signalé.
+
+
 ## v1.3.0 - 27 Octobre 2026
 
 ### Changements incompatibles

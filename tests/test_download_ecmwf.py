@@ -28,6 +28,7 @@ class FakeClient:
         self.session = requests.Session()
         self.requests = []
         self.fail_on = None
+        self.fail_on_time = None
         FakeClient.instances.append(self)
 
     def retrieve(self, request, target):
@@ -35,7 +36,7 @@ class FakeClient:
         # Comme le client réel : barre de progression et message d'attribution
         print("By downloading data from the ECMWF open data dataset...")
         print("<multiple>:  10%|█", file=sys.stderr)
-        if request['param'] == self.fail_on:
+        if request['param'] == self.fail_on or request['time'] == self.fail_on_time:
             raise RuntimeError("404 Client Error: Not Found")
         with open(target, 'wb') as f:
             f.write(b'GRIB')
@@ -64,7 +65,7 @@ def fake_backend(monkeypatch):
 
 @pytest.fixture
 def options(tmp_path):
-    return {'output_dir': str(tmp_path / 'CEP')}
+    return {'output_dir': str(tmp_path / 'CEP'), 'previous_runs': 0}
 
 
 def client():
@@ -209,8 +210,74 @@ def test_download_resumes_after_failure(fake_backend, options):
     assert len(os.listdir(output_file(options, ''))) == 3
 
 
+def requested_runs():
+    return [(r['date'], r['time']) for r in client().requests]
+
+
+def test_previous_run_is_completed_by_default(fake_backend, options):
+    del options['previous_runs']
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 12))
+    assert requested_runs() == [('20261022', 12), ('20261022', 0)]
+    assert os.path.isfile(output_file(options, 'CEP_Z_202610220000.grb'))
+
+
+def test_previous_run_can_be_on_the_previous_day(fake_backend, options):
+    options['previous_runs'] = 1
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 0))
+    assert requested_runs() == [('20261022', 0), ('20261021', 12)]
+    assert os.path.isfile(os.path.join(options['output_dir'], '2026', '10', '21',
+                                       'CEP_Z_202610211200.grb'))
+
+
+def test_previous_runs_follow_run_hours(fake_backend, options):
+    options['previous_runs'] = 3
+    options['run_hours'] = [0, 6, 12, 18]
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 6))
+    assert requested_runs() == [('20261022', 6), ('20261022', 0), ('20261021', 18),
+                                ('20261021', 12)]
+
+
+def test_complete_previous_run_is_not_requested(fake_backend, options):
+    options['previous_runs'] = 1
+    options['variables'] = ['z']
+    existing = output_file(options, 'CEP_Z_202610220000.grb')
+    os.makedirs(os.path.dirname(existing))
+    with open(existing, 'wb') as f:
+        f.write(b'existant')
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 12))
+    assert requested_runs() == [('20261022', 12)]
+
+
+def test_previous_run_is_not_requested_if_the_run_is_unavailable(fake_backend,
+                                                                 options):
+    options['previous_runs'] = 1
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    action._get_client().fail_on = 'z'
+    assert not action.run(datetime(2026, 10, 22, 12))
+    assert requested_runs() == [('20261022', 12)]
+
+
+def test_previous_run_failure_is_only_a_warning(fake_backend, options, caplog):
+    options['previous_runs'] = 1
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    action._get_client().fail_on_time = 0
+    assert action.run(datetime(2026, 10, 22, 12))
+    assert os.listdir(output_file(options, '')) == ['CEP_Z_202610221200.grb']
+    assert "Run précédent incomplet" in caplog.text
+
+
 @pytest.mark.parametrize('key, value, match', [
     ('variables', ['z', 'pv'], "pv"),
+    ('previous_runs', -1, "négatif"),
     ('resolution', 0.5, "résolution"),
     ('lead_time_max', 366, "360"),
     ('time_step', 4, "pas de temps"),
