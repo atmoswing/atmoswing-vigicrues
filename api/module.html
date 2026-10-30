@@ -910,6 +910,9 @@ répertoire cible. Ces fichiers sont lus par le jeu de données
 format GRIB2).</p>
 <p>Un fichier n’est écrit qu’une fois complet : les fichiers déjà présents sont
 ignorés, et une exécution interrompue reprend avec les variables manquantes.</p>
+<p>Les runs précédents sont aussi complétés s’ils manquent (ex. après une panne) :
+AtmoSwing lit les premières échéances d’une prévision dans le run précédent.
+Leur échec n’empêche pas la prévision et est seulement signalé.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -966,6 +969,13 @@ Valeur par défaut : 6</p>
 <dt>run_hours<span class="classifier">list</span></dt><dd><p>Heures des runs à télécharger. Pour une autre heure, l’action échoue
 et la date de la prévision est reculée.
 Valeur par défaut : [0, 12]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>previous_runs<span class="classifier">int</span></dt><dd><p>Nombre de runs précédents (parmi ‘run_hours’) à compléter s’ils
+manquent. 0 pour désactiver.
+Valeur par défaut : 1</p>
 </dd>
 </dl>
 </li>
@@ -1116,6 +1126,17 @@ Valeur par défaut : 120</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="atmoswing_vigicrues.DownloadEcmwfData.previous_runs">
+<span class="sig-name descname"><span class="pre">previous_runs</span></span><a class="headerlink" href="#atmoswing_vigicrues.DownloadEcmwfData.previous_runs" title="Link to this definition"></a></dt>
+<dd><p>Nombre de runs précédents à compléter s’ils manquent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>

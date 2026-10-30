@@ -72,6 +72,7 @@
              
   <h1>Source code for atmoswing_vigicrues.preactions.download_ecmwf</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -159,6 +160,10 @@
 <span class="sd">    Un fichier n'est écrit qu'une fois complet : les fichiers déjà présents sont</span>
 <span class="sd">    ignorés, et une exécution interrompue reprend avec les variables manquantes.</span>
 
+<span class="sd">    Les runs précédents sont aussi complétés s'ils manquent (ex. après une panne) :</span>
+<span class="sd">    AtmoSwing lit les premières échéances d'une prévision dans le run précédent.</span>
+<span class="sd">    Leur échec n'empêche pas la prévision et est seulement signalé.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
@@ -195,6 +200,10 @@
 <span class="sd">            Heures des runs à télécharger. Pour une autre heure, l'action échoue</span>
 <span class="sd">            et la date de la prévision est reculée.</span>
 <span class="sd">            Valeur par défaut : [0, 12]</span>
+<span class="sd">        * previous_runs : int</span>
+<span class="sd">            Nombre de runs précédents (parmi 'run_hours') à compléter s'ils</span>
+<span class="sd">            manquent. 0 pour désactiver.</span>
+<span class="sd">            Valeur par défaut : 1</span>
 <span class="sd">        * prefix : str</span>
 <span class="sd">            Préfixe des fichiers produits.</span>
 <span class="sd">            Valeur par défaut : 'CEP'</span>
@@ -239,6 +248,8 @@
 <span class="sd">        Échéances à télécharger (en heures).</span>
 <span class="sd">    run_hours : list</span>
 <span class="sd">        Heures des runs à télécharger.</span>
+<span class="sd">    previous_runs : int</span>
+<span class="sd">        Nombre de runs précédents à compléter s'ils manquent.</span>
 <span class="sd">    prefix : str</span>
 <span class="sd">        Préfixe des fichiers produits.</span>
 <span class="sd">    source : str</span>
@@ -296,6 +307,10 @@
                       <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;=</span> <span class="n">LEAD_TIME_3H_MAX</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">%</span> <span class="mi">6</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'run_hours'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_runs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'previous_runs'</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_runs</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="s2">"Le nombre de runs précédents du CEP ne peut être "</span>
+                            <span class="s2">"négatif."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'prefix'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'CEP'</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'source'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'ecmwf'</span>
 
@@ -351,30 +366,66 @@
                            <span class="sa">f</span><span class="s2">"(runs : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">date_msg</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'</span><span class="si">%d</span><span class="s1">/%m/%Y %Hh'</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Téléchargement des prévisions du : </span><span class="si">{</span><span class="n">date_msg</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">files_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_run</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
-        <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">files_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-            <span class="n">file_path</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="k">continue</span>
-
+        <span class="c1"># Le run demandé est disponible : les runs précédents le sont aussi</span>
+        <span class="k">for</span> <span class="n">previous_run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_previous_runs</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_download_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Le téléchargement de '</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2">' (CEP) a "</span>
-                             <span class="sa">f</span><span class="s2">"échoué (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">False</span>
-            <span class="n">files_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">files_count</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_run</span><span class="p">(</span><span class="n">previous_run</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Run précédent incomplet : </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Nombre de fichiers téléchargés : </span><span class="si">{</span><span class="n">files_count</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_download_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Télécharge les variables manquantes d'un run et retourne le nombre de</span>
+<span class="sd">        fichiers téléchargés.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        asv.Error</span>
+<span class="sd">            Si le téléchargement d'une variable échoue.</span>
+<span class="sd">        """</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">asv</span><span class="o">.</span><span class="n">build_date_dir_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">variable</span> <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+                   <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">local_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span><span class="o">.</span><span class="n">exists</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">date_msg</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'</span><span class="si">%d</span><span class="s1">/%m/%Y %Hh'</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Téléchargement des prévisions du : </span><span class="si">{</span><span class="n">date_msg</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">local_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_download_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Le téléchargement de '</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2">' (CEP) a échoué "</span>
+                                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_previous_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retourne les 'previous_runs' runs qui précèdent une date, du plus récent au</span>
+<span class="sd">        plus ancien. La date doit correspondre à l'une des heures de 'run_hours'.</span>
+<span class="sd">        """</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">run</span> <span class="o">=</span> <span class="n">date</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">runs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_runs</span><span class="p">:</span>
+            <span class="n">run</span> <span class="o">-=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">run</span><span class="o">.</span><span class="n">hour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_hours</span><span class="p">:</span>
+                <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">runs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y%m</span><span class="si">%d</span><span class="s1">%H'</span><span class="p">)</span><span class="si">}</span><span class="s2">00.grb"</span>
