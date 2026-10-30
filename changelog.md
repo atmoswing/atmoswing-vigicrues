@@ -1,7 +1,7 @@
 # Changelog AtmoSwing-vigicrues
 
 
-## À venir
+## v1.3.1 - 30 Octobre 2026
 
 ### Ajouts
 
