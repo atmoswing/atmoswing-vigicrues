@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import io
 import logging
 import os
@@ -84,6 +85,10 @@ class DownloadEcmwfData(PreAction):
     Un fichier n'est écrit qu'une fois complet : les fichiers déjà présents sont
     ignorés, et une exécution interrompue reprend avec les variables manquantes.
 
+    Les runs précédents sont aussi complétés s'ils manquent (ex. après une panne) :
+    AtmoSwing lit les premières échéances d'une prévision dans le run précédent.
+    Leur échec n'empêche pas la prévision et est seulement signalé.
+
     Parameters
     ----------
     name: str
@@ -120,6 +125,10 @@ class DownloadEcmwfData(PreAction):
             Heures des runs à télécharger. Pour une autre heure, l'action échoue
             et la date de la prévision est reculée.
             Valeur par défaut : [0, 12]
+        * previous_runs : int
+            Nombre de runs précédents (parmi 'run_hours') à compléter s'ils
+            manquent. 0 pour désactiver.
+            Valeur par défaut : 1
         * prefix : str
             Préfixe des fichiers produits.
             Valeur par défaut : 'CEP'
@@ -164,6 +173,8 @@ class DownloadEcmwfData(PreAction):
         Échéances à télécharger (en heures).
     run_hours : list
         Heures des runs à télécharger.
+    previous_runs : int
+        Nombre de runs précédents à compléter s'ils manquent.
     prefix : str
         Préfixe des fichiers produits.
     source : str
@@ -221,6 +232,10 @@ class DownloadEcmwfData(PreAction):
                       if step <= LEAD_TIME_3H_MAX or step % 6 == 0]
 
         self.run_hours = [int(h) for h in options.get('run_hours') or [0, 12]]
+        self.previous_runs = int(options.get('previous_runs', 1))
+        if self.previous_runs < 0:
+            raise asv.Error("Le nombre de runs précédents du CEP ne peut être "
+                            "négatif.")
         self.prefix = options.get('prefix') or 'CEP'
         self.source = options.get('source') or 'ecmwf'
 
@@ -271,29 +286,65 @@ class DownloadEcmwfData(PreAction):
                            f"(runs : {self.run_hours}).")
             return False
 
-        date_msg = date.strftime('%d/%m/%Y %Hh')
-        logger.info(f"  -> Téléchargement des prévisions du : {date_msg}.")
+        try:
+            files_count = self._download_run(date)
+        except asv.Error as e:
+            logger.error(f"  -> {e}")
+            return False
 
-        local_path = asv.build_date_dir_structure(self.output_dir, date)
-        local_path.mkdir(parents=True, exist_ok=True)
-
-        files_count = 0
-        for variable in self.variables:
-            file_path = local_path / self._file_name(variable, date)
-            if file_path.exists():
-                continue
-
+        # Le run demandé est disponible : les runs précédents le sont aussi
+        for previous_run in self._get_previous_runs(date):
             try:
-                self._download_variable(variable, date, file_path)
-            except Exception as e:
-                logger.error(f"  -> Le téléchargement de '{variable}' (CEP) a "
-                             f"échoué ({e}).")
-                return False
-            files_count += 1
+                files_count += self._download_run(previous_run)
+            except asv.Error as e:
+                logger.warning(f"  -> Run précédent incomplet : {e}")
 
         logger.info(f"  -> Nombre de fichiers téléchargés : {files_count}.")
 
         return True
+
+    def _download_run(self, date):
+        """
+        Télécharge les variables manquantes d'un run et retourne le nombre de
+        fichiers téléchargés.
+
+        Raises
+        ------
+        asv.Error
+            Si le téléchargement d'une variable échoue.
+        """
+        local_path = asv.build_date_dir_structure(self.output_dir, date)
+        missing = [variable for variable in self.variables
+                   if not (local_path / self._file_name(variable, date)).exists()]
+        if not missing:
+            return 0
+
+        date_msg = date.strftime('%d/%m/%Y %Hh')
+        logger.info(f"  -> Téléchargement des prévisions du : {date_msg}.")
+        local_path.mkdir(parents=True, exist_ok=True)
+
+        for variable in missing:
+            file_path = local_path / self._file_name(variable, date)
+            try:
+                self._download_variable(variable, date, file_path)
+            except Exception as e:
+                raise asv.Error(f"Le téléchargement de '{variable}' (CEP) a échoué "
+                                f"({e}).") from e
+
+        return len(missing)
+
+    def _get_previous_runs(self, date):
+        """
+        Retourne les 'previous_runs' runs qui précèdent une date, du plus récent au
+        plus ancien. La date doit correspondre à l'une des heures de 'run_hours'.
+        """
+        runs = []
+        run = date
+        while len(runs) < self.previous_runs:
+            run -= datetime.timedelta(hours=1)
+            if run.hour in self.run_hours:
+                runs.append(run)
+        return runs
 
     def _file_name(self, variable, date):
         return f"{self.prefix}_{variable.upper()}_{date.strftime('%Y%m%d%H')}00.grb"
