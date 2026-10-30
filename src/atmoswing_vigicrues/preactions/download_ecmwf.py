@@ -84,6 +84,8 @@ class DownloadEcmwfData(PreAction):
 
     Un fichier n'est écrit qu'une fois complet : les fichiers déjà présents sont
     ignorés, et une exécution interrompue reprend avec les variables manquantes.
+    Les flux qui partagent un même répertoire cible doivent donc demander les mêmes
+    niveaux et échéances : un fichier existant n'est pas complété.
 
     Les runs précédents sont aussi complétés s'ils manquent (ex. après une panne) :
     AtmoSwing lit les premières échéances d'une prévision dans le run précédent.
