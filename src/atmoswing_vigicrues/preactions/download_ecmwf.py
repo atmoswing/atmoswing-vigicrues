@@ -196,7 +196,11 @@ class DownloadEcmwfData(PreAction):
             raise ImportError("Le paquet ecmwf-opendata est requis pour cette "
                               "action.")
         if not asv.has_eccodes:
-            raise ImportError("Le paquet eccodes est requis pour cette action.")
+            raise ImportError(
+                "Le paquet Python eccodes est requis pour cette action "
+                "(pip install eccodes, ou avec conda : conda install -c "
+                "conda-forge python-eccodes ; le paquet conda eccodes seul ne "
+                "fournit que la librairie C).")
 
         self.type_name = "Téléchargement CEP"
         self.name = name

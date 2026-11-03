@@ -1,6 +1,14 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## Version en développement
+
+### Changements
+
+*   Documentation : installation des dépendances optionnelles (`pip install atmoswing-vigicrues[grib]`) et des liaisons Python d'eccodes avec conda (`python-eccodes`, le paquet conda `eccodes` ne fournissant que la librairie C).
+*   Message d'erreur plus explicite lorsque le paquet Python eccodes est absent.
+
+
 ## v1.3.1 - 30 Octobre 2026
 
 ### Ajouts

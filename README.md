@@ -31,6 +31,14 @@ Pour utiliser le module atmoswing-vigicrues, il faut installer :
 * AtmoSwing Forecaster (de préférence la version serveur)
 * Le module atmoswing-vigicrues (``pip install atmoswing-vigicrues`` ou l'image docker ``docker pull atmoswing/atmoswing-vigicrues``)
 
+Les pré-actions de téléchargement des données du CEP (``DownloadEcmwfData``) et de transformation des fichiers GRIB (``TransformGfsData``, ``TransformEcmwfData``) nécessitent des dépendances supplémentaires (``eccodes``, ``ecmwf-opendata``, ``pandas``, ``atmoswing-toolbox``), installées par :
+
+```
+pip install atmoswing-vigicrues[grib]
+```
+
+Avec conda, les liaisons Python d'eccodes s'installent par ``conda install -c conda-forge python-eccodes`` : le paquet conda ``eccodes`` ne fournit que la librairie C, et ``import eccodes`` échoue sans ``python-eccodes``. Les autres dépendances peuvent être installées ensuite avec pip.
+
 Utilisation
 -----------
 
