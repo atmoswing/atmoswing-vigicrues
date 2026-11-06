@@ -55,3 +55,11 @@ class FilePathError(Error):
         if not message:
             message = f"Le fichier '{path}' n'a pas été trouvé."
         super().__init__(message)
+
+
+class ProcessingError(Error):
+    """
+    Erreur de traitement de données disponibles (ex. fichier téléchargé qui ne
+    peut être découpé). Contrairement à une donnée manquante, elle ne justifie pas
+    de reculer la date de la prévision : l'exécution est interrompue.
+    """

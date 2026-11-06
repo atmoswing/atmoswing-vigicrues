@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import tempfile
 import types
 from datetime import datetime, timedelta, timezone
 
@@ -43,13 +44,20 @@ class FakeClient:
 
 
 @pytest.fixture
-def fake_backend(monkeypatch):
+def fake_backend(monkeypatch, tmp_path):
     """Remplace le client et le découpage des champs (aucune dépendance requise)."""
     FakeClient.instances = []
-    backend = types.SimpleNamespace(missing_fields=0, crops=[])
+    backend = types.SimpleNamespace(missing_fields=0, crops=[], crop_error=None,
+                                    tmp_dir=tmp_path / 'tmp')
+    backend.tmp_dir.mkdir()
+    monkeypatch.setattr(tempfile, 'tempdir', str(backend.tmp_dir))
 
     def fake_crop(source, target, domain):
         backend.crops.append(domain)
+        if backend.crop_error:
+            with open(target, 'wb') as f:
+                f.write(b'partiel')
+            raise backend.crop_error
         with open(target, 'wb') as f:
             f.write(b'GRIB')
         request = FakeClient.instances[-1].requests[-1]
@@ -196,6 +204,78 @@ def test_incomplete_download_is_not_kept(fake_backend, options):
     action = asv.DownloadEcmwfData('Download ECMWF', options)
     assert not action.run(datetime(2026, 10, 22, 0))
     assert os.listdir(output_file(options, '')) == []
+
+
+def test_temporary_download_is_removed_after_success(fake_backend, options):
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 0))
+    assert os.listdir(fake_backend.tmp_dir) == []
+
+
+def test_temporary_download_is_removed_after_download_failure(fake_backend,
+                                                              options):
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    action._get_client().fail_on = 'z'
+    assert not action.run(datetime(2026, 10, 22, 0))
+    assert os.listdir(fake_backend.tmp_dir) == []
+
+
+def test_temporary_download_is_removed_after_incomplete_download(fake_backend,
+                                                                 options):
+    fake_backend.missing_fields = 1
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert not action.run(datetime(2026, 10, 22, 0))
+    assert os.listdir(fake_backend.tmp_dir) == []
+
+
+def test_download_and_crop_are_logged(fake_backend, options, caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    assert action.run(datetime(2026, 10, 22, 0))
+    assert "Téléchargement de 'z'" in caplog.text
+    # Le chemin du fichier téléchargé est journalisé avant le découpage
+    assert "Découpage de 'z'" in caplog.text
+    assert str(fake_backend.tmp_dir) in caplog.text
+
+
+def test_crop_failure_keeps_downloaded_file(fake_backend, options):
+    options['variables'] = ['z', 'r']
+    fake_backend.crop_error = asv.Error("Le domaine CEP dépasse la grille.")
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+    with pytest.raises(asv.ProcessingError) as excinfo:
+        action.run(datetime(2026, 10, 22, 0))
+
+    message = str(excinfo.value)
+    assert "téléchargé mais n'a pas pu être découpé" in message
+    assert "dépasse la grille" in message
+    kept = [os.path.join(root, name)
+            for root, _, names in os.walk(fake_backend.tmp_dir) for name in names]
+    assert len(kept) == 1 and kept[0].endswith('CEP_Z_202610220000.grib2')
+    assert kept[0] in message
+    # Ni fichier cible, ni fichier partiel, et les variables suivantes ne sont pas
+    # téléchargées
+    assert os.listdir(output_file(options, '')) == []
+    assert [r['param'] for r in client().requests] == ['z']
+
+
+def test_crop_failure_of_previous_run_is_only_a_warning(fake_backend, options,
+                                                        caplog, monkeypatch):
+    options['previous_runs'] = 1
+    options['variables'] = ['z']
+    action = asv.DownloadEcmwfData('Download ECMWF', options)
+
+    def crop_previous_run_fails(source, target, domain):
+        if '202610220000' in str(target):
+            raise asv.Error("Grille inattendue.")
+        with open(target, 'wb') as f:
+            f.write(b'GRIB')
+        return len(action.steps) * len(action.levels['z'])
+
+    monkeypatch.setattr(download_ecmwf, 'crop_grib', crop_previous_run_fails)
+    assert action.run(datetime(2026, 10, 22, 12))
+    assert "Run précédent incomplet" in caplog.text
+    assert "Fichier téléchargé conservé" in caplog.text
 
 
 def test_download_resumes_after_failure(fake_backend, options):
@@ -369,6 +449,55 @@ def expected_values(domain):
     lats = np.arange(lat_max, lat_min - 1, -1.0)
     lons = np.arange(lon_min, lon_max + 1, 1.0)
     return lats[:, None] * 1000 + lons[None, :]
+
+
+def fake_grib_message(edition, payload):
+    """Message GRIB minimal (section 0, contenu arbitraire, section 7777)."""
+    if edition == 2:
+        length = 16 + len(payload) + 4
+        header = b'GRIB' + b'\x00\x00\x00\x02' + length.to_bytes(8, 'big')
+    else:
+        length = 8 + len(payload) + 4
+        header = b'GRIB' + length.to_bytes(3, 'big') + b'\x01'
+    return header + payload + b'7777'
+
+
+def test_iter_grib_messages_splits_file(tmp_path):
+    messages = [fake_grib_message(2, b'a' * 50), fake_grib_message(1, b'b' * 30),
+                fake_grib_message(2, b'')]
+    path = tmp_path / 'file.grib'
+    path.write_bytes(b''.join(messages))
+    with open(path, 'rb') as f:
+        assert list(download_ecmwf.iter_grib_messages(f)) == messages
+
+
+@pytest.mark.parametrize('content', [
+    b'HTML' + b'\x00' * 20,
+    fake_grib_message(2, b'a' * 50)[:-10],
+    fake_grib_message(2, b'a' * 50)[:-4] + b'XXXX',
+    b'GRIB\x00\x00\x00\x03' + b'\x00' * 20,
+])
+def test_iter_grib_messages_rejects_invalid_file(tmp_path, content):
+    path = tmp_path / 'file.grib'
+    path.write_bytes(content)
+    with open(path, 'rb') as f:
+        with pytest.raises(asv.Error, match="GRIB"):
+            list(download_ecmwf.iter_grib_messages(f))
+
+
+@requires_eccodes
+def test_crop_does_not_pass_file_to_eccodes(tmp_path, monkeypatch):
+    # Sous Windows, passer un fichier Python à eccodes peut arrêter le processus
+    source = tmp_path / 'z.grib2'
+    write_global_grib2(source, 'z', [500], [0, 6])
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Fichier Python transmis à eccodes")
+
+    monkeypatch.setattr(asv.eccodes, 'codes_grib_new_from_file', forbidden)
+    monkeypatch.setattr(asv.eccodes, 'codes_new_from_file', forbidden)
+    assert download_ecmwf.crop_grib(source, tmp_path / 'out.grb',
+                                    [-10, 5, 40, 50]) == 2
 
 
 @requires_eccodes
