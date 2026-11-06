@@ -5,6 +5,7 @@
 
 ### Changements
 
+*   Python 3.9 (en fin de vie) n'est plus pris en charge : Python 3.10 ou plus récent est requis.
 *   Image Docker basée sur AtmoSwing Forecaster v3.1.1, qui corrige la lecture des fichiers GRIB dont les niveaux ne sont pas ordonnés.
 *   Message d'erreur plus explicite lorsque le paquet Python eccodes est absent.
 *   `DownloadEcmwfData` : le téléchargement et le découpage de chaque variable sont journalisés séparément, avec le chemin du fichier téléchargé (grille complète, dans le répertoire temporaire).

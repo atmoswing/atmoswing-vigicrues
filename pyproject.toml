@@ -6,7 +6,7 @@ authors = [
 ]
 description = "Package to integrate AtmoSwing in the Vigicrues network."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 classifiers = [
