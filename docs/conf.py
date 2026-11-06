@@ -3,6 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import re
 import sys
 from pathlib import Path
 from unittest.mock import Mock as MagicMock
@@ -42,7 +43,9 @@ sys.path.insert(0, str(BASE_PATH / "src" / "atmoswing_vigicrues"))
 project = 'AtmoSwing Vigicrues'
 copyright = '2023, Terranum'
 author = 'Pascal Horton'
-release = '1.0.0'
+release = re.search(r'^version = "(.+)"$',
+                    (BASE_PATH / 'pyproject.toml').read_text(encoding='utf-8'),
+                    re.MULTILINE).group(1)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

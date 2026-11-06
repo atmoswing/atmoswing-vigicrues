@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues)](https://github.com/atmoswing/atmoswing-vigicrues)
 [![PyPI](https://img.shields.io/pypi/v/atmoswing-vigicrues)](https://pypi.org/project/atmoswing-vigicrues/)
 [![Docker Image Version](https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues)](https://hub.docker.com/r/atmoswing/atmoswing-vigicrues)
-![Static Badge](https://img.shields.io/badge/python-%3E%3D3.7-blue)
+![Static Badge](https://img.shields.io/badge/python-%3E%3D3.9-blue)
    
 Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
 
@@ -27,9 +27,17 @@ Installation
 
 Pour utiliser le module atmoswing-vigicrues, il faut installer :
 
-* Python >= 3.7
+* Python >= 3.9
 * AtmoSwing Forecaster (de préférence la version serveur)
 * Le module atmoswing-vigicrues (``pip install atmoswing-vigicrues`` ou l'image docker ``docker pull atmoswing/atmoswing-vigicrues``)
+
+Les pré-actions de téléchargement des données du CEP (``DownloadEcmwfData``) et de transformation des fichiers GRIB (``TransformGfsData``, ``TransformEcmwfData``) nécessitent des dépendances supplémentaires (``eccodes``, ``ecmwf-opendata``, ``pandas``, ``atmoswing-toolbox``), installées par :
+
+```
+pip install atmoswing-vigicrues[grib]
+```
+
+Avec conda, les liaisons Python d'eccodes s'installent par ``conda install -c conda-forge python-eccodes`` : le paquet conda ``eccodes`` ne fournit que la librairie C, et ``import eccodes`` échoue sans ``python-eccodes``. Les autres dépendances peuvent être installées ensuite avec pip.
 
 Utilisation
 -----------

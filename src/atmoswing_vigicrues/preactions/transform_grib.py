@@ -62,7 +62,11 @@ class TransformGribData(PreAction):
         if not asv.has_netcdf:
             raise ImportError("Le paquet netCDF4 est requis pour cette action.")
         if not asv.has_eccodes:
-            raise ImportError("Le paquet eccodes est requis pour cette action.")
+            raise ImportError(
+                "Le paquet Python eccodes est requis pour cette action "
+                "(pip install eccodes, ou avec conda : conda install -c "
+                "conda-forge python-eccodes ; le paquet conda eccodes seul ne "
+                "fournit que la librairie C).")
         if not has_toolbox:
             raise ImportError("Le paquet atmoswing-toolbox est requis pour cette "
                               "action.")

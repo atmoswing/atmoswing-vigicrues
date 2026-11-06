@@ -287,6 +287,22 @@ def test_pre_actions_attempted_once_when_no_step_back_allowed(stub_controller):
     assert len(action.dates) == 1
 
 
+def test_processing_error_stops_without_stepping_back(stub_controller, caplog):
+    class FailingPreAction(StubPreAction):
+        def run(self, date) -> bool:
+            self.dates.append(date)
+            raise asv.ProcessingError("Fichier non traitable.")
+
+    action = FailingPreAction([])
+    stub_controller.pre_actions = [action]
+    stub_controller._run_atmoswing = lambda: pytest.fail("AtmoSwing ne doit pas "
+                                                         "être exécuté.")
+    assert stub_controller.run() == -1
+    assert action.dates == [datetime.datetime(2023, 6, 1, 12)]
+    assert "Fichier non traitable." in caplog.text
+    assert "Recul" not in caplog.text
+
+
 def test_return_code_when_post_action_fails(stub_controller, monkeypatch):
     monkeypatch.setattr(stub_controller, '_list_atmoswing_output_files',
                         lambda: ['file.nc'])

@@ -158,12 +158,15 @@ class Controller:
 
         En cas d'échec d'une pré-action, la date de la prévision est reculée de
         'attempts_step_hours' et l'ensemble des pré-actions est relancé, jusqu'à
-        un recul maximal de 'attempts_max_hours'.
+        un recul maximal de 'attempts_max_hours'. Une exception levée par une
+        pré-action (ex. asv.ProcessingError : données disponibles mais non
+        traitables) interrompt l'exécution sans recul de la date.
 
         Raises
         ------
         asv.Error
-            Si les pré-actions échouent pour toutes les dates tentées.
+            Si les pré-actions échouent pour toutes les dates tentées, ou si une
+            pré-action lève une exception.
         """
         if not self.pre_actions:
             return

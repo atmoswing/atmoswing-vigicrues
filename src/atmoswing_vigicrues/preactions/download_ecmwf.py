@@ -3,6 +3,7 @@ import datetime
 import io
 import logging
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -84,10 +85,20 @@ class DownloadEcmwfData(PreAction):
 
     Un fichier n'est écrit qu'une fois complet : les fichiers déjà présents sont
     ignorés, et une exécution interrompue reprend avec les variables manquantes.
+    Les flux qui partagent un même répertoire cible doivent donc demander les mêmes
+    niveaux et échéances : un fichier existant n'est pas complété.
 
     Les runs précédents sont aussi complétés s'ils manquent (ex. après une panne) :
     AtmoSwing lit les premières échéances d'une prévision dans le run précédent.
     Leur échec n'empêche pas la prévision et est seulement signalé.
+
+    Chaque variable est d'abord téléchargée sur la grille complète dans un
+    répertoire temporaire, puis découpée. Un échec du téléchargement (données pas
+    encore disponibles) fait échouer l'action, et la date de la prévision est
+    reculée. Un échec du découpage (données disponibles mais non traitables)
+    interrompt l'exécution (asv.ProcessingError), sans reculer la date : le
+    fichier téléchargé est alors conservé dans le répertoire temporaire, dont le
+    chemin est indiqué dans le message d'erreur.
 
     Parameters
     ----------
@@ -194,7 +205,11 @@ class DownloadEcmwfData(PreAction):
             raise ImportError("Le paquet ecmwf-opendata est requis pour cette "
                               "action.")
         if not asv.has_eccodes:
-            raise ImportError("Le paquet eccodes est requis pour cette action.")
+            raise ImportError(
+                "Le paquet Python eccodes est requis pour cette action "
+                "(pip install eccodes, ou avec conda : conda install -c "
+                "conda-forge python-eccodes ; le paquet conda eccodes seul ne "
+                "fournit que la librairie C).")
 
         self.type_name = "Téléchargement CEP"
         self.name = name
@@ -288,6 +303,9 @@ class DownloadEcmwfData(PreAction):
 
         try:
             files_count = self._download_run(date)
+        except asv.ProcessingError:
+            # Les données sont disponibles : reculer la date n'y changerait rien
+            raise
         except asv.Error as e:
             logger.error(f"  -> {e}")
             return False
@@ -312,6 +330,8 @@ class DownloadEcmwfData(PreAction):
         ------
         asv.Error
             Si le téléchargement d'une variable échoue.
+        asv.ProcessingError
+            Si une variable téléchargée ne peut être découpée.
         """
         local_path = asv.build_date_dir_structure(self.output_dir, date)
         missing = [variable for variable in self.variables
@@ -325,11 +345,7 @@ class DownloadEcmwfData(PreAction):
 
         for variable in missing:
             file_path = local_path / self._file_name(variable, date)
-            try:
-                self._download_variable(variable, date, file_path)
-            except Exception as e:
-                raise asv.Error(f"Le téléchargement de '{variable}' (CEP) a échoué "
-                                f"({e}).") from e
+            self._download_variable(variable, date, file_path)
 
         return len(missing)
 
@@ -353,6 +369,18 @@ class DownloadEcmwfData(PreAction):
         """
         Télécharge une variable, puis l'enregistre sur le domaine.
         Le fichier cible n'est créé qu'une fois complet.
+
+        La grille complète est téléchargée dans un répertoire temporaire, supprimé
+        une fois le fichier cible créé ou si le téléchargement échoue. Il est
+        conservé si le découpage échoue (ou si le processus s'arrête pendant le
+        découpage), pour permettre l'analyse du fichier téléchargé.
+
+        Raises
+        ------
+        asv.Error
+            Si le téléchargement échoue ou est incomplet.
+        asv.ProcessingError
+            Si le fichier téléchargé ne peut être découpé.
         """
         param, levtype = VARIABLES[variable]
         request = {
@@ -370,21 +398,44 @@ class DownloadEcmwfData(PreAction):
             expected *= len(self.levels[variable])
 
         tmp_path = file_path.with_name(file_path.name + '.part')
+        tmp_dir = Path(tempfile.mkdtemp(prefix='asv_cep_'))
+        source = tmp_dir / f"{file_path.stem}.grib2"
+        keep_source = False
         try:
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                source = Path(tmp_dir) / 'download.grib2'
+            logger.info(f"  -> Téléchargement de '{variable}'.")
+            try:
                 # Les barres de progression et messages affichés par le client
                 # sont ignorés (journal des exécutions planifiées)
                 with contextlib.redirect_stdout(io.StringIO()), \
                         contextlib.redirect_stderr(io.StringIO()):
                     self._get_client().retrieve(request, target=str(source))
+            except Exception as e:
+                raise asv.Error(f"Le téléchargement de '{variable}' (CEP) a échoué "
+                                f"({e}).") from e
+
+            # Chemin journalisé avant le découpage : il reste connu même si le
+            # processus s'arrête sans message d'erreur
+            logger.info(f"  -> Découpage de '{variable}' (fichier téléchargé : "
+                        f"{source}).")
+            try:
                 count = crop_grib(source, tmp_path, self.domain)
+            except Exception as e:
+                keep_source = True
+                raise asv.ProcessingError(
+                    f"Le fichier de '{variable}' (CEP) a été téléchargé mais n'a "
+                    f"pas pu être découpé ({e}). Fichier téléchargé conservé : "
+                    f"{source}") from e
+
             if count != expected:
-                raise asv.Error(f"{count} champs reçus sur {expected} attendus")
+                raise asv.Error(f"Le téléchargement de '{variable}' (CEP) est "
+                                f"incomplet ({count} champs reçus sur {expected} "
+                                f"attendus).")
             os.replace(tmp_path, file_path)
         finally:
             if tmp_path.exists():
                 tmp_path.unlink()
+            if not keep_source:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def _get_client(self):
         if self._client is None:
@@ -452,25 +503,74 @@ def crop_grib(source, target, domain):
         Le nombre de champs enregistrés.
     """
     eccodes = asv.eccodes
-    count = 0
-    with open(source, 'rb') as f_in, open(target, 'wb') as f_out:
-        while True:
-            handle = eccodes.codes_grib_new_from_file(f_in)
-            if handle is None:
-                break
+    fields = []
+    with open(source, 'rb') as f_in:
+        for message in iter_grib_messages(f_in):
+            handle = eccodes.codes_new_from_message(message)
             try:
+                key = (eccodes.codes_get(handle, 'dataDate'),
+                       eccodes.codes_get(handle, 'dataTime'),
+                       eccodes.codes_get(handle, 'endStep'),
+                       eccodes.codes_get(handle, 'level'))
                 values, grid = _crop_field(eccodes, handle, domain)
                 output = eccodes.codes_clone(handle)
                 try:
                     _set_grid(eccodes, output, grid)
                     eccodes.codes_set_values(output, values.astype(float).flatten())
-                    eccodes.codes_write(output, f_out)
+                    fields.append((key, eccodes.codes_get_message(output)))
                 finally:
                     eccodes.codes_release(output)
             finally:
                 eccodes.codes_release(handle)
-            count += 1
-    return count
+
+    fields.sort(key=lambda field: field[0])
+    with open(target, 'wb') as f_out:
+        for _, output_message in fields:
+            f_out.write(output_message)
+    return len(fields)
+
+
+def iter_grib_messages(f):
+    """
+    Lit un à un les messages d'un fichier GRIB (éditions 1 et 2).
+
+    Les messages sont lus en Python puis transmis à eccodes en mémoire, plutôt que
+    de passer le fichier ouvert à eccodes ('codes_grib_new_from_file') : sous
+    Windows, la bibliothèque eccodes peut utiliser une autre version de la
+    bibliothèque C que Python (ex. avec conda), et le processus s'arrête alors
+    sans message d'erreur.
+
+    Parameters
+    ----------
+    f: file
+        Le fichier GRIB, ouvert en mode binaire.
+
+    Yields
+    ------
+    bytes
+        Un message GRIB complet.
+    """
+    while True:
+        header = f.read(16)
+        if not header:
+            return
+        if len(header) < 8 or header[:4] != b'GRIB':
+            raise asv.Error("Le fichier GRIB est invalide (message mal formé).")
+        edition = header[7]
+        if edition == 2:
+            if len(header) < 16:
+                raise asv.Error("Le fichier GRIB est tronqué.")
+            length = int.from_bytes(header[8:16], 'big')
+        elif edition == 1:
+            length = int.from_bytes(header[4:7], 'big')
+        else:
+            raise asv.Error(f"Édition GRIB non supportée ({edition}).")
+        if length < len(header):
+            raise asv.Error("Le fichier GRIB est invalide (longueur de message).")
+        message = header + f.read(length - len(header))
+        if len(message) != length or message[-4:] != b'7777':
+            raise asv.Error("Le fichier GRIB est tronqué.")
+        yield message
 
 
 def _crop_field(eccodes, handle, domain):

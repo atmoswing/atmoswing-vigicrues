@@ -20,7 +20,7 @@ from .disseminations.dissemination import Dissemination
 from .disseminations.transfer_sftp_out import TransferSftpOut
 from .disseminations.transfer_ftp_out import TransferFtpOut
 from .exceptions import (ConfigError, Error, FilePathError, OptionError,
-                         PathError)
+                         PathError, ProcessingError)
 from .options import Options
 from .postactions.postaction import PostAction
 from .postactions.export_bdapbp import ExportBdApBp
@@ -39,9 +39,9 @@ if has_eccodes:
     use_builtin_eccodes_definitions()
 
 __all__ = ('Error', 'OptionError', 'ConfigError', 'PathError', 'FilePathError',
-           'Controller', 'Options', 'ExportBdApBp', 'ExportPrv', 'TransferSftpOut',
-           'DownloadGfsData', 'DownloadEcmwfData', 'TransformGfsData',
-           'TransformEcmwfData', 'file_exists',
+           'ProcessingError', 'Controller', 'Options', 'ExportBdApBp', 'ExportPrv',
+           'TransferSftpOut', 'DownloadGfsData', 'DownloadEcmwfData',
+           'TransformGfsData', 'TransformEcmwfData', 'file_exists',
            'check_file_exists', 'check_dir_exists', 'build_date_dir_structure',
            'Dataset', 'eccodes', 'TransferSftpIn', 'PreAction', 'PostAction',
            'Dissemination', 'TransferFtpOut')
