@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>atmoswing_vigicrues.controller &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
+  <title>atmoswing_vigicrues.controller &mdash; AtmoSwing Vigicrues 1.3.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
@@ -13,7 +13,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/documentation_options.js?v=8ca9e7a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -236,12 +236,15 @@
 
 <span class="sd">        En cas d'échec d'une pré-action, la date de la prévision est reculée de</span>
 <span class="sd">        'attempts_step_hours' et l'ensemble des pré-actions est relancé, jusqu'à</span>
-<span class="sd">        un recul maximal de 'attempts_max_hours'.</span>
+<span class="sd">        un recul maximal de 'attempts_max_hours'. Une exception levée par une</span>
+<span class="sd">        pré-action (ex. asv.ProcessingError : données disponibles mais non</span>
+<span class="sd">        traitables) interrompt l'exécution sans recul de la date.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        asv.Error</span>
-<span class="sd">            Si les pré-actions échouent pour toutes les dates tentées.</span>
+<span class="sd">            Si les pré-actions échouent pour toutes les dates tentées, ou si une</span>
+<span class="sd">            pré-action lève une exception.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_actions</span><span class="p">:</span>
             <span class="k">return</span>

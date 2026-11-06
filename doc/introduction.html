@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
+  <title>Introduction &mdash; AtmoSwing Vigicrues 1.3.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/documentation_options.js?v=8ca9e7a0"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -83,7 +83,7 @@
   <section id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
 <p>Module Python pour l’intégration d’AtmoSwing dans le réseau Vigicrues.</p>
-<p><a class="reference external" href="https://github.com/atmoswing/atmoswing-vigicrues"><img alt="github" src="https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues" /></a> <a class="reference external" href="https://pypi.org/project/atmoswing-vigicrues/"><img alt="pypi" src="https://img.shields.io/pypi/v/atmoswing-vigicrues" /></a> <a class="reference external" href="https://hub.docker.com/r/atmoswing/atmoswing-vigicrues"><img alt="docker" src="https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker" /></a> <a class="reference external" href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.7-green" /></a></p>
+<p><a class="reference external" href="https://github.com/atmoswing/atmoswing-vigicrues"><img alt="github" src="https://img.shields.io/github/v/release/atmoswing/atmoswing-vigicrues" /></a> <a class="reference external" href="https://pypi.org/project/atmoswing-vigicrues/"><img alt="pypi" src="https://img.shields.io/pypi/v/atmoswing-vigicrues" /></a> <a class="reference external" href="https://hub.docker.com/r/atmoswing/atmoswing-vigicrues"><img alt="docker" src="https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker" /></a> <a class="reference external" href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-green" /></a></p>
 <section id="objectif">
 <h2>Objectif<a class="headerlink" href="#objectif" title="Link to this heading"></a></h2>
 <p>Le module a pour but la gestion du flux de la prévision par AtmoSwing. Il permet :</p>
@@ -99,10 +99,15 @@
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <p>Pour utiliser le module atmoswing-vigicrues, il faut installer :</p>
 <ul class="simple">
-<li><p>Python &gt;= 3.7</p></li>
+<li><p>Python &gt;= 3.9</p></li>
 <li><p>AtmoSwing Forecaster (de préférence la version serveur)</p></li>
 <li><p>Le module atmoswing-vigicrues (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">atmoswing-vigicrues</span></code> ou l’image docker <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">atmoswing/atmoswing-vigicrues</span></code>)</p></li>
 </ul>
+<p>Les pré-actions de téléchargement des données du CEP (<code class="docutils literal notranslate"><span class="pre">DownloadEcmwfData</span></code>) et de transformation des fichiers GRIB (<code class="docutils literal notranslate"><span class="pre">TransformGfsData</span></code>, <code class="docutils literal notranslate"><span class="pre">TransformEcmwfData</span></code>) nécessitent des dépendances supplémentaires (<code class="docutils literal notranslate"><span class="pre">eccodes</span></code>, <code class="docutils literal notranslate"><span class="pre">ecmwf-opendata</span></code>, <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">atmoswing-toolbox</span></code>), installées par :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>atmoswing-vigicrues<span class="o">[</span>grib<span class="o">]</span>
+</pre></div>
+</div>
+<p>Avec conda, les liaisons Python d’eccodes s’installent par <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-c</span> <span class="pre">conda-forge</span> <span class="pre">python-eccodes</span></code> : le paquet conda <code class="docutils literal notranslate"><span class="pre">eccodes</span></code> ne fournit que la librairie C, et <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">eccodes</span></code> échoue sans <code class="docutils literal notranslate"><span class="pre">python-eccodes</span></code>. Les autres dépendances peuvent être installées ensuite avec pip.</p>
 </section>
 <section id="utilisation">
 <h2>Utilisation<a class="headerlink" href="#utilisation" title="Link to this heading"></a></h2>
@@ -156,7 +161,6 @@
 <span class="w">      </span><span class="nt">levels</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">500</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">30</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">65</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
-<span class="w">      </span><span class="nt">max_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 <span class="w">      </span><span class="nt">proxies</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">http</span><span class="p">:</span><span class="w"> </span><span class="s">''</span>
 <span class="w">        </span><span class="nt">https</span><span class="p">:</span><span class="w"> </span><span class="s">''</span>
@@ -172,6 +176,7 @@
 <span class="w">        </span><span class="nt">r</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">850</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">30</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">65</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">lead_time_max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192</span>
+<span class="w">      </span><span class="nt">previous_runs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 
 <span class="nt">post_actions</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export BdApBp</span>
@@ -184,7 +189,7 @@
 
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Export PRV for Scores</span>
 <span class="w">    </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ExportPrv</span>
-<span class="w">    </span><span class="nt">enable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="w">    </span><span class="nt">with</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">'D:\atmoswing\exports\prv'</span>
 <span class="w">      </span><span class="nt">frequencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.7</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.8</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.9</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.95</span><span class="p p-Indicator">]</span>
@@ -240,19 +245,19 @@
 <p>Le schéma ci-dessous présente la structure des classes principales du module.</p>
 <div class="graphviz"><img src="../_images/inheritance-e63b7239eaf4d58d9ba723e6c4cfe30c2c0c1fa6.png" alt="Inheritance diagram of Controller, PreAction, TransferSftpIn, DownloadGfsData, DownloadEcmwfData, TransformGfsData, TransformEcmwfData, PostAction, ExportBdApBp, ExportPrv, Dissemination, TransferSftpOut, TransferFtpOut" usemap="#inheritance54023c49a2" class="inheritance graphviz" /></div>
 <map id="inheritance54023c49a2" name="inheritance54023c49a2">
-<area shape="rect" id="node3" href="../api/module.html#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="140,55,256,80"/>
-<area shape="rect" id="node5" href="../api/module.html#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="156,177,240,203"/>
-<area shape="rect" id="node8" href="../api/module.html#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="153,301,243,327"/>
-<area shape="rect" id="node2" href="../api/module.html#atmoswing_vigicrues.Controller" target="_top" title="Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues." alt="" coords="5,128,92,153"/>
-<area shape="rect" id="node10" href="../api/module.html#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="326,5,445,31"/>
-<area shape="rect" id="node12" href="../api/module.html#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="324,55,447,80"/>
-<area shape="rect" id="node4" href="../api/module.html#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="304,104,467,129"/>
-<area shape="rect" id="node6" href="../api/module.html#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="315,153,455,179"/>
-<area shape="rect" id="node11" href="../api/module.html#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="330,203,441,228"/>
-<area shape="rect" id="node7" href="../api/module.html#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="328,301,443,327"/>
-<area shape="rect" id="node9" href="../api/module.html#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="343,351,428,376"/>
-<area shape="rect" id="node13" href="../api/module.html#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="515,228,677,253"/>
-<area shape="rect" id="node15" href="../api/module.html#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="526,277,666,303"/>
+<area shape="rect" id="node3" href="../api/module.html#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="139,57,254,85"/>
+<area shape="rect" id="node5" href="../api/module.html#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="155,188,238,216"/>
+<area shape="rect" id="node8" href="../api/module.html#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="151,317,242,345"/>
+<area shape="rect" id="node2" href="../api/module.html#atmoswing_vigicrues.Controller" target="_top" title="Classe principale pour la gestion des prévisions AtmoSwing pour le réseau Vigicrues." alt="" coords="5,136,91,164"/>
+<area shape="rect" id="node10" href="../api/module.html#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="324,5,441,33"/>
+<area shape="rect" id="node12" href="../api/module.html#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="322,57,443,85"/>
+<area shape="rect" id="node4" href="../api/module.html#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="302,109,463,137"/>
+<area shape="rect" id="node6" href="../api/module.html#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="313,161,452,189"/>
+<area shape="rect" id="node11" href="../api/module.html#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="328,213,438,241"/>
+<area shape="rect" id="node7" href="../api/module.html#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="326,317,440,345"/>
+<area shape="rect" id="node9" href="../api/module.html#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="340,369,425,397"/>
+<area shape="rect" id="node13" href="../api/module.html#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="511,240,673,268"/>
+<area shape="rect" id="node15" href="../api/module.html#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="522,292,662,320"/>
 </map></section>
 </section>
 

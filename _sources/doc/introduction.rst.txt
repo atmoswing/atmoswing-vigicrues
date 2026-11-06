@@ -12,7 +12,7 @@ Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
    :target: https://pypi.org/project/atmoswing-vigicrues/
 .. |docker| image:: https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker
    :target: https://hub.docker.com/r/atmoswing/atmoswing-vigicrues
-.. |python| image:: https://img.shields.io/badge/python-%3E%3D3.7-green
+.. |python| image:: https://img.shields.io/badge/python-%3E%3D3.9-green
    :target: https://www.python.org/
 
 Objectif
@@ -32,9 +32,17 @@ Installation
 
 Pour utiliser le module atmoswing-vigicrues, il faut installer :
 
-* Python >= 3.7
+* Python >= 3.9
 * AtmoSwing Forecaster (de préférence la version serveur)
 * Le module atmoswing-vigicrues (``pip install atmoswing-vigicrues`` ou l'image docker ``docker pull atmoswing/atmoswing-vigicrues``)
+
+Les pré-actions de téléchargement des données du CEP (``DownloadEcmwfData``) et de transformation des fichiers GRIB (``TransformGfsData``, ``TransformEcmwfData``) nécessitent des dépendances supplémentaires (``eccodes``, ``ecmwf-opendata``, ``pandas``, ``atmoswing-toolbox``), installées par :
+
+.. code-block:: bash
+
+    pip install atmoswing-vigicrues[grib]
+
+Avec conda, les liaisons Python d'eccodes s'installent par ``conda install -c conda-forge python-eccodes`` : le paquet conda ``eccodes`` ne fournit que la librairie C, et ``import eccodes`` échoue sans ``python-eccodes``. Les autres dépendances peuvent être installées ensuite avec pip.
 
 Utilisation
 -----------
@@ -95,7 +103,6 @@ Un exemple de fichier de configuration est présenté ci-dessous :
           levels: [500, 1000]
           domain: [-20, 30, 25, 65]
           resolution: 0.5
-          max_attempts: 8
           proxies:
             http: ''
             https: ''
@@ -111,6 +118,7 @@ Un exemple de fichier de configuration est présenté ci-dessous :
             r: [850]
           domain: [-20, 30, 20, 65]
           lead_time_max: 192
+          previous_runs: 1
 
     post_actions:
       - name: Export BdApBp
@@ -123,7 +131,7 @@ Un exemple de fichier de configuration est présenté ci-dessous :
 
       - name: Export PRV for Scores
         uses: ExportPrv
-        enable: True
+        active: True
         with:
           output_dir: 'D:\atmoswing\exports\prv'
           frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]

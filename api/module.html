@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Composants &mdash; AtmoSwing Vigicrues 1.0.0 documentation</title>
+  <title>Composants &mdash; AtmoSwing Vigicrues 1.3.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/documentation_options.js?v=8ca9e7a0"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -258,12 +258,12 @@ dissémination a échoué.</p></li>
 <h2>Pre-actions<a class="headerlink" href="#pre-actions" title="Link to this heading"></a></h2>
 <div class="graphviz"><img src="../_images/inheritance-4bd3bf3ff81ef69027a2f85d54fab91658061545.png" alt="Inheritance diagram of PreAction, TransferSftpIn, DownloadGfsData, DownloadEcmwfData, TransformGfsData, TransformEcmwfData" usemap="#inheritanceabf66e071a" class="inheritance graphviz" /></div>
 <map id="inheritanceabf66e071a" name="inheritanceabf66e071a">
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="125,80,209,105"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="257,5,420,31"/>
-<area shape="rect" id="node4" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="269,55,409,80"/>
-<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="283,104,394,129"/>
-<area shape="rect" id="node6" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="468,128,631,153"/>
-<area shape="rect" id="node8" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="479,177,619,203"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.PreAction" target="_top" title="Classe de base pour les opérations nécessaires avant l&#39;exécution des prévisions." alt="" coords="125,84,209,112"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.DownloadEcmwfData" target="_top" title="Téléchargement des prévisions du CEP (ECMWF IFS) depuis les données ouvertes" alt="" coords="257,5,418,33"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.DownloadGfsData" target="_top" title="Téléchargement des prévisions émises par GFS." alt="" coords="268,57,407,85"/>
+<area shape="rect" id="node5" href="#atmoswing_vigicrues.TransferSftpIn" target="_top" title="Récupération des prévisions des modèles météo par SFTP." alt="" coords="282,109,392,137"/>
+<area shape="rect" id="node6" href="#atmoswing_vigicrues.TransformEcmwfData" target="_top" title="Transforme les prévisions émises par le CEP (ECMWF) en fichier netcdf." alt="" coords="466,135,627,162"/>
+<area shape="rect" id="node8" href="#atmoswing_vigicrues.TransformGfsData" target="_top" title="Transforme les prévisions émises par GFS en fichier netcdf." alt="" coords="477,187,616,214"/>
 </map><section id="classe-de-base-des-pre-actions">
 <h3>Classe de base des pré-actions<a class="headerlink" href="#classe-de-base-des-pre-actions" title="Link to this heading"></a></h3>
 <dl class="py class">
@@ -909,10 +909,19 @@ répertoire cible. Ces fichiers sont lus par le jeu de données
 ‘Custom_Vigicrues_IFS’ d’AtmoSwing (version lisant les fichiers du CEP au
 format GRIB2).</p>
 <p>Un fichier n’est écrit qu’une fois complet : les fichiers déjà présents sont
-ignorés, et une exécution interrompue reprend avec les variables manquantes.</p>
+ignorés, et une exécution interrompue reprend avec les variables manquantes.
+Les flux qui partagent un même répertoire cible doivent donc demander les mêmes
+niveaux et échéances : un fichier existant n’est pas complété.</p>
 <p>Les runs précédents sont aussi complétés s’ils manquent (ex. après une panne) :
 AtmoSwing lit les premières échéances d’une prévision dans le run précédent.
 Leur échec n’empêche pas la prévision et est seulement signalé.</p>
+<p>Chaque variable est d’abord téléchargée sur la grille complète dans un
+répertoire temporaire, puis découpée. Un échec du téléchargement (données pas
+encore disponibles) fait échouer l’action, et la date de la prévision est
+reculée. Un échec du découpage (données disponibles mais non traitables)
+interrompt l’exécution (asv.ProcessingError), sans reculer la date : le
+fichier téléchargé est alors conservé dans le répertoire temporaire, dont le
+chemin est indiqué dans le message d’erreur.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1293,9 +1302,9 @@ Voir TransformGribData pour les options.</p>
 <h2>Post-actions<a class="headerlink" href="#post-actions" title="Link to this heading"></a></h2>
 <div class="graphviz"><img src="../_images/inheritance-13ce81e660ab4c8e7b4962f3e9f0f8ea71720dfa.png" alt="Inheritance diagram of PostAction, ExportBdApBp, ExportPrv" usemap="#inheritanced33a11fe45" class="inheritance graphviz" /></div>
 <map id="inheritanced33a11fe45" name="inheritanced33a11fe45">
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="125,31,216,56"/>
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="264,5,379,31"/>
-<area shape="rect" id="node4" href="#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="279,55,364,80"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.PostAction" target="_top" title="Classe de base pour les opérations de traitement des résultats d&#39;AtmoSwing." alt="" coords="125,32,216,60"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.ExportBdApBp" target="_top" title="Export des prévisions au format Json de la BdApBp." alt="" coords="264,5,378,33"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.ExportPrv" target="_top" title="Export des prévisions au format PRV du logiciel Scores." alt="" coords="279,57,363,85"/>
 </map><section id="classe-de-base-des-post-actions">
 <h3>Classe de base des post-actions<a class="headerlink" href="#classe-de-base-des-post-actions" title="Link to this heading"></a></h3>
 <dl class="py class">
@@ -1659,9 +1668,9 @@ Par défaut : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]</p>
 <h2>Dissemination<a class="headerlink" href="#dissemination" title="Link to this heading"></a></h2>
 <div class="graphviz"><img src="../_images/inheritance-697f3ccc320b8c682593cfad82cef907ad0bdad8.png" alt="Inheritance diagram of Dissemination, TransferSftpOut, TransferFtpOut" usemap="#inheritance54a5557647" class="inheritance graphviz" /></div>
 <map id="inheritance54a5557647" name="inheritance54a5557647">
-<area shape="rect" id="node2" href="#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="125,31,241,56"/>
-<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="291,5,410,31"/>
-<area shape="rect" id="node4" href="#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="289,55,412,80"/>
+<area shape="rect" id="node2" href="#atmoswing_vigicrues.Dissemination" target="_top" title="Classe de base pour les opérations de diffusion des résultats d&#39;AtmoSwing." alt="" coords="125,32,241,60"/>
+<area shape="rect" id="node3" href="#atmoswing_vigicrues.TransferFtpOut" target="_top" title="Transfer des résultats par FTP." alt="" coords="291,5,408,33"/>
+<area shape="rect" id="node4" href="#atmoswing_vigicrues.TransferSftpOut" target="_top" title="Transfer des résultats par SFTP." alt="" coords="289,57,410,85"/>
 </map><section id="classe-de-base-des-disseminations">
 <h3>Classe de base des disséminations<a class="headerlink" href="#classe-de-base-des-disseminations" title="Link to this heading"></a></h3>
 <dl class="py class">
