@@ -1,18 +1,18 @@
 # Changelog AtmoSwing-vigicrues
 
 
-## Version en développement
+## v1.3.2 - 6 Novembre 2026
 
 ### Changements
 
-*   Documentation : installation des dépendances optionnelles (`pip install atmoswing-vigicrues[grib]`) et des liaisons Python d'eccodes avec conda (`python-eccodes`, le paquet conda `eccodes` ne fournissant que la librairie C).
+*   Image Docker basée sur AtmoSwing Forecaster v3.1.1, qui corrige la lecture des fichiers GRIB dont les niveaux ne sont pas ordonnés.
 *   Message d'erreur plus explicite lorsque le paquet Python eccodes est absent.
 *   `DownloadEcmwfData` : le téléchargement et le découpage de chaque variable sont journalisés séparément, avec le chemin du fichier téléchargé (grille complète, dans le répertoire temporaire).
-*   `DownloadEcmwfData` : un échec du découpage n'est plus présenté comme un échec du téléchargement. Il interrompt l'exécution (code de retour -1) sans reculer la date de la prévision, ce qui évite de télécharger inutilement les runs précédents. Le fichier téléchargé est conservé dans le répertoire temporaire et son chemin est indiqué dans le message d'erreur. Nouvelle exception `ProcessingError` pour ce cas.
+*   `DownloadEcmwfData` : un échec du découpage n'est plus présenté comme un échec du téléchargement. Il interrompt l'exécution (code de retour -1) sans reculer la date de la prévision, ce qui évite de télécharger inutilement les runs précédents.
 
 ### Corrections
 
-*   `DownloadEcmwfData` : les champs sont enregistrés par échéance puis par niveau croissant, comme dans les fichiers du CEP diffusés auparavant. L'ordre des niveaux des données ouvertes varie d'une échéance à l'autre, et AtmoSwing Forecaster ne trouvait alors pas certains niveaux (« Le niveau souhaité (700) n'existe pas »), selon le nombre d'échéances. Les fichiers déjà téléchargés doivent être supprimés pour être recréés.
+*   `DownloadEcmwfData` : les champs sont enregistrés par échéance puis par niveau croissant, comme dans les fichiers du CEP diffusés auparavant.
 *   `DownloadEcmwfData` : sous Windows (ex. avec conda), le processus pouvait s'arrêter sans message d'erreur lors du découpage des fichiers GRIB, laissant un fichier `.part` vide. Les messages GRIB sont désormais lus en Python et transmis à eccodes en mémoire.
 
 

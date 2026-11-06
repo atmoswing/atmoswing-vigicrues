@@ -4,9 +4,9 @@
 # Steps ordered from the less frequently changed to the more frequently
 # changed to ensure the build cache is reused.
 
-# AtmoSwing Forecaster v3.1.0 (Ubuntu 26.04), épinglée par digest pour des
+# AtmoSwing Forecaster v3.1.1 (Ubuntu 26.04), épinglée par digest pour des
 # builds reproductibles. Mise à jour du digest : Dependabot (.github/dependabot.yml).
-FROM atmoswing/forecaster:v3.1.0@sha256:1d075cbc5e7a008c164070184cdb5e17aa9b2099a7f3039294f48e4d3b8ba71d
+FROM atmoswing/forecaster:v3.1.1@sha256:9694f7e9b9c7160eb2926973947107266b4e645fe349a9bdb2f5c23f3da97c04
 
 WORKDIR /app
 
