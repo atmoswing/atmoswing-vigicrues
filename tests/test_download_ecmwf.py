@@ -536,6 +536,25 @@ def test_crop_pressure_levels(tmp_path, lon_first):
 
 
 @requires_eccodes
+def test_crop_sorts_fields_by_step_then_level(tmp_path):
+    # Données ouvertes : l'ordre des niveaux varie d'une échéance à l'autre, ce
+    # qui empêche AtmoSwing de trouver certains niveaux
+    parts = []
+    shuffled = [([1000, 300, 700], 6), ([700, 1000, 300], 0), ([300, 700, 1000], 12)]
+    for i, (levels, step) in enumerate(shuffled):
+        part = tmp_path / f'part{i}.grib2'
+        write_global_grib2(part, 'z', levels, [step])
+        parts.append(part.read_bytes())
+    source = tmp_path / 'z.grib2'
+    source.write_bytes(b''.join(parts))
+    target = tmp_path / 'CEP_Z_202610221200.grb'
+    assert download_ecmwf.crop_grib(source, target, [-10, 5, 40, 50]) == 9
+
+    assert [(f['step'], f['level']) for f in read_grib(target)] == [
+        (step, level) for step in (0, 6, 12) for level in (300, 700, 1000)]
+
+
+@requires_eccodes
 def test_crop_surface_field_scanned_northwards(tmp_path):
     source = tmp_path / 'tcwv.grib2'
     target = tmp_path / 'CEP_TCWV_202610221200.grb'

@@ -503,23 +503,31 @@ def crop_grib(source, target, domain):
         Le nombre de champs enregistrés.
     """
     eccodes = asv.eccodes
-    count = 0
-    with open(source, 'rb') as f_in, open(target, 'wb') as f_out:
+    fields = []
+    with open(source, 'rb') as f_in:
         for message in iter_grib_messages(f_in):
             handle = eccodes.codes_new_from_message(message)
             try:
+                key = (eccodes.codes_get(handle, 'dataDate'),
+                       eccodes.codes_get(handle, 'dataTime'),
+                       eccodes.codes_get(handle, 'endStep'),
+                       eccodes.codes_get(handle, 'level'))
                 values, grid = _crop_field(eccodes, handle, domain)
                 output = eccodes.codes_clone(handle)
                 try:
                     _set_grid(eccodes, output, grid)
                     eccodes.codes_set_values(output, values.astype(float).flatten())
-                    eccodes.codes_write(output, f_out)
+                    fields.append((key, eccodes.codes_get_message(output)))
                 finally:
                     eccodes.codes_release(output)
             finally:
                 eccodes.codes_release(handle)
-            count += 1
-    return count
+
+    fields.sort(key=lambda field: field[0])
+    with open(target, 'wb') as f_out:
+        for _, output_message in fields:
+            f_out.write(output_message)
+    return len(fields)
 
 
 def iter_grib_messages(f):

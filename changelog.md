@@ -12,6 +12,7 @@
 
 ### Corrections
 
+*   `DownloadEcmwfData` : les champs sont enregistrés par échéance puis par niveau croissant, comme dans les fichiers du CEP diffusés auparavant. L'ordre des niveaux des données ouvertes varie d'une échéance à l'autre, et AtmoSwing Forecaster ne trouvait alors pas certains niveaux (« Le niveau souhaité (700) n'existe pas »), selon le nombre d'échéances. Les fichiers déjà téléchargés doivent être supprimés pour être recréés.
 *   `DownloadEcmwfData` : sous Windows (ex. avec conda), le processus pouvait s'arrêter sans message d'erreur lors du découpage des fichiers GRIB, laissant un fichier `.part` vide. Les messages GRIB sont désormais lus en Python et transmis à eccodes en mémoire.
 
 
