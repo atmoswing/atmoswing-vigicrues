@@ -12,7 +12,7 @@ Module Python pour l'intégration d'AtmoSwing dans le réseau Vigicrues.
    :target: https://pypi.org/project/atmoswing-vigicrues/
 .. |docker| image:: https://img.shields.io/docker/v/atmoswing/atmoswing-vigicrues?label=docker
    :target: https://hub.docker.com/r/atmoswing/atmoswing-vigicrues
-.. |python| image:: https://img.shields.io/badge/python-%3E%3D3.9-green
+.. |python| image:: https://img.shields.io/badge/python-%3E%3D3.10-green
    :target: https://www.python.org/
 
 Objectif
@@ -32,7 +32,7 @@ Installation
 
 Pour utiliser le module atmoswing-vigicrues, il faut installer :
 
-* Python >= 3.9
+* Python >= 3.10
 * AtmoSwing Forecaster (de préférence la version serveur)
 * Le module atmoswing-vigicrues (``pip install atmoswing-vigicrues`` ou l'image docker ``docker pull atmoswing/atmoswing-vigicrues``)
 
