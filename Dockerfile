@@ -6,7 +6,7 @@
 
 # AtmoSwing Forecaster v3.1.1 (Ubuntu 26.04), épinglée par digest pour des
 # builds reproductibles. Mise à jour du digest : Dependabot (.github/dependabot.yml).
-FROM atmoswing/forecaster:v3.1.1@sha256:9694f7e9b9c7160eb2926973947107266b4e645fe349a9bdb2f5c23f3da97c04
+FROM atmoswing/forecaster:v3.1.1@sha256:6b84e73c17b4f1c473345c02be33c21e1a2272db10e5ce057c55b4f7b8dff45d
 
 WORKDIR /app
 
