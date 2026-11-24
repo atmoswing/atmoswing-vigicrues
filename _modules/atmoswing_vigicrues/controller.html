@@ -76,6 +76,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">atmoswing_vigicrues</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">asv</span>
@@ -292,16 +293,18 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Prévision pour la date : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Commande: "</span> <span class="o">+</span> <span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
 
+        <span class="n">started_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">(</span><span class="n">started_at</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Exception de AtmoSwing Forecaster: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
         <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"  -&gt; Échec de l'exécution."</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_process_output</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_log_file</span><span class="p">(</span><span class="n">started_at</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">asv</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Erreur de AtmoSwing Forecaster (code de retour "</span>
                             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ret</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
 
@@ -423,12 +426,46 @@
         <span class="k">return</span> <span class="n">files</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_log_file</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_process_output</span><span class="p">(</span><span class="n">ret</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Journalise les sorties standard et d'erreur d'AtmoSwing Forecaster, qui</span>
+<span class="sd">        contiennent les erreurs survenues avant l'écriture de son journal.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"Sortie"</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Sortie d'erreur"</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">stderr</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">output</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'replace'</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"     | </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> d'AtmoSwing Forecaster :</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_log_file</span><span class="p">(</span><span class="n">started_at</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Journalise le contenu du journal d'AtmoSwing Forecaster.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        started_at : float, optional</span>
+<span class="sd">            Heure de lancement d'AtmoSwing Forecaster (secondes depuis l'epoch).</span>
+<span class="sd">            Un journal qui n'a pas été modifié depuis provient d'une exécution</span>
+<span class="sd">            antérieure : il n'est pas affiché.</span>
+<span class="sd">        """</span>
         <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
         <span class="n">log_file</span> <span class="o">=</span> <span class="n">tmp_dir</span> <span class="o">/</span> <span class="s2">"AtmoSwingForecaster.log"</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">log_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Le journal des logs n'a pas été trouvé "</span>
                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">modified_at</span> <span class="o">=</span> <span class="n">log_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>
+        <span class="c1"># Marge pour la résolution des horodatages de certains systèmes de fichiers</span>
+        <span class="k">if</span> <span class="n">started_at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">modified_at</span> <span class="o">&lt;</span> <span class="n">started_at</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">modified</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">modified_at</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  -&gt; Le journal des logs (</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span><span class="si">}</span><span class="s2">) n'a pas été "</span>
+                           <span class="sa">f</span><span class="s2">"mis à jour par cette exécution (dernière modification : "</span>
+                           <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">modified</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S'</span><span class="p">)</span><span class="si">}</span><span class="s2">) : il n'est "</span>
+                           <span class="sa">f</span><span class="s2">"pas affiché."</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'replace'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"     | </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">file</span><span class="p">]</span>
