@@ -1,5 +1,7 @@
 import base64
+import os
 import socket
+import sys
 import tempfile
 import threading
 from pathlib import Path
@@ -322,3 +324,32 @@ def test_load_host_key_fails_for_unknown_host(tmp_path, server_key):
 def test_load_host_key_fails_for_missing_file(tmp_path):
     with pytest.raises(asv.FilePathError):
         asv.utils.load_host_key(tmp_path / 'absent', 'sftp.example.org', 22)
+
+
+def test_connect_via_http_proxy_fails_on_too_long_response(fake_proxy):
+    port, _ = fake_proxy(b"HTTP/1.1 200 OK\r\n" + b"X" * 17000, close=True)
+    with pytest.raises(asv.Error, match="trop longue"):
+        asv.utils.connect_via_http_proxy('127.0.0.1', port, 'sftp.example.org', 22)
+
+
+@pytest.mark.parametrize('response', [
+    b"HTTP/1.1 502 Bad Gateway\r\n\r\n",
+    b"INVALIDE\r\n\r\n",
+])
+def test_connect_via_http_proxy_fails_on_error_status(fake_proxy, response):
+    port, _ = fake_proxy(response)
+    with pytest.raises(asv.Error, match="Échec de la connexion via le proxy"):
+        asv.utils.connect_via_http_proxy('127.0.0.1', port, 'sftp.example.org', 22)
+
+
+def test_eccodes_definitions_are_kept_without_environment_variable(monkeypatch):
+    monkeypatch.delenv('ECCODES_DEFINITION_PATH', raising=False)
+    monkeypatch.setitem(sys.modules, 'eccodes', None)  # Ne doit pas être importé
+    asv.utils.use_builtin_eccodes_definitions()
+
+
+def test_eccodes_definitions_override_ignores_missing_eccodes(monkeypatch):
+    monkeypatch.setenv('ECCODES_DEFINITION_PATH', '/usr/share/eccodes/definitions')
+    monkeypatch.setitem(sys.modules, 'eccodes', None)  # ImportError à l'import
+    asv.utils.use_builtin_eccodes_definitions()
+    assert os.environ['ECCODES_DEFINITION_PATH'] == '/usr/share/eccodes/definitions'

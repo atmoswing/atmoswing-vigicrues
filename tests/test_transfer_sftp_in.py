@@ -5,6 +5,7 @@ import lzma
 import os
 import shutil
 import socket
+import sys
 import tarfile
 import tempfile
 import threading
@@ -288,3 +289,146 @@ def test_unpack_single_compressed_file(tmp_path, suffix, opener):
         f.write(b'grib')
     asv.TransferSftpIn._unpack_if_needed(compressed, tmp_path)
     assert (tmp_path / 'CEP_z_2023041312.grb').read_bytes() == b'grib'
+
+
+SSH_ERRORS = [
+    (paramiko.ssh_exception.PasswordRequiredException("clé"),
+     "PasswordRequiredException"),
+    (paramiko.ssh_exception.BadAuthenticationType("refusé", ['publickey']),
+     "BadAuthenticationType"),
+    (paramiko.ssh_exception.AuthenticationException("refusé"),
+     "AuthenticationException"),
+    (paramiko.ssh_exception.ChannelException(1, "canal"), "ChannelException"),
+    (paramiko.ssh_exception.ProxyCommandFailure("proxy", "échec"),
+     "ProxyCommandFailure"),
+    (FileNotFoundError("absent"), "FileNotFoundError"),
+]
+
+
+@pytest.mark.parametrize('error, message', SSH_ERRORS)
+def test_sftp_errors_are_reported(options_no_variables, monkeypatch, caplog, error,
+                                  message):
+    closed = []
+
+    def connect(hostkey, username, password):
+        raise error
+
+    monkeypatch.setattr(paramiko, 'Transport', lambda address: types.SimpleNamespace(
+        connect=connect, close=lambda: closed.append(True)))
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+    assert not action.run(datetime(2023, 4, 13, 12))
+    assert f"SFTP {message}" in caplog.text
+    assert closed == [True]
+
+
+class FakeSftpServer:
+    """Client SFTP factice servant une liste de fichiers distants."""
+
+    def __init__(self, remote_files):
+        self.remote_files = remote_files
+        self.downloaded = []
+        self.closed = False
+
+    def chdir(self, path):
+        pass
+
+    def listdir(self, path):
+        return list(self.remote_files)
+
+    def get(self, remote_file, local_file, prefetch=True):
+        self.downloaded.append(remote_file)
+        with open(local_file, 'wb') as f:
+            f.write(self.remote_files[remote_file])
+
+    def close(self):
+        self.closed = True
+
+
+@pytest.fixture
+def fake_sftp_server(monkeypatch):
+    def install(remote_files):
+        sftp = FakeSftpServer(remote_files)
+        transport = types.SimpleNamespace(
+            connect=lambda hostkey, username, password: None,
+            open_sftp_client=lambda: sftp, close=lambda: None)
+        monkeypatch.setattr(paramiko, 'Transport', lambda address: transport)
+        return sftp
+
+    return install
+
+
+def test_files_are_downloaded_over_sftp(options_no_variables, fake_sftp_server,
+                                        tmp_path, caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    options_no_variables['local_dir'] = str(tmp_path)
+    sftp = fake_sftp_server({
+        'CEP_Z_2023041312.grb': b'z',
+        'CEP_T_2023041300.grb': b't',
+        'CEP_Z_2023041212.grb': b'ancien',
+    })
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+    assert action.run(datetime(2023, 4, 13, 12))
+    assert sorted(sftp.downloaded) == ['CEP_T_2023041300.grb',
+                                       'CEP_Z_2023041312.grb']
+    assert sftp.closed
+    assert "  -> Nombre de fichiers récupérés : 2." in caplog.messages
+
+
+def test_missing_remote_files_are_reported(options_no_variables, fake_sftp_server,
+                                           tmp_path, caplog):
+    options_no_variables['local_dir'] = str(tmp_path)
+    fake_sftp_server({'CEP_Z_2023041212.grb': b'ancien'})
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_no_variables)
+    assert not action.run(datetime(2023, 4, 13, 12))
+    assert "Pas de fichier disponible pour 2023041312" in caplog.text
+
+
+def test_local_files_are_not_downloaded_again(options_with_variables, monkeypatch,
+                                              tmp_path, caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    options_with_variables['local_dir'] = str(tmp_path)
+    local_dir = asv.build_date_dir_structure(str(tmp_path), datetime(2023, 4, 13))
+    local_dir.mkdir(parents=True)
+    for variable in options_with_variables['variables']:
+        (local_dir / f'cep_{variable}_2023041312.grb').write_bytes(b'')
+    monkeypatch.setattr(paramiko, 'Transport',
+                        lambda address: pytest.fail("Connexion inattendue."))
+
+    action = asv.TransferSftpIn('Get CEP data over SFTP', options_with_variables)
+    assert action.run(datetime(2023, 4, 13, 12))
+    assert caplog.messages == ["  -> Fichiers déjà présents localement."]
+
+
+def test_unpack_ignores_uncompressed_files(tmp_path):
+    grib = tmp_path / 'CEP_z_2023041312.grb'
+    grib.write_bytes(b'grib')
+    asv.TransferSftpIn._unpack_if_needed(grib, tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ['CEP_z_2023041312.grb']
+
+
+def test_unpack_rejects_invalid_tar_archive(tmp_path):
+    archive = tmp_path / 'CEP_2023041312.tgz'
+    archive.write_bytes(b'pas une archive')
+    with pytest.raises(asv.Error, match="archive tar"):
+        asv.TransferSftpIn._unpack_if_needed(archive, tmp_path)
+
+
+def test_unpack_tar_archive_without_data_filter(tmp_path, monkeypatch):
+    # Versions de Python sans filtre d'extraction (antérieures à 3.12)
+    module = sys.modules[asv.TransferSftpIn.__module__]
+    monkeypatch.setattr(module, 'tarfile', types.SimpleNamespace(
+        is_tarfile=tarfile.is_tarfile, open=tarfile.open))
+    member = tmp_path / 'CEP_z_2023041312.grb'
+    member.write_bytes(b'grib')
+    archive_path = tmp_path / 'CEP_2023041312.tar.gz'
+    with tarfile.open(archive_path, 'w:gz') as archive:
+        archive.add(member, arcname='CEP_z_2023041312.grb')
+    member.unlink()
+
+    target = tmp_path / 'target'
+    target.mkdir()
+    asv.TransferSftpIn._unpack_if_needed(archive_path, target)
+    assert (target / 'CEP_z_2023041312.grb').read_bytes() == b'grib'

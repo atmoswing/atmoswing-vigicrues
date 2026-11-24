@@ -613,3 +613,43 @@ def test_download_from_ecmwf_open_data(tmp_path):
 
     # Les fichiers existants ne sont pas téléchargés à nouveau
     assert action.run(date)
+
+
+@pytest.mark.parametrize('content, match', [
+    (b'GRIB\x00\x00\x00\x02' + b'\x00' * 4, "tronqué"),
+    (b'GRIB\x00\x00\x00\x02' + (10).to_bytes(8, 'big') + b'\x00' * 8,
+     "longueur de message"),
+])
+def test_iter_grib_messages_rejects_invalid_header(tmp_path, content, match):
+    path = tmp_path / 'file.grib'
+    path.write_bytes(content)
+    with open(path, 'rb') as f:
+        with pytest.raises(asv.Error, match=match):
+            list(download_ecmwf.iter_grib_messages(f))
+
+
+class FakeEccodesGrid:
+    """Remplace eccodes pour la lecture des clés de la grille d'un message."""
+
+    def __init__(self, **keys):
+        self.keys = keys
+
+    def codes_get(self, handle, key):
+        return self.keys[key]
+
+
+@pytest.mark.parametrize('keys, match', [
+    ({'gridType': 'reduced_gg', 'iScansNegatively': 0}, "régulières"),
+    ({'gridType': 'regular_ll', 'iScansNegatively': 1}, "est en ouest"),
+])
+def test_crop_rejects_unsupported_grids(keys, match):
+    with pytest.raises(asv.Error, match=match):
+        download_ecmwf._crop_field(FakeEccodesGrid(**keys), None, [-10, 5, 40, 50])
+
+
+@requires_eccodes
+def test_crop_rejects_domain_outside_grid(tmp_path):
+    source = tmp_path / 'z.grib2'
+    write_global_grib2(source, 'z', [500], [0])
+    with pytest.raises(asv.Error, match="dépasse"):
+        download_ecmwf.crop_grib(source, tmp_path / 'out.grb', [-10, 5, 40, 95])

@@ -1,6 +1,7 @@
 import datetime
 import glob
 import importlib
+import logging
 import os
 import shutil
 import subprocess
@@ -465,3 +466,10 @@ def test_base_classes_cannot_be_used_as_actions(tmp_path):
         encoding='utf-8')
     with pytest.raises(asv.ConfigError):
         asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+
+
+def test_post_actions_are_skipped_without_new_files(stub_controller, caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    stub_controller.post_actions = [StubPostAction(False)]
+    assert stub_controller.run() == 0
+    assert "  -> Aucun nouveau fichier à traiter en post-action." in caplog.messages

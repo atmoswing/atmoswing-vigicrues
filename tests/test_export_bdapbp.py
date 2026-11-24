@@ -162,3 +162,16 @@ def test_export_bdapbp_with_all_stations(options, forecast_files, metadata):
             data = json.load(f)
             assert data['status'] == 0
     shutil.rmtree(options['output_dir'])
+
+
+def test_export_bdapbp_without_files_succeeds(options, metadata):
+    export = asv.ExportBdApBp('Export BdApBp', options)
+    export.feed([], metadata)
+    assert export.run() is True
+
+
+@pytest.mark.parametrize('content', ['{tronqué', '["sans", "statut"]'])
+def test_unreadable_export_is_not_considered_exported(tmp_path, content):
+    export_file = tmp_path / 'export.json'
+    export_file.write_text(content, encoding='utf-8')
+    assert asv.ExportBdApBp._already_exported(export_file) is False

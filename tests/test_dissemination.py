@@ -67,3 +67,7 @@ def test_nothing_to_disseminate_is_not_a_failure(action_class, config_file):
     action = action_class('Diffusion', options.config['disseminations'][0]['with'])
     action.feed([])
     assert action.run(datetime(2022, 12, 16, 0)) is True
+
+
+def test_unreadable_export_is_never_replaced(tmp_path):
+    assert not asv.Dissemination._must_replace(str(tmp_path / 'absent.json'), None)
