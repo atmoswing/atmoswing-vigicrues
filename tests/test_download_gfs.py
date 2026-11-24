@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import tempfile
@@ -127,3 +128,67 @@ def test_download_gfs_ignores_empty_proxies(options, proxies, expected):
     action = asv.DownloadGfsData('Download GFS data', options)
     assert action.proxies == expected
     shutil.rmtree(options['output_dir'])
+
+
+def test_download_gfs_rejects_unknown_resolution(options):
+    options['resolution'] = 0.1
+    with pytest.raises(ValueError, match="résolution"):
+        asv.DownloadGfsData('Download GFS data', options)
+
+
+class FakeResponse:
+    def __init__(self, status_code, content=b'', text=''):
+        self.status_code = status_code
+        self.content = content
+        self.text = text
+
+
+def test_download_gfs_writes_downloaded_files(options, monkeypatch, tmp_path,
+                                              caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    options['output_dir'] = str(tmp_path)
+    options['lead_time_max'] = 6
+    options['time_step_back'] = 1
+    urls = []
+
+    def fake_get(url, **kwargs):
+        urls.append(url)
+        return FakeResponse(200, content=b'grib')
+
+    monkeypatch.setattr(requests, 'get', fake_get)
+    action = asv.DownloadGfsData('Download GFS data', options)
+    assert action.download(datetime(2023, 6, 1, 12))
+    files = sorted(p.name for p in tmp_path.rglob('*.grib2'))
+    assert files == ['2023060112.NWS_GFS.hgt.000.grib2',
+                     '2023060112.NWS_GFS.hgt.006.grib2',
+                     '2023060112.NWS_GFS.rh.000.grib2',
+                     '2023060112.NWS_GFS.rh.006.grib2']
+    assert "  -> Nombre de fichiers téléchargés : 4." in caplog.messages
+
+    # Les fichiers existants ne sont pas téléchargés à nouveau
+    urls.clear()
+    assert action.download(datetime(2023, 6, 1, 12))
+    assert urls == []
+
+
+def test_download_gfs_reports_server_error(options, monkeypatch, tmp_path, caplog):
+    options['output_dir'] = str(tmp_path)
+    monkeypatch.setattr(requests, 'get', lambda url, **kwargs: FakeResponse(
+        404, text='<html><b>Fichier introuvable</b></html>'))
+    action = asv.DownloadGfsData('Download GFS data', options)
+    assert action.download(datetime(2023, 6, 1, 12)) is False
+    assert "  -> Fichier introuvable" in caplog.messages
+    assert not list(tmp_path.rglob('*.grib2'))
+
+
+def test_download_gfs_reports_unexpected_error(options, monkeypatch, tmp_path,
+                                               caplog):
+    options['output_dir'] = str(tmp_path)
+
+    def fake_get(url, **kwargs):
+        raise RuntimeError("erreur inattendue")
+
+    monkeypatch.setattr(requests, 'get', fake_get)
+    action = asv.DownloadGfsData('Download GFS data', options)
+    assert action.download(datetime(2023, 6, 1, 12)) is False
+    assert "  -> Le téléchargement de GFS a échoué." in caplog.messages

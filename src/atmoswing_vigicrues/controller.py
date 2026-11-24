@@ -3,6 +3,7 @@ import glob
 import logging
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 import atmoswing_vigicrues as asv
@@ -214,16 +215,18 @@ class Controller:
         logger.info(f"Prévision pour la date : {self.date.strftime('%Y-%m-%d %H')}")
         logger.info("Commande: " + ' '.join(cmd))
 
+        started_at = time.time()
         try:
             ret = subprocess.run(cmd, capture_output=True)
         except Exception as e:
             logger.error("  -> Échec de l'exécution.")
-            self._parse_log_file()
+            self._parse_log_file(started_at)
             raise asv.Error(f"Exception de AtmoSwing Forecaster: {e}") from e
 
         if ret.returncode != 0:
             logger.error("  -> Échec de l'exécution.")
-            self._parse_log_file()
+            self._log_process_output(ret)
+            self._parse_log_file(started_at)
             raise asv.Error(f"Erreur de AtmoSwing Forecaster (code de retour "
                             f"{ret.returncode}).")
 
@@ -345,12 +348,46 @@ class Controller:
         return files
 
     @staticmethod
-    def _parse_log_file():
+    def _log_process_output(ret):
+        """
+        Journalise les sorties standard et d'erreur d'AtmoSwing Forecaster, qui
+        contiennent les erreurs survenues avant l'écriture de son journal.
+        """
+        for label, output in (("Sortie", ret.stdout), ("Sortie d'erreur", ret.stderr)):
+            if not output:
+                continue
+            text = output.decode('utf-8', errors='replace').rstrip()
+            if not text:
+                continue
+            lines = [f"     | {line.rstrip()}" for line in text.splitlines()]
+            logger.error(f"{label} d'AtmoSwing Forecaster :\n" + "\n".join(lines))
+
+    @staticmethod
+    def _parse_log_file(started_at=None):
+        """
+        Journalise le contenu du journal d'AtmoSwing Forecaster.
+
+        Parameters
+        ----------
+        started_at : float, optional
+            Heure de lancement d'AtmoSwing Forecaster (secondes depuis l'epoch).
+            Un journal qui n'a pas été modifié depuis provient d'une exécution
+            antérieure : il n'est pas affiché.
+        """
         tmp_dir = Path(tempfile.gettempdir())
         log_file = tmp_dir / "AtmoSwingForecaster.log"
         if not log_file.exists():
             logger.warning(f"  -> Le journal des logs n'a pas été trouvé "
                            f"({str(log_file)}).")
+            return
+        modified_at = log_file.stat().st_mtime
+        # Marge pour la résolution des horodatages de certains systèmes de fichiers
+        if started_at is not None and modified_at < started_at - 2:
+            modified = datetime.datetime.fromtimestamp(modified_at)
+            logger.warning(f"  -> Le journal des logs ({str(log_file)}) n'a pas été "
+                           f"mis à jour par cette exécution (dernière modification : "
+                           f"{modified.strftime('%Y-%m-%d %H:%M:%S')}) : il n'est "
+                           f"pas affiché.")
             return
         with open(str(log_file), errors='replace') as file:
             lines = [f"     | {item.rstrip()}" for item in file]

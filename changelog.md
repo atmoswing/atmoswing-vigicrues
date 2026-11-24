@@ -1,6 +1,14 @@
 # Changelog AtmoSwing-vigicrues
 
 
+## Version à venir
+
+### Corrections
+
+*   En cas d'échec d'AtmoSwing Forecaster, ses sorties standard et d'erreur sont journalisées : elles contiennent les erreurs survenues avant l'écriture de son journal (fichier batch introuvable ou invalide, par exemple).
+*   Le journal d'AtmoSwing Forecaster n'est plus affiché s'il n'a pas été mis à jour par l'exécution qui a échoué : il provenait d'une exécution antérieure et induisait en erreur.
+
+
 ## v1.3.2 - 6 Novembre 2026
 
 ### Changements

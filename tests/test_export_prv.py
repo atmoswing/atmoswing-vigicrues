@@ -97,3 +97,9 @@ def test_export_prv_closes_netcdf_files(options, forecast_files, metadata,
     assert len(opened) == 2 * len(forecast_files)
     assert not any(nc_file.isopen() for nc_file in opened)
     shutil.rmtree(options['output_dir'])
+
+
+def test_export_prv_without_files_succeeds(options, metadata):
+    export = asv.ExportPrv('Export PRV', options)
+    export.feed([], metadata)
+    assert export.run() is True

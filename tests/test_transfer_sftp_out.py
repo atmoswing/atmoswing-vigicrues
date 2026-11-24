@@ -123,3 +123,59 @@ def test_upload_replaces_remote_exports_in_error(options, local_exports, monkeyp
     action.feed(local_exports)
     assert action.run(datetime(2022, 12, 16, 00))
     assert sftp.uploaded == expected
+
+
+SSH_ERRORS = [
+    (paramiko.ssh_exception.PasswordRequiredException("clé"),
+     "PasswordRequiredException"),
+    (paramiko.ssh_exception.BadAuthenticationType("refusé", ['publickey']),
+     "BadAuthenticationType"),
+    (paramiko.ssh_exception.AuthenticationException("refusé"),
+     "AuthenticationException"),
+    (paramiko.ssh_exception.ChannelException(1, "canal"), "ChannelException"),
+    (paramiko.ssh_exception.ProxyCommandFailure("proxy", "échec"),
+     "ProxyCommandFailure"),
+    (paramiko.ssh_exception.SSHException("ssh"), "SSHException"),
+    (FileNotFoundError("absent"), "FileNotFoundError"),
+]
+
+
+@pytest.mark.parametrize('error, message', SSH_ERRORS)
+def test_sftp_errors_are_reported(options, local_exports, monkeypatch, caplog, error,
+                                  message):
+    closed = []
+
+    def connect(hostkey, username, password):
+        raise error
+
+    monkeypatch.setattr(paramiko, 'Transport', lambda address: types.SimpleNamespace(
+        connect=connect, close=lambda: closed.append(True)))
+
+    action = asv.TransferSftpOut('Upload over SFTP', options)
+    action.feed(local_exports)
+    assert not action.run(datetime(2022, 12, 16, 00))
+    assert f"SFTP {message}" in caplog.text
+    assert closed == [True]
+
+
+def test_known_hosts_key_is_used_for_sftp_connection(options, local_exports,
+                                                     monkeypatch, tmp_path):
+    key = paramiko.RSAKey.generate(1024)
+    host_keys = paramiko.HostKeys()
+    host_keys.add(options['hostname'], key.get_name(), key)
+    host_keys.save(str(tmp_path / 'known_hosts'))
+    options['known_hosts'] = str(tmp_path / 'known_hosts')
+    host_keys_used = []
+
+    def connect(hostkey, username, password):
+        host_keys_used.append(hostkey)
+
+    monkeypatch.setattr(paramiko, 'Transport', lambda address: types.SimpleNamespace(
+        connect=connect, close=lambda: None))
+    monkeypatch.setattr(paramiko.SFTPClient, 'from_transport',
+                        lambda transport: FakeSftp({}))
+
+    action = asv.TransferSftpOut('Upload over SFTP', options)
+    action.feed(local_exports)
+    assert action.run(datetime(2022, 12, 16, 00))
+    assert host_keys_used == [key]

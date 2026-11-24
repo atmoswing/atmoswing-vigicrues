@@ -1,11 +1,13 @@
 import datetime
 import glob
 import importlib
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import types
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -379,6 +381,34 @@ def test_atmoswing_exception_is_reported(atmoswing_controller, tmp_path):
         controller._run_atmoswing()
 
 
+def test_atmoswing_failure_reports_process_output(atmoswing_controller, caplog):
+    # Python refuse l'option '-f' et l'explique sur sa sortie d'erreur
+    controller = atmoswing_controller(sys.executable)
+    with pytest.raises(asv.Error, match="code de retour"):
+        controller._run_atmoswing()
+    assert "Sortie d'erreur d'AtmoSwing Forecaster" in caplog.text
+    assert "     | " in caplog.text
+
+
+def test_parse_log_file_skips_stale_log(tmp_path, monkeypatch, caplog):
+    monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
+    log_file = tmp_path / 'AtmoSwingForecaster.log'
+    log_file.write_text("ligne d'une ancienne exécution\n")
+    old = time.time() - 3600
+    os.utime(log_file, (old, old))
+    asv.Controller._parse_log_file(time.time())
+    assert "ancienne exécution" not in caplog.text
+    assert "n'a pas été mis à jour" in caplog.text
+
+
+def test_parse_log_file_shows_fresh_log(tmp_path, monkeypatch, caplog):
+    monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
+    started_at = time.time()
+    (tmp_path / 'AtmoSwingForecaster.log').write_text("ligne du journal\n")
+    asv.Controller._parse_log_file(started_at)
+    assert "ligne du journal" in caplog.text
+
+
 def test_parse_log_file_handles_missing_log(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr(tempfile, 'gettempdir', lambda: str(tmp_path))
     asv.Controller._parse_log_file()
@@ -436,3 +466,10 @@ def test_base_classes_cannot_be_used_as_actions(tmp_path):
         encoding='utf-8')
     with pytest.raises(asv.ConfigError):
         asv.Controller(types.SimpleNamespace(config_file=str(config_file)))
+
+
+def test_post_actions_are_skipped_without_new_files(stub_controller, caplog):
+    caplog.set_level(logging.INFO, logger='atmoswing_vigicrues')
+    stub_controller.post_actions = [StubPostAction(False)]
+    assert stub_controller.run() == 0
+    assert "  -> Aucun nouveau fichier à traiter en post-action." in caplog.messages
